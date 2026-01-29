@@ -1,0 +1,7 @@
+/node_modules
+/.next
+/drizzle
+/.vscode
+/db/scripts
+pnpm-lock.yaml
+lefthook.yml

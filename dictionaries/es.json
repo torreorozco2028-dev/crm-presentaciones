@@ -1,0 +1,203 @@
+{
+  "Common": {
+    "loading": "Cargando...",
+    "pagination": {
+      "previous": "Anterior",
+      "next": "Siguiente"
+    },
+    "table": {
+      "noRows": "No hay datos que mostrar"
+    },
+    "dropdown": {
+      "settings": "Configuraciones",
+
+      "signOutBtn": "Cerrar sesión",
+      "detail": "Detalle",
+      "edit": "Editar",
+      "delete": "Eliminar"
+    },
+    "menu": {
+      "dashboard": "Tablero",
+      "projects": "Proyectos",
+      "unitCosts": "Costos Unitarios",
+      "unit-costs": "Costos Unitarios",
+      "unit costs": "Costos Unitarios",
+      "unit-prices": "Precios Unitarios",
+      "unit prices": "Precios Unitarios",
+      "activities": "Actividades",
+      "providers": "Proveedores",
+      "warehouse": "Almacén",
+      "renting": "Alquiler",
+      "dailyBook": "Libro diario",
+      "daily-book": "Libro diario",
+      "daily book": "Libro diario",
+      "ledgerBook": "Libro Mayor",
+      "ledger-book": "Libro Mayor",
+      "ledger book": "Libro Mayor",
+      "accounts": "Cuentas",
+      "users": "Usuarios",
+      "home": "Inicio",
+      "planning": "Planificación",
+      "inventory": "Inventario",
+      "accounting": "Contabilidad",
+      "admin": "Adminitración",
+      "settings": "Configuración",
+      "avatar": "Avatar"
+    },
+    "intros": {
+      "dashboard": "Bienvenido a tu tablero, tu centro neurálgico para métricas empresariales en tiempo real.",
+      "projects": "Gestiona y supervisa todos tus proyectos en curso y completados con facilidad.",
+      "unitCosts": "Mantén un ojo en la eficiencia de costos de tus productos y servicios.",
+      "unitPrices": "Mantén un ojo en los precios de tus productos y servicios.",
+      "providers": "Gestiona todos los proveedores en un solo lugar para una comunicación fluida y entregas puntuales.",
+      "warehouse": "Optimiza la gestión de tu inventario con monitoreo de stock en tiempo real.",
+      "renting": "Gestiona tus acuerdos de alquiler y activos sin esfuerzo.",
+      "dailyBook": "Registra y revisa las transacciones financieras diarias para una mejor responsabilidad empresarial.",
+      "accounts": "Gestiona tus cuentas para libros diarios",
+      "users": "Gestiona tu equipo y controla el acceso a tu sistema de manera eficiente.",
+      "ledgerBook": "Mantén un registro detallado de todas tus transacciones financieras.",
+      "activities": "",
+      "settings": "",
+      "avatar": ""
+    }
+  },
+  "Auth": {
+    "login-form": {
+      "accessYourAccount": "Accede a tu cuenta",
+      "emailAddress": "Dirección de correo electrónico",
+      "password": "Contraseña",
+      "logInButton": "Iniciar sesión",
+      "enterYourEmail": "Introduce tu correo electrónico",
+      "enterYourPassword": "Introduce tu contraseña"
+    },
+    "register-form": {
+      "title": "Registra tu cuenta",
+      "name": {
+        "label": "Nombre",
+        "placeholder": "Ingresa tu nombre",
+        "required": "El nombre es requerido"
+      },
+      "email": {
+        "label": "Correo electrónico",
+        "placeholder": "Ingresa tu correo electrónico",
+        "required": "El correo electrónico es requerido"
+      },
+      "password": {
+        "label": "Contraseña",
+        "placeholder": "Ingresa tu contraseña",
+        "required": "La contraseña es requerida"
+      },
+      "confirmPassword": {
+        "label": "Confirmar contraseña",
+        "placeholder": "Confirma tu contraseña"
+      },
+      "terms": {
+        "text": "Estoy de acuerdo con los",
+        "termsLink": "Términos",
+        "andText": "y",
+        "privacyLink": "Política de Privacidad"
+      },
+      "signUpButton": "Registrarse",
+      "orText": "O",
+      "loginText": "¿Ya tienes una cuenta?",
+      "loginLink": "Iniciar sesión",
+      "loading": "Cargando",
+      "noPermissions": "No tienes permisos para ver este formulario"
+    }
+  },
+
+  "Users": {
+    "addNew": "Agregar",
+    "users-table": {
+      "loading": "Cargando...",
+      "deleteSuccess": "Usuario eliminado exitosamente",
+      "deleteError": "Error al eliminar usuario",
+      "invite": "Invitar Usuario",
+      "name": "NOMBRE",
+      "email": "CORREO",
+      "status": "ESTADO",
+      "role": "ROL",
+      "startedAt": "INICIO",
+      "actions": "ACCIONES"
+    },
+    "search": {
+      "label": "Buscar"
+    },
+    "dropdown": {
+      "columns": "Columnas",
+      "deleteBtn": "Eliminar"
+    },
+    "invite": {
+      "invite": {
+        "successTitle": "¡Invitación enviada!",
+        "errorTitle": "Error al enviar la invitación",
+        "pendingMessage": "Enviando invitación..."
+      },
+      "form": {
+        "title": "Invitar a alguien",
+        "input": {
+          "label": "Ingresa la dirección de correo electrónico"
+        },
+        "submitBtn": {
+          "label": "Enviar Invitación"
+        },
+        "closeBtn": {
+          "label": "Cerrar"
+        },
+        "validations": {
+          "email": {
+            "required": "El correo electrónico es requerido",
+            "invalid": "Dirección de correo electrónico inválida"
+          }
+        }
+      }
+    }
+  },
+
+  "Avatar": {
+    "title": "Sube tu Avatar",
+    "description": "Elige una foto de perfil para personalizar tu cuenta. La imagen debe ser clara y centrada en tu rostro.",
+    "uploadText": "Haz clic para subir o arrastra y suelta",
+    "fileTypes": "SVG, PNG, JPG o GIF (máx. 2MB)",
+    "buttons": {
+      "cancel": "Cancelar",
+      "upload": "Subir Avatar"
+    },
+    "success": "¡Avatar subido exitosamente! Puedes verlo en:"
+  },
+  "Email": {
+    "invite": {
+      "subject": "Has sido invitado a unirte a StructSoft",
+      "welcome": "¡Bienvenido a Structsoft!",
+      "invited": "Has sido invitado a unirte a Structsoft. Estamos emocionados de tenerte a bordo.",
+      "clickBelow": "Haz clic en el botón de abajo para comenzar tu proceso de registro:",
+      "startRegistration": "Comenzar Registro",
+      "buttonNotWorking": "Si el botón de arriba no funciona, puedes copiar y pegar el siguiente enlace en tu navegador:",
+      "thankYou": "Gracias,",
+      "team": "Equipo Structsoft"
+    }
+  },
+  "Settings": {
+    "title": "Perfil de Usuario",
+    "loading": "Cargando información...",
+    "editProfile": "Editar Perfil",
+    "name": "Nombre",
+    "email": "Correo Electrónico",
+    "role": "Rol",
+    "changePassword": "Cambiar Contraseña",
+    "newPassword": "Nueva Contraseña",
+    "confirmPassword": "Confirmar Contraseña",
+    "cancel": "Cancelar",
+    "saveChanges": "Guardar Cambios",
+    "changeImage": "Cambiar Imagen",
+    "notifications": {
+      "updateSuccess": "Perfil actualizado correctamente",
+      "updateError": "Error al actualizar el perfil",
+      "noChanges": "No hay cambios para guardar"
+    },
+    "validation": {
+      "passwordLength": "La contraseña debe tener al menos 8 caracteres",
+      "passwordsMatch": "Las contraseñas no coinciden"
+    }
+  }
+}

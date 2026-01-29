@@ -1,0 +1,210 @@
+{
+  "Common": {
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "close": "Close",
+      "create": "Create",
+      "edit": "Edit",
+      "view": "View"
+    },
+    "loading": "Loading...",
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "table": {
+      "noRows": "No rows to display."
+    },
+    "dropdown": {
+      "settings": "Settings",
+      "signOutBtn": "Sign Out",
+      "detail": "Detail",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "menu": {
+      "dashboard": "Dashboard",
+      "projects": "Projects",
+      "unitCosts": "Unit Costs",
+      "unit-costs": "Unit Costs",
+      "unit costs": "Unit Costs",
+      "unit-prices": "Unit Prices",
+      "unit prices": "Unit Prices",
+      "activities": "Activities",
+      "providers": "Providers",
+      "warehouse": "Warehouse",
+      "renting": "Renting",
+      "dailyBook": "Daily Book",
+      "daily-book": "Daily Book",
+      "daily book": "Daily Book",
+      "ledgerBook": "Ledger Book",
+      "ledger-book": "Ledger Book",
+      "ledger book": "Ledger Book",
+      "accounts": "Accounts",
+      "users": "Users",
+      "home": "Home",
+      "planning": "Planning",
+      "inventory": "Inventory",
+      "accounting": "Accounting",
+      "admin": "Admin",
+      "settings": "Settings",
+      "avatar": ""
+    },
+    "intros": {
+      "dashboard": "Welcome to your dashboard, your central hub for real-time business metrics.",
+      "projects": "Manage and monitor all your ongoing and completed projects with ease.",
+      "unitCosts": "Keep an eye on the cost efficiency of your products and services.",
+      "unitPrices": "Keep an eye on the prices of your products and services.",
+      "providers": "Manage all providers in one place for smooth communication and timely deliveries.",
+      "warehouse": "Optimize your inventory management with real-time stock monitoring.",
+      "renting": "Handle your rental agreements and assets effortlessly.",
+      "dailyBook": "Record and review daily financial transactions for better business accountability.",
+      "accounts": "Manage your accounts for daily books",
+      "users": "Manage your team and control access to your system efficiently.",
+      "ledgerBook": "Record and review daily financial transactions for better business accountability.",
+      "activities": "",
+      "settings": "",
+      "avatar": ""
+    }
+  },
+  "Auth": {
+    "login-form": {
+      "accessYourAccount": "Access Your Account",
+      "emailAddress": "Email Address",
+      "password": "Password",
+      "logInButton": "Log In",
+      "enterYourEmail": "Enter your email",
+      "enterYourPassword": "Enter your password"
+    },
+    "register-form": {
+      "title": "Register Your Account",
+      "name": {
+        "label": "Name",
+        "placeholder": "Enter your Name",
+        "required": "Name is required"
+      },
+      "email": {
+        "label": "Email Address",
+        "placeholder": "Enter your email",
+        "required": "Email is required"
+      },
+      "password": {
+        "label": "Password",
+        "placeholder": "Enter your password",
+        "required": "Password is required"
+      },
+      "confirmPassword": {
+        "label": "Confirm Password",
+        "placeholder": "Confirm your password"
+      },
+      "terms": {
+        "text": "I agree with the",
+        "termsLink": "Terms",
+        "andText": "and",
+        "privacyLink": "Privacy Policy"
+      },
+      "signUpButton": "Sign Up",
+      "orText": "OR",
+      "loginText": "Already have an account?",
+      "loginLink": "Log In",
+      "loading": "Loading",
+      "noPermissions": "You don't have permissions to view this form"
+    }
+  },
+
+  "Users": {
+    "addNew": "Add",
+    "users-table": {
+      "loading": "Loading...",
+      "deleteSuccess": "User deleted successfully",
+      "deleteError": "Failed to delete user",
+      "invite": "Invite User",
+      "name": "NAME",
+      "email": "EMAIL",
+      "status": "STATUS",
+      "role": "ROLE",
+      "startedAt": "STARTED AT",
+      "actions": "ACTIONS"
+    },
+    "search": {
+      "label": "Search"
+    },
+    "dropdown": {
+      "columns": "Columns",
+      "deleteBtn": "Delete"
+    },
+    "invite": {
+      "invite": {
+        "successTitle": "Invitation sent",
+        "errorTitle": "Invitation failed",
+        "pendingMessage": "Sending invitation..."
+      },
+      "form": {
+        "title": "Invite someone",
+        "input": {
+          "label": "Enter your email address"
+        },
+        "submitBtn": {
+          "label": "Send Invite"
+        },
+        "closeBtn": {
+          "label": "Close"
+        },
+        "validations": {
+          "email": {
+            "required": "Email is required",
+            "invalid": "Invalid email address"
+          }
+        }
+      }
+    }
+  },
+
+  "Avatar": {
+    "title": "Upload Your Avatar",
+    "description": "Choose a profile picture to personalize your account. The image should be clear and centered on your face.",
+    "uploadText": "Click to upload or drag and drop",
+    "fileTypes": "SVG, PNG, JPG or GIF (max. 2MB)",
+    "buttons": {
+      "cancel": "Cancel",
+      "upload": "Upload Avatar"
+    },
+    "success": "Avatar uploaded successfully! You can view it at:"
+  },
+  "Email": {
+    "invite": {
+      "subject": "You were invited to join StructSoft",
+      "welcome": "Welcome to Structsoft!",
+      "invited": "You have been invited to join Structsoft. We are excited to have you on board.",
+      "clickBelow": "Click the button below to start your registration process:",
+      "startRegistration": "Start Registration",
+      "buttonNotWorking": "If the button above does not work, you can copy and paste the following link into your browser:",
+      "thankYou": "Thank you,",
+      "team": "Structsoft Team"
+    }
+  },
+  "Settings": {
+    "title": "User Profile",
+    "loading": "Wait...",
+    "editProfile": "Edit Profile",
+    "name": "Name",
+    "email": "Email",
+    "role": "Role",
+    "changePassword": "Change Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "cancel": "Cancel",
+    "saveChanges": "Save Changes",
+    "changeImage": "Change Image",
+    "notifications": {
+      "updateSuccess": "Profile updated successfully",
+      "updateError": "Failed to update profile",
+      "noChanges": "No changes to save"
+    },
+    "validation": {
+      "passwordLength": "Password must be at least 8 characters",
+      "passwordsMatch": "Passwords don't match"
+    }
+  }
+}

@@ -1,0 +1,8 @@
+pre-commit:
+  commands:
+    1_typecheck: 
+      run: pnpm typecheck
+    2_eslint:
+      run: pnpm lint
+    3_prettier:
+      run: pnpm prettier
