@@ -17,7 +17,7 @@ export default class BuildingEntity {
   async getBuildings(limit: number, page: number, search?: string) {
     const offset = (page - 1) * limit;
     //filtros
-    const whereClause = search 
+    const whereClause = search
       ? or(
           ilike(building.building_title, `%${search}%`),
           ilike(building.building_location, `%${search}%`)
@@ -29,9 +29,6 @@ export default class BuildingEntity {
       limit: limit,
       offset: offset,
       orderBy: [desc(building.id)],
-      with: {
-        generalFeatures: true
-      }
     });
   }
 
@@ -40,7 +37,7 @@ export default class BuildingEntity {
       where: eq(building.id, id),
       with: {
         generalFeatures: true,
-      }
+      },
     });
   }
 
@@ -72,7 +69,9 @@ export default class BuildingEntity {
   }
 
   async deleteFeature(featureId: string) {
-    return await db.delete(general_features).where(eq(general_features.id, featureId));
+    return await db
+      .delete(general_features)
+      .where(eq(general_features.id, featureId));
   }
 
   async getTotalBuildings() {

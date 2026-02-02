@@ -26,6 +26,7 @@
     "menu": {
       "dashboard": "Dashboard",
       "projects": "Projects",
+      "launch": "Launch",
       "unitCosts": "Unit Costs",
       "unit-costs": "Unit Costs",
       "unit costs": "Unit Costs",
@@ -65,7 +66,8 @@
       "ledgerBook": "Record and review daily financial transactions for better business accountability.",
       "activities": "",
       "settings": "",
-      "avatar": ""
+      "avatar": "",
+      "launch": "Manage and monitor all your project presentations with ease."
     }
   },
   "Auth": {

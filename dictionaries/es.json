@@ -19,6 +19,7 @@
     "menu": {
       "dashboard": "Tablero",
       "projects": "Proyectos",
+      "launch": "Lanzamiento",
       "unitCosts": "Costos Unitarios",
       "unit-costs": "Costos Unitarios",
       "unit costs": "Costos Unitarios",
@@ -58,7 +59,8 @@
       "ledgerBook": "Mantén un registro detallado de todas tus transacciones financieras.",
       "activities": "",
       "settings": "",
-      "avatar": ""
+      "avatar": "",
+      "launch": "Gestiona y supervisa todos tus presentaciones de proyectos con facilidad."
     }
   },
   "Auth": {
