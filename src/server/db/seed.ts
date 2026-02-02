@@ -15,7 +15,7 @@ async function main() {
     await userEntity.batchInsertRecords(usersData as any);
     console.log('Users seeded');
 
-    //Crear ´perfiles
+    //Crear perfiles
     const profilesData = await createFakeProfiles();
     await profileEntity.batchInsertRecords(profilesData as any);
     console.log('Profiles seeded');
