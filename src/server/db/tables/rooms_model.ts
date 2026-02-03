@@ -10,7 +10,7 @@ export const rooms_model = pgTable('rooms_model', {
     .references(() => department_model.id)
     .notNull(),
   room_name: varchar({ length: 100 }).notNull(),
-  room_type: varchar({ length: 256 }).notNull(),
+  room_type: varchar({ length: 256 }),
   square_meters: integer(),
 });
 

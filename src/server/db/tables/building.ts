@@ -1,7 +1,17 @@
 import { relations, sql } from 'drizzle-orm';
-import { pgTable, uuid, varchar, integer, text } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, integer, text, timestamp, jsonb, primaryKey } from 'drizzle-orm/pg-core';
 import { department_model } from './department';
 import { common_areas } from './common_areas';
+
+export const general_features = pgTable('general_features', {
+  id: uuid('id')
+    .default(sql`gen_random_uuid()`)
+    .primaryKey(),
+  name_gfeatures: varchar('name_gfeatures', { length: 100 }).notNull(),
+  room: varchar({ length: 50 }),
+  createdAt: timestamp('created_at').default(sql`now()`),
+  updatedAt: timestamp('updated_at').default(sql`now()`),
+});
 
 export const building = pgTable('building', {
   id: uuid('id')
@@ -9,28 +19,45 @@ export const building = pgTable('building', {
     .primaryKey(),
   building_title: varchar({ length: 100 }).notNull(),
   building_description: text(),
-  building_location: varchar({ length: 256 }).notNull(),
-  building_plan_url: varchar({ length: 256 }).notNull(),
-  primary_image: varchar({ length: 256 }).notNull(),
-  total_floors: integer().notNull(),
-  n_garages: integer('number_garages').notNull(),
-  n_storages: integer('number_storages').notNull(),
-  batch_images: text(),
+  building_location: varchar({ length: 255 }),
+  plan_image: varchar({ length: 255 }).notNull(),
+  prymary_image: varchar({ length: 255 }),
+  total_floors: integer(),
+  number_garages: integer(),
+  number_storages: integer(),
+  batch_images: jsonb().default([]),
+  createdAt: timestamp('created_at').default(sql`now()`),
+  updatedAt: timestamp('updated_at').default(sql`now()`),
 });
 
-export const general_features = pgTable('general_features', {
-  id: uuid('id')
-    .default(sql`gen_random_uuid()`)
-    .primaryKey(),
+export const building_to_features = pgTable('building_to_features', {
   buildingId: uuid('building_id')
-    .references(() => building.id)
-    .notNull(),
-  name_gfeatures: varchar('general_features_name', { length: 100 }).notNull(),
-  room: varchar({ length: 50 }),
-});
+    .notNull()
+    .references(() => building.id, { onDelete: 'cascade' }),
+  featureId: uuid('feature_id')
+    .notNull()
+    .references(() => general_features.id, { onDelete: 'cascade' }),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.buildingId, t.featureId] }),
+}));
 
 export const buildingRelations = relations(building, ({ many }) => ({
+  buildingToFeatures: many(building_to_features),
   models: many(department_model),
   commonAreas: many(common_areas),
-  generalFeatures: many(general_features),
+}));
+
+export const generalFeaturesRelations = relations(general_features, ({ many }) => ({
+  buildingToFeatures: many(building_to_features),
+}));
+
+export const buildingToFeaturesRelations = relations(building_to_features, ({ one }) => ({
+  building: one(building, {
+    fields: [building_to_features.buildingId],
+    references: [building.id],
+  }),
+  feature: one(general_features, {
+    fields: [building_to_features.featureId],
+    references: [general_features.id],
+  }),
 }));

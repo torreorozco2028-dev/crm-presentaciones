@@ -1,15 +1,8 @@
 import { relations, sql } from 'drizzle-orm';
-import {
-  pgTable,
-  uuid,
-  varchar,
-  integer,
-  text,
-  boolean,
-  primaryKey,
-} from 'drizzle-orm/pg-core';
+import {pgTable, uuid, varchar, integer, text, boolean, primaryKey, timestamp} from 'drizzle-orm/pg-core';
 import { building } from './building';
 import { rooms_model } from './rooms_model';
+import { sales } from './sales';
 
 export const department_model = pgTable('department_model', {
   id: uuid('id')
@@ -23,6 +16,19 @@ export const department_model = pgTable('department_model', {
   balcony: boolean().default(false), //tiene o no balcon
   id_plan: varchar({ length: 256 }).notNull(),
   batch_images: text(),
+  createdAt: timestamp('created_at').default(sql`now()`),
+  updatedAt: timestamp('updated_at').default(sql`now()`),
+});
+
+export const unit_department = pgTable('unit_department', {
+  id: uuid('id').default(sql`gen_random_uuid()`).primaryKey(),
+  unit_number: varchar({ length: 20 }),
+  floor: integer().notNull(),
+  real_square_meters: integer(),
+  modelId: uuid('model_id').references(() => department_model.id).notNull(),
+  state: integer().default(1), // 1 disponible, 2 reservado, 3 vendido
+  createdAt: timestamp('created_at').default(sql`now()`),
+  updatedAt: timestamp('updated_at').default(sql`now()`),
 });
 
 export const department_features = pgTable('department_features', {
@@ -34,29 +40,21 @@ export const department_features = pgTable('department_features', {
   }).notNull(),
 });
 
-export const modelToFeatures = pgTable(
-  'model_to_features',
-  {
-    modelId: uuid('model_id')
-      .references(() => department_model.id)
-      .notNull(),
-    featureId: uuid('features_id')
-      .references(() => department_features.id)
-      .notNull(),
-  },
-  (t) => ({
-    pk: primaryKey({ columns: [t.modelId, t.featureId] }),
-  })
-);
+export const modelToFeatures = pgTable('model_to_features', {
+  modelId: uuid('model_id').references(() => department_model.id).notNull(),
+  featureId: uuid('features_id').references(() => department_features.id).notNull(),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.modelId, t.featureId] }),
+}));
 
-export const departmentModelRelations = relations(
-  department_model,
-  ({ one, many }) => ({
-    building: one(building, {
-      fields: [department_model.buildingId],
-      references: [building.id],
-    }),
-    rooms: many(rooms_model),
-    features: many(modelToFeatures),
-  })
-);
+export const departmentModelRelations = relations(department_model, ({ one, many }) => ({
+  building: one(building, { fields: [department_model.buildingId], references: [building.id] }),
+  rooms: many(rooms_model),
+  features: many(modelToFeatures),
+  units: many(unit_department),
+}));
+
+export const unitDepartmentRelations = relations(unit_department, ({ one, many }) => ({
+  model: one(department_model, { fields: [unit_department.modelId], references: [department_model.id] }),
+  sales: many(sales),
+}));
