@@ -10,7 +10,7 @@ import {
   department_features,
   modelToFeatures,
   departmentModelRelations,
-  unitDepartmentRelations
+  unitDepartmentRelations,
 } from './tables/department';
 import {
   building,

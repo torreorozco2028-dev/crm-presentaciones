@@ -29,6 +29,7 @@ export async function uploadSingleImage(file: File): Promise<string> {
 
 export async function uploadBuildingPlan(file: File): Promise<string> {
   return await uploadToBlob(file, ['image/svg+xml']);
+
 }
 
 export async function uploadMultipleImages(files: File[]): Promise<string[]> {
@@ -43,7 +44,6 @@ export async function uploadMultipleImages(files: File[]): Promise<string[]> {
     throw new Error('Error al subir una o mas imagenes');
   }
 }
-
 
 export async function deleteFilesFromStorage(urls: string | string[]): Promise<void> {
   const urlArray = Array.isArray(urls) ? urls : [urls];

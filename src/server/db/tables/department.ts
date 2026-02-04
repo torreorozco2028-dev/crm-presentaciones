@@ -11,7 +11,7 @@ export const department_model = pgTable('department_model', {
   buildingId: uuid('building_id')
     .references(() => building.id)
     .notNull(),
-  department_model_id: varchar({ length: 100 }),
+  name_model_department: varchar({ length: 100 }),
   base_square_meters: integer(),
   balcony: boolean().default(false), //tiene o no balcon
   id_plan: varchar({ length: 256 }).notNull(),
