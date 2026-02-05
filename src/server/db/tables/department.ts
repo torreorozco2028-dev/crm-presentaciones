@@ -15,6 +15,7 @@ export const department_model = pgTable('department_model', {
   base_square_meters: integer(),
   balcony: boolean().default(false), //tiene o no balcon
   id_plan: varchar({ length: 256 }).notNull(),
+  prymary_image: varchar({ length: 255 }),
   batch_images: text(),
   createdAt: timestamp('created_at').default(sql`now()`),
   updatedAt: timestamp('updated_at').default(sql`now()`),

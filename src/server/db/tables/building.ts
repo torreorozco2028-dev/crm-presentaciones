@@ -2,6 +2,9 @@ import { relations, sql } from 'drizzle-orm';
 import { pgTable, uuid, varchar, integer, text, timestamp, jsonb, primaryKey } from 'drizzle-orm/pg-core';
 import { department_model } from './department';
 import { common_areas } from './common_areas';
+import { construction_phases } from './construction_phases'
+import { points_interest } from './pointsofinterest'
+import { sales_stages } from './sales_stages'
 
 export const general_features = pgTable('general_features', {
   id: uuid('id')
@@ -20,7 +23,7 @@ export const building = pgTable('building', {
   building_title: varchar({ length: 100 }).notNull(),
   building_description: text(),
   building_location: varchar({ length: 255 }),
-  plan_image: varchar({ length: 255 }).notNull(),
+  plan_image: varchar({ length: 255 }),
   prymary_image: varchar({ length: 255 }),
   total_floors: integer(),
   number_garages: integer(),
@@ -45,6 +48,9 @@ export const buildingRelations = relations(building, ({ many }) => ({
   buildingToFeatures: many(building_to_features),
   models: many(department_model),
   commonAreas: many(common_areas),
+  constructionPhases: many(construction_phases),
+  pointsOfInterest: many(points_interest),
+  salesStages: many(sales_stages)
 }));
 
 export const generalFeaturesRelations = relations(general_features, ({ many }) => ({
