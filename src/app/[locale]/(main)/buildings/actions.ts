@@ -122,7 +122,7 @@ export async function deleteBuildingAction(id: string) {
     const buildingToDelete = await entity.getBuildingById(id);
     if (!buildingToDelete) throw new Error('Edificio no existe');
 
-    //  const result = await entity.deleteBuilding(id);
+    await entity.deleteBuilding(id);
 
     const urlsToDelete = [
       buildingToDelete.prymary_image,
