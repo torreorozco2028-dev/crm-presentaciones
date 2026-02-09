@@ -30,7 +30,7 @@ import {
   createBuildingAction,
   deleteBuildingAction,
 } from './actions';
-import { getAllFeaturesAction } from '../general_features/actions';
+import { getAllFeaturesAction } from '../generalfeatures/actions';
 
 export default function BuildingsPage() {
   const queryClient = useQueryClient();
@@ -43,7 +43,7 @@ export default function BuildingsPage() {
   });
 
   const { data: featureCatalog } = useQuery({
-    queryKey: ['general-features'],
+    queryKey: ['generalfeatures'],
     queryFn: () => getAllFeaturesAction(),
   });
 

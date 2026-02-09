@@ -20,7 +20,7 @@ export async function createFeatureAction(name: string, room?: string) {
       name_gfeatures: name,
       room: room || null,
     });
-    revalidatePath('/general-features');
+    revalidatePath('/generalfeatures');
     return { success: true };
   } catch (error) {
     console.error('Error creating feature:', error);
@@ -34,7 +34,7 @@ export async function updateFeatureAction(
 ) {
   try {
     await entity.updateFeature(id, data);
-    revalidatePath('/general-features');
+    revalidatePath('/generalfeatures');
     return { success: true };
   } catch (error) {
     console.error('Error updating feature:', error);
@@ -45,7 +45,7 @@ export async function updateFeatureAction(
 export async function deleteFeatureAction(id: string) {
   try {
     await entity.deleteFeature(id);
-    revalidatePath('/general-features');
+    revalidatePath('/generalfeatures');
     return { success: true };
   } catch (error) {
     console.error('Error deleting feature:', error);

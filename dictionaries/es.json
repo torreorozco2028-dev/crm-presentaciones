@@ -24,14 +24,14 @@
       "building": "Edificios",
       "settings": "Configuración",
       "avatar": "Avatar",
-      "generalFeatures": "Acabados generales"
+      "generalfeatures": "Acabados generales"
     },
     "intros": {
       "users": "Gestiona tu equipo y controla el acceso a tu sistema de manera eficiente.",
       "launch": "Lanza tus presentaciones facilmente",
       "buildings": "Gestiona y supervisa todos tus presentaciones de proyectos con facilidad.",
       "settings": "Configuraciones",
-      "generalFeatures": "Acabados generales"
+      "generalfeatures": "Acabados generales"
     }
   },
   "Auth": {

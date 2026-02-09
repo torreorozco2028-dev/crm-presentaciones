@@ -33,9 +33,9 @@ export const menuOptions = {
       displayDivider: false,
     },
     {
-      key: 'general_features',
-      label: 'menu.generalFeatures',
-      path: '/general_features',
+      key: 'generalfeatures',
+      label: 'menu.generalfeatures',
+      path: '/generalfeatures',
       icon: 'BrickWall',
       displayDivider: true,
     },

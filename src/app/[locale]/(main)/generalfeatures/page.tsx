@@ -48,7 +48,7 @@ export default function GeneralFeaturesPage() {
   const [roomName, setRoomName] = useState('');
 
   const { data: features, isLoading } = useQuery({
-    queryKey: ['general-features'],
+    queryKey: ['generalfeatures'],
     queryFn: () => getAllFeaturesAction(),
   });
 
@@ -61,7 +61,7 @@ export default function GeneralFeaturesPage() {
           description: 'Caracteristica guardada en el catalogo',
           color: 'success',
         });
-        queryClient.invalidateQueries({ queryKey: ['general-features'] });
+        queryClient.invalidateQueries({ queryKey: ['generalfeatures'] });
         onClose();
         setFeatureName('');
         setRoomName('');
@@ -73,7 +73,7 @@ export default function GeneralFeaturesPage() {
     mutationFn: (id: string) => deleteFeatureAction(id),
     onSuccess: () => {
       addToast({ title: 'Eliminado', color: 'warning' });
-      queryClient.invalidateQueries({ queryKey: ['general-features'] });
+      queryClient.invalidateQueries({ queryKey: ['generalfeatures'] });
     },
   });
 

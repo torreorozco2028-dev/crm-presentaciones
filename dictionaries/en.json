@@ -24,14 +24,14 @@
       "building": "Building",
       "settings": "Settings",
       "avatar": "Avatar",
-      "generalFeatures": "General Features"
+      "generalfeatures": "General Features"
     },
     "intros": {
       "users": "Manage your team and control system access efficiently.",
       "launch": "Launch your presentations easily",
       "buildings": "Manage and supervise all your project presentations with ease.",
       "settings": "Settings",
-      "generalFeatures": "General Features"
+      "generalfeatures": "General Features"
     }
   },
   "Auth": {
