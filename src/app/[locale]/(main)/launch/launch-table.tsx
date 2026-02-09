@@ -52,7 +52,7 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
         className='mb-8 text-center'
       >
         <h1
-          className='mb-2 text-2xl font-black tracking-tight sm:text-3xl md:mb-3 md:text-4xl lg:text-5xl'
+          className='mb-2 text-2xl font-black tracking-tight sm:text-3xl md:mb-3 md:text-xl lg:text-3xl'
           style={{
             background:
               'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #fbbf24 100%)',
@@ -63,37 +63,28 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
         >
           Proyectos Exclusivos
         </h1>
-        <motion.div
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: 1 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
-          className='mx-auto mb-2 h-1 w-24 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 sm:w-32 md:mb-3'
-        />
-        <p className='mx-auto max-w-2xl text-base font-light tracking-wide text-zinc-400 sm:text-lg md:text-xl'>
-          Descubre nuestra colección de desarrollos inmobiliarios premium
-        </p>
       </motion.div>
       <div className='mb-10 grid grid-cols-1 gap-4 sm:mb-12 sm:grid-cols-2 sm:gap-6 md:mb-16 md:gap-8 lg:grid-cols-3'>
         <AnimatePresence mode='wait'>
           {items.map((building, index) => (
             <motion.div
               key={`${building.id}-${currentPage}`}
-              initial={{ opacity: 0, scale: 0.85, y: 30 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.85, y: -30 }}
+              initial={{ scale: 0.9 }}
+              animate={{}}
+              exit={{}}
               transition={{
                 duration: 0.5,
                 delay: index * 0.08,
                 ease: [0.25, 0.1, 0.25, 1],
               }}
-              whileHover={{ y: -8 }}
+              whileHover={{ opacity: 1, scale: 1 }}
               className='cursor-pointer'
               onClick={() => navToPresentation(building.id)}
             >
               <div
                 className={`group relative overflow-hidden bg-transparent transition-all duration-500 ${'border-foreground-100/10 hover:border-foreground-200/10'}`}
               >
-                <div className='relative p-0'>
+                <div className='relative p-0 opacity-85 transition-all duration-500 group-hover:opacity-100'>
                   {/* Contenedor de imagen/video */}
                   <div>
                     {isVideo(building.prymary_image) ? (
@@ -109,7 +100,7 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
                       <Image
                         src={building.prymary_image}
                         alt={building.building_title}
-                        className='h-full w-full object-cover transition-all duration-700 group-hover:scale-95'
+                        className='h-full w-full object-cover transition-all duration-700'
                         removeWrapper
                         style={{
                           background: 'transparent',

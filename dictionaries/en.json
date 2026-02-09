@@ -1,73 +1,37 @@
 {
   "Common": {
-    "actions": {
-      "save": "Save",
-      "cancel": "Cancel",
-      "close": "Close",
-      "create": "Create",
-      "edit": "Edit",
-      "view": "View"
-    },
     "loading": "Loading...",
     "pagination": {
       "previous": "Previous",
       "next": "Next"
     },
     "table": {
-      "noRows": "No rows to display."
+      "noRows": "No rows to display"
     },
     "dropdown": {
       "settings": "Settings",
-      "signOutBtn": "Sign Out",
+      "signOutBtn": "Sign out",
       "detail": "Detail",
       "edit": "Edit",
       "delete": "Delete"
     },
     "menu": {
-      "dashboard": "Dashboard",
-      "projects": "Projects",
       "launch": "Launch",
-      "unitCosts": "Unit Costs",
-      "unit-costs": "Unit Costs",
-      "unit costs": "Unit Costs",
-      "unit-prices": "Unit Prices",
-      "unit prices": "Unit Prices",
-      "activities": "Activities",
-      "providers": "Providers",
-      "warehouse": "Warehouse",
-      "renting": "Renting",
-      "dailyBook": "Daily Book",
-      "daily-book": "Daily Book",
-      "daily book": "Daily Book",
-      "ledgerBook": "Ledger Book",
-      "ledger-book": "Ledger Book",
-      "ledger book": "Ledger Book",
-      "accounts": "Accounts",
       "users": "Users",
+      "admin": "Administration",
       "home": "Home",
-      "planning": "Planning",
-      "inventory": "Inventory",
-      "accounting": "Accounting",
-      "admin": "Admin",
+      "buildings": "Buildings",
+      "building": "Building",
       "settings": "Settings",
-      "avatar": ""
+      "avatar": "Avatar",
+      "generalFeatures": "General Features"
     },
     "intros": {
-      "dashboard": "Welcome to your dashboard, your central hub for real-time business metrics.",
-      "projects": "Manage and monitor all your ongoing and completed projects with ease.",
-      "unitCosts": "Keep an eye on the cost efficiency of your products and services.",
-      "unitPrices": "Keep an eye on the prices of your products and services.",
-      "providers": "Manage all providers in one place for smooth communication and timely deliveries.",
-      "warehouse": "Optimize your inventory management with real-time stock monitoring.",
-      "renting": "Handle your rental agreements and assets effortlessly.",
-      "dailyBook": "Record and review daily financial transactions for better business accountability.",
-      "accounts": "Manage your accounts for daily books",
-      "users": "Manage your team and control access to your system efficiently.",
-      "ledgerBook": "Record and review daily financial transactions for better business accountability.",
-      "activities": "",
-      "settings": "",
-      "avatar": "",
-      "launch": "Manage and monitor all your project presentations with ease."
+      "users": "Manage your team and control system access efficiently.",
+      "launch": "Launch your presentations easily",
+      "buildings": "Manage and supervise all your project presentations with ease.",
+      "settings": "Settings",
+      "generalFeatures": "General Features"
     }
   },
   "Auth": {

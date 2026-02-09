@@ -18,6 +18,8 @@ import {
   useDisclosure,
   addToast,
   Spinner,
+  Select,
+  SelectItem,
 } from '@heroui/react';
 import LucideIcon from '@/components/lucide-icon';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -26,6 +28,17 @@ import {
   createFeatureAction,
   deleteFeatureAction,
 } from './actions';
+const AMBIENTES = [
+  'Baño',
+  'Dormitorio',
+  'Cocina',
+  'Sala de Estar',
+  'Comedor',
+  'Terraza',
+  'Lavadero',
+  'Estudio',
+  'Cochera',
+];
 
 export default function GeneralFeaturesPage() {
   const queryClient = useQueryClient();
@@ -136,13 +149,21 @@ export default function GeneralFeaturesPage() {
               onValueChange={setFeatureName}
               variant='bordered'
             />
-            <Input
+            <Select
               label='Ambiente (Opcional)'
-              placeholder='Ej: Baño, Dormitorios'
-              value={roomName}
-              onValueChange={setRoomName}
+              placeholder='Selecciona un ambiente'
               variant='bordered'
-            />
+              selectedKeys={roomName ? [roomName] : []} // Controla el valor seleccionado
+              onSelectionChange={(keys) => {
+                // Convertimos el Set de NextUI a un string simple
+                const value = Array.from(keys).join('');
+                setRoomName(value);
+              }}
+            >
+              {AMBIENTES.map((ambiente: any) => (
+                <SelectItem key={ambiente}>{ambiente}</SelectItem>
+              ))}
+            </Select>
           </ModalBody>
           <ModalFooter>
             <Button variant='light' onPress={onClose}>
