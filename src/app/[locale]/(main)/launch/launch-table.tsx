@@ -66,31 +66,24 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
       </motion.div>
       <div className='mb-10 grid grid-cols-1 gap-4 sm:mb-12 sm:grid-cols-2 sm:gap-6 md:mb-16 md:gap-8 lg:grid-cols-3'>
         <AnimatePresence mode='wait'>
-          {items.map((building, index) => (
+          {items.map((building) => (
             <motion.div
               key={`${building.id}-${currentPage}`}
               initial={{ scale: 0.9 }}
               animate={{}}
               exit={{}}
-              transition={{
-                duration: 0.5,
-                delay: index * 0.08,
-                ease: [0.25, 0.1, 0.25, 1],
-              }}
               whileHover={{ opacity: 1, scale: 1 }}
-              className='cursor-pointer'
+              className='hover:border-lg cursor-pointer rounded-xl border-foreground-100 bg-transparent duration-300 hover:rounded-lg hover:border-foreground-200 hover:shadow-xl'
               onClick={() => navToPresentation(building.id)}
             >
-              <div
-                className={`group relative overflow-hidden bg-transparent transition-all duration-500 ${'border-foreground-100/10 hover:border-foreground-200/10'}`}
-              >
-                <div className='relative p-0 opacity-85 transition-all duration-500 group-hover:opacity-100'>
+              <div className={`group relative overflow-hidden`}>
+                <div className='relative p-0 opacity-85 group-hover:opacity-100'>
                   {/* Contenedor de imagen/video */}
                   <div>
                     {isVideo(building.prymary_image) ? (
                       <video
                         src={building.prymary_image}
-                        className='h-full w-full object-cover transition-all duration-700 group-hover:scale-110'
+                        className='h-full w-full object-cover group-hover:scale-110'
                         autoPlay
                         loop
                         muted
@@ -100,7 +93,7 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
                       <Image
                         src={building.prymary_image}
                         alt={building.building_title}
-                        className='h-full w-full object-cover transition-all duration-700'
+                        className='h-full w-full object-cover'
                         removeWrapper
                         style={{
                           background: 'transparent',
@@ -108,7 +101,7 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
                       />
                     )}
                     <motion.div
-                      className='absolute inset-0 opacity-0 duration-500 group-hover:opacity-100'
+                      className='absolute inset-0 opacity-0 group-hover:opacity-100'
                       style={{
                         background:
                           'linear-gradient(90deg, transparent, rgba(251, 190, 36, 0), transparent)',
@@ -117,7 +110,7 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
                         x: ['-100%', '100%'],
                       }}
                       transition={{
-                        duration: 1.5,
+                        duration: 0.5,
                         repeat: Infinity,
                         repeatDelay: 1,
                       }}
