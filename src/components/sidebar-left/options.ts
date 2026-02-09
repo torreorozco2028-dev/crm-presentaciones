@@ -71,7 +71,7 @@ export const menuOptions = {
     {
       key: 'general_features',
       label: 'menu.renting',
-      path: '/general_features', 
+      path: '/general_features',
       icon: 'Settings2',
       displayDivider: true,
     },

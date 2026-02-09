@@ -9,7 +9,10 @@ type NewFeature = typeof general_features.$inferInsert;
 export default class BuildingEntity {
   async createBuilding(record: NewBuilding, featureIds: string[] = []) {
     return await db.transaction(async (tx) => {
-      const [newBuilding] = await tx.insert(building).values(record).returning();
+      const [newBuilding] = await tx
+        .insert(building)
+        .values(record)
+        .returning();
 
       if (featureIds.length > 0) {
         const relations = featureIds.map((fId) => ({
@@ -67,8 +70,14 @@ export default class BuildingEntity {
     });
   }
 
-  async updateBuilding(id: string, data: BuildingUpdate, featureIds?: string[]) {
-    const oldRecord = await db.query.building.findFirst({ where: eq(building.id, id) });
+  async updateBuilding(
+    id: string,
+    data: BuildingUpdate,
+    featureIds?: string[]
+  ) {
+    const oldRecord = await db.query.building.findFirst({
+      where: eq(building.id, id),
+    });
 
     const updated = await db.transaction(async (tx) => {
       const [res] = await tx
@@ -78,7 +87,9 @@ export default class BuildingEntity {
         .returning();
 
       if (featureIds !== undefined) {
-        await tx.delete(building_to_features).where(eq(building_to_features.buildingId, id));
+        await tx
+          .delete(building_to_features)
+          .where(eq(building_to_features.buildingId, id));
         if (featureIds.length > 0) {
           const relations = featureIds.map((fId) => ({
             buildingId: id,
@@ -101,7 +112,6 @@ export default class BuildingEntity {
     return deleted;
   }
 
-
   async getAllFeatures() {
     return await db.query.general_features.findMany({
       orderBy: [desc(general_features.createdAt)],
@@ -109,7 +119,10 @@ export default class BuildingEntity {
   }
 
   async createFeature(data: NewFeature) {
-    const [feature] = await db.insert(general_features).values(data).returning();
+    const [feature] = await db
+      .insert(general_features)
+      .values(data)
+      .returning();
     return feature;
   }
 

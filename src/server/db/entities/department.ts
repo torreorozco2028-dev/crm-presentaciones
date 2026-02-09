@@ -1,6 +1,11 @@
 import { db } from '../config';
-import { department_model, unit_department, department_features, modelToFeatures } from '../schema';
-import { eq, sql, desc, and } from 'drizzle-orm';
+import {
+  department_model,
+  unit_department,
+  department_features,
+  modelToFeatures,
+} from '../schema';
+import { eq, desc } from 'drizzle-orm';
 
 type NewModel = typeof department_model.$inferInsert;
 type ModelUpdate = Partial<NewModel>;
@@ -9,21 +14,26 @@ type UnitUpdate = Partial<NewUnit>;
 type NewFeature = typeof department_features.$inferInsert;
 
 export default class DepartmentEntity {
-
   //DEPARTMENTMODEL
 
-//para probar lo del svg
+  //para probar lo del svg
   async quickCreateModel(buildingId: string, id_plan: string) {
-    const [model] = await db.insert(department_model).values({
-      buildingId,
-      id_plan,
-    }).returning();
+    const [model] = await db
+      .insert(department_model)
+      .values({
+        buildingId,
+        id_plan,
+      })
+      .returning();
     return model;
   }
 
   async createModel(record: NewModel, featureIds: string[] = []) {
     return await db.transaction(async (tx) => {
-      const [newModel] = await tx.insert(department_model).values(record).returning();
+      const [newModel] = await tx
+        .insert(department_model)
+        .values(record)
+        .returning();
 
       if (featureIds.length > 0) {
         const relations = featureIds.map((fId) => ({
@@ -41,9 +51,9 @@ export default class DepartmentEntity {
       where: eq(department_model.buildingId, buildingId),
       with: {
         units: true,
-        features: { with: { feature: true } }
+        features: { with: { feature: true } },
       },
-      orderBy: [desc(department_model.createdAt)]
+      orderBy: [desc(department_model.createdAt)],
     });
   }
 
@@ -70,7 +80,10 @@ export default class DepartmentEntity {
   }
 
   async deleteModel(id: string) {
-    const [deleted] = await db.delete(department_model).where(eq(department_model.id, id)).returning();
+    const [deleted] = await db
+      .delete(department_model)
+      .where(eq(department_model.id, id))
+      .returning();
     return deleted;
   }
 
@@ -84,12 +97,12 @@ export default class DepartmentEntity {
   async getUnitsByModel(modelId: string) {
     return await db.query.unit_department.findMany({
       where: eq(unit_department.modelId, modelId),
-      orderBy: [unit_department.floor, unit_department.unit_number]
+      orderBy: [unit_department.floor, unit_department.unit_number],
     });
   }
 
   async updateUnit(id: string, data: UnitUpdate) {
-    const [updated] = await tx
+    const [updated] = await db
       .update(unit_department)
       .set({ ...data, updatedAt: new Date() })
       .where(eq(unit_department.id, id))
@@ -98,7 +111,10 @@ export default class DepartmentEntity {
   }
 
   async deleteUnit(id: string) {
-    return await db.delete(unit_department).where(eq(unit_department.id, id)).returning();
+    return await db
+      .delete(unit_department)
+      .where(eq(unit_department.id, id))
+      .returning();
   }
 
   //DEPARTMENT FEATURES
@@ -107,11 +123,17 @@ export default class DepartmentEntity {
   }
 
   async createFeature(data: NewFeature) {
-    const [feature] = await db.insert(department_features).values(data).returning();
+    const [feature] = await db
+      .insert(department_features)
+      .values(data)
+      .returning();
     return feature;
   }
 
   async deleteFeature(id: string) {
-    return await db.delete(department_features).where(eq(department_features.id, id)).returning();
+    return await db
+      .delete(department_features)
+      .where(eq(department_features.id, id))
+      .returning();
   }
 }

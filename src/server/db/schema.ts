@@ -18,14 +18,20 @@ import {
   building_to_features,
   buildingRelations,
   generalFeaturesRelations,
-  buildingToFeaturesRelations
+  buildingToFeaturesRelations,
 } from './tables/building';
-import {client, clientRelations} from './tables/client'
-import {sales, salesRelations} from './tables/sales'
-import {construction_phases, constructionPhasesRelations} from './tables/construction_phases'
-import {points_interest, pointsInterestRelations} from './tables/pointsofinterest'
-import {sales_stages, salesStagesRelations} from './tables/sales_stages'
-import {ourteam } from './tables/ourteam'
+import { client, clientRelations } from './tables/client';
+import { sales, salesRelations } from './tables/sales';
+import {
+  construction_phases,
+  constructionPhasesRelations,
+} from './tables/construction_phases';
+import {
+  points_interest,
+  pointsInterestRelations,
+} from './tables/pointsofinterest';
+import { sales_stages, salesStagesRelations } from './tables/sales_stages';
+import { ourteam } from './tables/ourteam';
 
 export {
   users,
@@ -59,5 +65,5 @@ export {
   pointsInterestRelations,
   points_interest,
   salesStagesRelations,
-  sales_stages
+  sales_stages,
 };

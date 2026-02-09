@@ -1,16 +1,17 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardBody, CardFooter, Pagination, Image } from '@heroui/react';
+import { Pagination, Image } from '@heroui/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getBuildings } from './_actions/building-actions';
+import { useParams, useRouter } from 'next/navigation';
 
 interface Building {
   id: string | number;
   building_title: string;
-  primary_image: string; // Puede ser URL de imagen (.png, .jpg, .webp) o video (.mp4)
+  prymary_image: string | null; // Puede ser URL de imagen (.png, .jpg, .webp) o video (.mp4)
   building_description: string | null;
-  building_location: string;
+  building_location: string | null;
 }
 
 interface LaunchTableProps {
@@ -20,11 +21,10 @@ interface LaunchTableProps {
 
 export default function LaunchTable({ buildings, total }: LaunchTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedBuilding, setSelectedBuilding] = useState<
-    string | number | null
-  >(null);
   const [items, setItems] = useState<any[]>(buildings);
-  // Helper function to check if media is video
+  const router = useRouter();
+  const params = useParams();
+  const locale = params.locale as string;
   const isVideo = (url: string) => {
     return (
       url.toLowerCase().endsWith('.mp4') ||
@@ -33,13 +33,17 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
     );
   };
   const onPageChange = async (pNum: number) => {
-    const items = await getBuildings(10, pNum);
+    const items = await getBuildings(3, pNum);
     setItems(items);
     setCurrentPage(pNum);
   };
 
+  const navToPresentation = (id: string | number) => {
+    router.push(`/${locale}/presentaciones/${id}`);
+  };
+
   return (
-    <div className='mx-auto max-w-7xl'>
+    <div className='items-between mx-auto flex min-h-screen max-w-7xl flex-col justify-between'>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -30 }}
@@ -83,27 +87,18 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
                 ease: [0.25, 0.1, 0.25, 1],
               }}
               whileHover={{ y: -8 }}
-              className='touch-none'
+              className='cursor-pointer'
+              onClick={() => navToPresentation(building.id)}
             >
-              <Card
-                isPressable
-                className={`group relative overflow-hidden border-1 backdrop-blur-md transition-all duration-500 ${
-                  selectedBuilding === building.id
-                    ? 'scale-[1.02] border-amber-500 shadow-2xl shadow-amber-500/30'
-                    : 'border-foreground-100/10 hover:border-foreground-200/10'
-                }`}
-                onPress={() =>
-                  setSelectedBuilding(
-                    selectedBuilding === building.id ? null : building.id
-                  )
-                }
+              <div
+                className={`group relative overflow-hidden bg-transparent transition-all duration-500 ${'border-foreground-100/10 hover:border-foreground-200/10'}`}
               >
-                <CardBody className='relative p-0'>
+                <div className='relative p-0'>
                   {/* Contenedor de imagen/video */}
-                  <div className='relative aspect-[3/4] overflow-hidden bg-transparent'>
-                    {isVideo(building.primary_image) ? (
+                  <div>
+                    {isVideo(building.prymary_image) ? (
                       <video
-                        src={building.primary_image}
+                        src={building.prymary_image}
                         className='h-full w-full object-cover transition-all duration-700 group-hover:scale-110'
                         autoPlay
                         loop
@@ -112,17 +107,20 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
                       />
                     ) : (
                       <Image
-                        src={building.primary_image}
+                        src={building.prymary_image}
                         alt={building.building_title}
-                        className='h-full w-full object-cover transition-all duration-700 group-hover:scale-110'
+                        className='h-full w-full object-cover transition-all duration-700 group-hover:scale-95'
                         removeWrapper
+                        style={{
+                          background: 'transparent',
+                        }}
                       />
                     )}
                     <motion.div
-                      className='absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100'
+                      className='absolute inset-0 opacity-0 duration-500 group-hover:opacity-100'
                       style={{
                         background:
-                          'linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.1), transparent)',
+                          'linear-gradient(90deg, transparent, rgba(251, 190, 36, 0), transparent)',
                       }}
                       animate={{
                         x: ['-100%', '100%'],
@@ -133,46 +131,15 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
                         repeatDelay: 1,
                       }}
                     />
-                    {/* Badge de selección */}
-                    {selectedBuilding === building.id && (
-                      <motion.div
-                        initial={{ scale: 0, rotate: -180 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        exit={{ scale: 0, rotate: 180 }}
-                        transition={{
-                          type: 'spring',
-                          stiffness: 200,
-                          damping: 15,
-                        }}
-                        className='absolute right-2 top-2 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 shadow-2xl shadow-amber-500/50 sm:right-4 sm:top-4 sm:h-14 sm:w-14'
-                      >
-                        <svg
-                          className='h-6 w-6 text-zinc-950 sm:h-8 sm:w-8'
-                          fill='none'
-                          stroke='currentColor'
-                          viewBox='0 0 24 24'
-                        >
-                          <motion.path
-                            initial={{ pathLength: 0 }}
-                            animate={{ pathLength: 1 }}
-                            transition={{ duration: 0.3, delay: 0.1 }}
-                            strokeLinecap='round'
-                            strokeLinejoin='round'
-                            strokeWidth={3}
-                            d='M5 13l4 4L19 7'
-                          />
-                        </svg>
-                      </motion.div>
-                    )}
                   </div>
-                </CardBody>
-                <CardFooter className='flex flex-col items-start gap-2 border-t border-foreground-100/10 bg-gradient-to-br from-foreground-50 via-foreground-100 to-foreground-50 p-4 backdrop-blur-sm sm:gap-3 sm:p-6'>
+                </div>
+                <div className='flex flex-col items-start bg-transparent p-4 sm:gap-3 sm:p-6'>
                   <h3 className='text-lg font-bold leading-tight text-foreground-900 transition-colors duration-300 group-hover:text-amber-400 sm:text-xl md:text-2xl'>
                     {building.building_title}
                   </h3>
 
                   {building.building_location && (
-                    <div className='flex items-center gap-2 text-sm text-zinc-400'>
+                    <div className='flex items-center gap-2 text-sm text-zinc-400 transition-colors duration-300 group-hover:text-foreground-800'>
                       <svg
                         className='h-4 w-4 flex-shrink-0'
                         fill='none'
@@ -192,28 +159,21 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
                           d='M15 11a3 3 0 11-6 0 3 3 0 016 0z'
                         />
                       </svg>
-                      <span className='font-medium'>
+                      <span className='font-medium transition-colors duration-300 group-hover:text-foreground-800'>
                         {building.building_location}
                       </span>
                     </div>
                   )}
 
                   {building.building_description && (
-                    <p className='line-clamp-2 text-xs leading-relaxed text-zinc-400 sm:text-sm'>
+                    <p className='line-clamp-2 text-xs leading-relaxed text-zinc-400 transition-colors duration-300 group-hover:text-foreground-800 sm:text-sm'>
                       {building.building_description}
                     </p>
                   )}
 
                   {/* Botón CTA */}
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className='mt-1 w-full rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-2 text-xs font-bold tracking-wide text-zinc-950 transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/30 sm:mt-2 sm:px-4 sm:py-2.5 sm:text-sm'
-                  >
-                    Ver Detalles
-                  </motion.button>
-                </CardFooter>
-              </Card>
+                </div>
+              </div>
             </motion.div>
           ))}
         </AnimatePresence>
@@ -227,7 +187,7 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
           className='flex flex-col items-center gap-4 px-2 sm:gap-6'
         >
           <Pagination
-            total={total}
+            total={Math.ceil(total / 3)}
             page={currentPage}
             onChange={onPageChange}
             showControls

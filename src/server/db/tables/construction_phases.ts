@@ -1,5 +1,5 @@
 import { relations, sql } from 'drizzle-orm';
-import { pgTable, uuid, varchar, text, timestamp, integer} from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, timestamp } from 'drizzle-orm/pg-core';
 import { building } from './building';
 
 export const construction_phases = pgTable('construction_phases', {
@@ -16,9 +16,12 @@ export const construction_phases = pgTable('construction_phases', {
   updatedAt: timestamp('updated_at').default(sql`now()`),
 });
 
-export const constructionPhasesRelations = relations(construction_phases, ({ one }) => ({
-  building: one(building, {
-    fields: [construction_phases.buildingId],
-    references: [building.id],
-  }),
-}));
+export const constructionPhasesRelations = relations(
+  construction_phases,
+  ({ one }) => ({
+    building: one(building, {
+      fields: [construction_phases.buildingId],
+      references: [building.id],
+    }),
+  })
+);

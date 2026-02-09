@@ -1,10 +1,19 @@
 import { relations, sql } from 'drizzle-orm';
-import { pgTable, uuid, varchar, integer, text, timestamp, jsonb, primaryKey } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  uuid,
+  varchar,
+  integer,
+  text,
+  timestamp,
+  jsonb,
+  primaryKey,
+} from 'drizzle-orm/pg-core';
 import { department_model } from './department';
 import { common_areas } from './common_areas';
-import { construction_phases } from './construction_phases'
-import { points_interest } from './pointsofinterest'
-import { sales_stages } from './sales_stages'
+import { construction_phases } from './construction_phases';
+import { points_interest } from './pointsofinterest';
+import { sales_stages } from './sales_stages';
 
 export const general_features = pgTable('general_features', {
   id: uuid('id')
@@ -33,16 +42,20 @@ export const building = pgTable('building', {
   updatedAt: timestamp('updated_at').default(sql`now()`),
 });
 
-export const building_to_features = pgTable('building_to_features', {
-  buildingId: uuid('building_id')
-    .notNull()
-    .references(() => building.id, { onDelete: 'cascade' }),
-  featureId: uuid('feature_id')
-    .notNull()
-    .references(() => general_features.id, { onDelete: 'cascade' }),
-}, (t) => ({
-  pk: primaryKey({ columns: [t.buildingId, t.featureId] }),
-}));
+export const building_to_features = pgTable(
+  'building_to_features',
+  {
+    buildingId: uuid('building_id')
+      .notNull()
+      .references(() => building.id, { onDelete: 'cascade' }),
+    featureId: uuid('feature_id')
+      .notNull()
+      .references(() => general_features.id, { onDelete: 'cascade' }),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.buildingId, t.featureId] }),
+  })
+);
 
 export const buildingRelations = relations(building, ({ many }) => ({
   buildingToFeatures: many(building_to_features),
@@ -50,20 +63,26 @@ export const buildingRelations = relations(building, ({ many }) => ({
   commonAreas: many(common_areas),
   constructionPhases: many(construction_phases),
   pointsOfInterest: many(points_interest),
-  salesStages: many(sales_stages)
+  salesStages: many(sales_stages),
 }));
 
-export const generalFeaturesRelations = relations(general_features, ({ many }) => ({
-  buildingToFeatures: many(building_to_features),
-}));
+export const generalFeaturesRelations = relations(
+  general_features,
+  ({ many }) => ({
+    buildingToFeatures: many(building_to_features),
+  })
+);
 
-export const buildingToFeaturesRelations = relations(building_to_features, ({ one }) => ({
-  building: one(building, {
-    fields: [building_to_features.buildingId],
-    references: [building.id],
-  }),
-  feature: one(general_features, {
-    fields: [building_to_features.featureId],
-    references: [general_features.id],
-  }),
-}));
+export const buildingToFeaturesRelations = relations(
+  building_to_features,
+  ({ one }) => ({
+    building: one(building, {
+      fields: [building_to_features.buildingId],
+      references: [building.id],
+    }),
+    feature: one(general_features, {
+      fields: [building_to_features.featureId],
+      references: [general_features.id],
+    }),
+  })
+);

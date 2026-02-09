@@ -9,7 +9,7 @@ import {
   text,
 } from 'drizzle-orm/pg-core';
 import { profiles } from './profile-table';
-import { sales } from './sales'
+import { sales } from './sales';
 
 export const users = pgTable(
   'user',
