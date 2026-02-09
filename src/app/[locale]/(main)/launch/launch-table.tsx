@@ -73,11 +73,11 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
               animate={{}}
               exit={{}}
               whileHover={{ opacity: 1, scale: 1 }}
-              className='hover:border-lg cursor-pointer rounded-xl border-foreground-100 bg-transparent duration-300 hover:rounded-lg hover:border-foreground-200 hover:shadow-xl'
+              className='hover:border-lg cursor-pointer rounded-xl border-foreground-50 bg-transparent duration-300 hover:rounded-lg hover:border-1 hover:border-foreground-50 hover:shadow-xl'
               onClick={() => navToPresentation(building.id)}
             >
               <div className={`group relative overflow-hidden`}>
-                <div className='relative p-0 opacity-85 group-hover:opacity-100'>
+                <div className='relative p-0 opacity-95 group-hover:opacity-100'>
                   {/* Contenedor de imagen/video */}
                   <div>
                     {isVideo(building.prymary_image) ? (
