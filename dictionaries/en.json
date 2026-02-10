@@ -150,6 +150,18 @@
       "team": "Structsoft Team"
     }
   },
+  "Navbar": {
+    "title": "Upload Your Avatar",
+    "description": "Choose a profile picture to personalize your account. The image should be clear and centered on your face.",
+    "uploadText": "Click to upload or drag and drop",
+    "fileTypes": "SVG, PNG, JPG or GIF (max. 2MB)",
+    "buttons": {
+      "cancel": "Cancel",
+      "upload": "Upload Avatar"
+    },
+    "success": "Avatar uploaded successfully! You can view it at:"
+  },
+
   "Settings": {
     "title": "User Profile",
     "loading": "Wait...",
