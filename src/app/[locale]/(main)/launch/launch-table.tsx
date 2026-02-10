@@ -39,7 +39,7 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
   };
 
   const navToPresentation = (id: string | number) => {
-    router.push(`/${locale}/presentaciones/${id}`);
+    router.push(`/${locale}/presentations/building/${id}`);
   };
 
   return (
@@ -69,63 +69,58 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
           {items.map((building) => (
             <motion.div
               key={`${building.id}-${currentPage}`}
-              initial={{ scale: 0.9 }}
-              animate={{}}
-              exit={{}}
-              whileHover={{ opacity: 1, scale: 1 }}
-              className='hover:border-lg cursor-pointer rounded-xl border-foreground-50 bg-transparent duration-300 hover:rounded-lg hover:border-1 hover:border-foreground-50 hover:shadow-xl'
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              whileHover={{ scale: 1.02 }}
+              // Definimos una altura fija para que el % funcione, o puedes usar h-full si el padre tiene altura
+              className='flex h-[500px] cursor-pointer flex-col overflow-hidden rounded-xl border-1 border-foreground-50 bg-transparent hover:shadow-xl'
               onClick={() => navToPresentation(building.id)}
             >
-              <div className={`group relative overflow-hidden`}>
-                <div className='relative p-0 opacity-95 group-hover:opacity-100'>
-                  {/* Contenedor de imagen/video */}
-                  <div>
-                    {isVideo(building.prymary_image) ? (
-                      <video
-                        src={building.prymary_image}
-                        className='h-full w-full object-cover group-hover:scale-110'
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                      />
-                    ) : (
-                      <Image
-                        src={building.prymary_image}
-                        alt={building.building_title}
-                        className='h-full w-full object-cover'
-                        removeWrapper
-                        style={{
-                          background: 'transparent',
-                        }}
-                      />
-                    )}
-                    <motion.div
-                      className='absolute inset-0 opacity-0 group-hover:opacity-100'
-                      style={{
-                        background:
-                          'linear-gradient(90deg, transparent, rgba(251, 190, 36, 0), transparent)',
-                      }}
-                      animate={{
-                        x: ['-100%', '100%'],
-                      }}
-                      transition={{
-                        duration: 0.5,
-                        repeat: Infinity,
-                        repeatDelay: 1,
-                      }}
+              <div className='group relative flex h-full flex-col'>
+                {/* CONTENEDOR DE IMAGEN/VIDEO - Ocupa el 70% (puedes cambiar a h-[60%]) */}
+                <div className='relative h-[70%] w-full overflow-hidden opacity-95 transition-opacity duration-300 group-hover:opacity-100'>
+                  {isVideo(building.prymary_image) ? (
+                    <video
+                      src={building.prymary_image}
+                      className='h-full w-full object-cover'
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
                     />
-                  </div>
+                  ) : (
+                    <Image
+                      src={building.prymary_image}
+                      alt={building.building_title}
+                      className='h-full w-full object-cover'
+                      removeWrapper
+                    />
+                  )}
+
+                  {/* Efecto de brillo (Shimmer) al hacer hover */}
+                  <motion.div
+                    className='pointer-events-none absolute inset-0'
+                    style={{
+                      background:
+                        'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)',
+                    }}
+                    initial={{ x: '-100%' }}
+                    whileHover={{ x: '100%' }}
+                    transition={{ duration: 0.6 }}
+                  />
                 </div>
-                <div className='flex flex-col items-start bg-transparent p-4 sm:gap-3 sm:p-6'>
-                  <h3 className='text-lg font-bold leading-tight text-foreground-900 transition-colors duration-300 group-hover:text-amber-400 sm:text-xl md:text-2xl'>
+
+                {/* CONTENEDOR DE TEXTO - Ocupa el 30% restante */}
+                <div className='flex h-[30%] flex-col justify-center gap-1 bg-white/5 p-4 backdrop-blur-sm'>
+                  <h3 className='line-clamp-1 text-lg font-bold leading-tight text-foreground-900 transition-colors group-hover:text-amber-400'>
                     {building.building_title}
                   </h3>
 
                   {building.building_location && (
-                    <div className='flex items-center gap-2 text-sm text-zinc-400 transition-colors duration-300 group-hover:text-foreground-800'>
+                    <div className='flex items-center gap-1 text-zinc-400'>
                       <svg
-                        className='h-4 w-4 flex-shrink-0'
+                        className='h-3 w-3 flex-shrink-0'
                         fill='none'
                         stroke='currentColor'
                         viewBox='0 0 24 24'
@@ -143,19 +138,17 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
                           d='M15 11a3 3 0 11-6 0 3 3 0 016 0z'
                         />
                       </svg>
-                      <span className='font-medium transition-colors duration-300 group-hover:text-foreground-800'>
+                      <span className='truncate text-xs font-medium'>
                         {building.building_location}
                       </span>
                     </div>
                   )}
 
                   {building.building_description && (
-                    <p className='line-clamp-2 text-xs leading-relaxed text-zinc-400 transition-colors duration-300 group-hover:text-foreground-800 sm:text-sm'>
+                    <p className='line-clamp-2 text-xs text-zinc-500 transition-colors group-hover:text-zinc-300'>
                       {building.building_description}
                     </p>
                   )}
-
-                  {/* Botón CTA */}
                 </div>
               </div>
             </motion.div>
