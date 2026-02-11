@@ -1,7 +1,7 @@
 'use client';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { getBuildingById } from './actions/building-actions';
+import { getBuildingById } from './building/actions/building-actions';
 
 interface Building {
   id: string;

@@ -38,9 +38,10 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
     setCurrentPage(pNum);
   };
 
-  const navToPresentation = (id: string | number) => {
-    router.push(`/${locale}/presentations/${id}`);
-  };
+const navToPresentation = (id: string | number) => {
+  router.push(`/${locale}/presentations/${id}/building`);
+};
+
 
   return (
     <div className='items-between mx-auto flex min-h-screen max-w-7xl flex-col justify-between'>
