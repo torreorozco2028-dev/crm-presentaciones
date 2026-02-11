@@ -51,7 +51,6 @@ export default class DepartmentEntity {
       where: eq(department_model.buildingId, buildingId),
       with: {
         units: true,
-        features: { with: { feature: true } },
       },
       orderBy: [desc(department_model.createdAt)],
     });

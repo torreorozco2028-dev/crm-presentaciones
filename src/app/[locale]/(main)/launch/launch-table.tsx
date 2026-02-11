@@ -39,7 +39,7 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
   };
 
   const navToPresentation = (id: string | number) => {
-    router.push(`/${locale}/presentations/building/${id}`);
+    router.push(`/${locale}/presentations/${id}`);
   };
 
   return (

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useParams } from 'next/navigation';
 import {
   motion,
   AnimatePresence,
@@ -13,7 +14,7 @@ import { FiMenu, FiX, FiChevronDown } from 'react-icons/fi';
 
 const LOGO_SRC = '/logo1.png';
 
-const NAV_LINKS = [
+const BASE_NAV_LINKS = [
   {
     title: 'INICIO',
     href: '#inicio',
@@ -25,13 +26,36 @@ const NAV_LINKS = [
   },
   { title: 'AREAS COMUNES', href: '#areas-comunes' },
   { title: 'DISTRIBUCION', href: '#distribucion' },
-  { title: 'PRECIO', href: '#precio' },
   { title: 'EQUIPO', href: '#equipo' },
 ];
 
 export default function CreativeNavbar() {
+  const params = useParams();
+  const buildingId = params?.buildingId as string | undefined;
+  const locale = params?.locale as string | undefined;
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isInicioDropdownOpen, setIsInicioDropdownOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Construir NAV_LINKS dinámicamente
+  const NAV_LINKS = BASE_NAV_LINKS.map((link) => {
+    if (link.title === 'DISTRIBUCION') {
+      return {
+        ...link,
+        dropdown: [
+          {
+            title: 'Departamentos',
+            href: buildingId
+              ? `/${locale}/presentations/${buildingId}/departamentos`
+              : '#distribucion',
+          },
+          { title: 'Precio', href: '#precio' },
+        ],
+      };
+    }
+    return link;
+  });
   const [isHidden, setIsHidden] = useState(false);
   const { scrollY } = useScroll();
   const lastScrollY = useRef(0);
@@ -40,7 +64,7 @@ export default function CreativeNavbar() {
     const previous = lastScrollY.current;
     if (latest > previous && latest > 100) {
       setIsHidden(true);
-      setIsInicioDropdownOpen(false);
+      setOpenDropdown(null);
     } else {
       setIsHidden(false);
     }
@@ -118,19 +142,33 @@ export default function CreativeNavbar() {
               {NAV_LINKS.map((link) => (
                 <li key={link.title} className='relative'>
                   {link.dropdown ? (
-                    <div>
+                    <div
+                      ref={(el: any) => (dropdownRefs.current[link.title] = el)}
+                      onBlur={() =>
+                        setTimeout(() => {
+                          const active = document.activeElement;
+                          const el = dropdownRefs.current[link.title];
+                          if (!el || !el.contains(active as Node)) {
+                            if (openDropdown === link.title)
+                              setOpenDropdown(null);
+                          }
+                        }, 150)
+                      }
+                      tabIndex={-1}
+                    >
                       <button
                         onClick={() =>
-                          setIsInicioDropdownOpen(!isInicioDropdownOpen)
-                        }
-                        onBlur={() =>
-                          setTimeout(() => setIsInicioDropdownOpen(false), 200)
+                          setOpenDropdown((prev) =>
+                            prev === link.title ? null : link.title
+                          )
                         }
                         className='flex items-center gap-1 transition-colors hover:text-amber-500 focus:outline-none'
                       >
                         {link.title}
                         <motion.span
-                          animate={{ rotate: isInicioDropdownOpen ? 180 : 0 }}
+                          animate={{
+                            rotate: openDropdown === link.title ? 180 : 0,
+                          }}
                         >
                           <FiChevronDown />
                         </motion.span>
@@ -139,7 +177,9 @@ export default function CreativeNavbar() {
                       {/* Dropdown Menu */}
                       <motion.ul
                         initial='closed'
-                        animate={isInicioDropdownOpen ? 'open' : 'closed'}
+                        animate={
+                          openDropdown === link.title ? 'open' : 'closed'
+                        }
                         variants={dropdownVariants}
                         className='absolute left-0 mt-4 min-w-[220px] overflow-hidden rounded-2xl border border-white/20 bg-white/80 p-2 shadow-xl backdrop-blur-xl dark:border-zinc-800/50 dark:bg-zinc-900/90'
                       >
@@ -148,7 +188,7 @@ export default function CreativeNavbar() {
                             <Link
                               href={subItem.href}
                               className='block rounded-xl px-4 py-3 text-sm transition-colors hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-500'
-                              onClick={() => setIsInicioDropdownOpen(false)}
+                              onClick={() => setOpenDropdown(null)}
                             >
                               {subItem.title}
                             </Link>

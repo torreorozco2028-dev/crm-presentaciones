@@ -33,6 +33,7 @@ export const building = pgTable('building', {
   building_description: text(),
   building_location: varchar({ length: 255 }),
   plan_image: varchar({ length: 255 }),
+  distribution_image: varchar({ length: 255 }),
   prymary_image: varchar({ length: 255 }),
   total_floors: integer(),
   number_garages: integer(),

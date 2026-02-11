@@ -52,6 +52,10 @@ export const department_features = pgTable('department_features', {
   dfeatures_name: varchar('department_features_name', {
     length: 100,
   }).notNull(),
+  room: varchar({ length: 50 }),
+  order: integer(),
+  createdAt: timestamp('created_at').default(sql`now()`),
+  updatedAt: timestamp('updated_at').default(sql`now()`),
 });
 
 export const modelToFeatures = pgTable(
