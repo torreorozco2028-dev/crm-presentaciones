@@ -43,6 +43,7 @@ export async function createBuildingAction(formData: FormData) {
       building_title: formData.get('building_title') as string,
       building_description: formData.get('building_description') as string,
       building_location: formData.get('building_location') as string,
+      buildin_locationURL: formData.get('building_locationURL') as string,
       prymary_image: primaryUrl,
       plan_image: planUrl,
       total_floors: parseInt(formData.get('total_floors') as string) || 0,

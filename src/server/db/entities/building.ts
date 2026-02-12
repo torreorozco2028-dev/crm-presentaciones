@@ -1,5 +1,5 @@
 import { db } from '../config';
-import { building, general_features, building_to_features } from '../schema';
+import { building, general_features, building_to_features} from '../schema';
 import { eq, sql, ilike, or, desc } from 'drizzle-orm';
 
 type NewBuilding = typeof building.$inferInsert;
@@ -46,6 +46,8 @@ export default class BuildingEntity {
             feature: true,
           },
         },
+      pointsOfInterest: true,
+      commonAreas: true,
       },
     });
   }

@@ -94,7 +94,7 @@ export default function BuildingsPage() {
             Gestion de Edificios
           </h1>
           <p className='text-default-500'>
-            Administra tus proyectos inmobiliarios y sus archivos
+            Administra tus proyectos
           </p>
         </div>
         <Button
@@ -111,6 +111,7 @@ export default function BuildingsPage() {
           <TableColumn>VISTA</TableColumn>
           <TableColumn>EDIFICIO</TableColumn>
           <TableColumn>UBICACION</TableColumn>
+          <TableColumn>UBICACIONURL</TableColumn>
           <TableColumn>CARACTERISTICAS</TableColumn>
           <TableColumn>NUMEROGARAGES</TableColumn>
           <TableColumn>NUMEROSTORAGES</TableColumn>
@@ -135,6 +136,7 @@ export default function BuildingsPage() {
                 </div>
               </TableCell>
               <TableCell>{b.building_location}</TableCell>
+              <TableCell>{b.building_locationURL}</TableCell>
               <TableCell>
                 <div className='flex flex-wrap gap-1'>
                   {b.buildingToFeatures?.map((rel: any) => (
@@ -192,6 +194,12 @@ export default function BuildingsPage() {
               <Input
                 name='building_location'
                 label='Ubicación'
+                isRequired
+                variant='bordered'
+              />
+              <Input
+                name='building_locationURL'
+                label='Ubicación link'
                 isRequired
                 variant='bordered'
               />
