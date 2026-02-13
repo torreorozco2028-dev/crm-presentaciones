@@ -38,7 +38,6 @@ export default function CreativeNavbar() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Construir NAV_LINKS dinámicamente
   const NAV_LINKS = BASE_NAV_LINKS.map((link) => {
     if (link.title === 'DISTRIBUCION') {
       return {

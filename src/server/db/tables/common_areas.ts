@@ -1,5 +1,5 @@
 import { relations, sql } from 'drizzle-orm';
-import { pgTable, uuid, varchar, text, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, timestamp, jsonb } from 'drizzle-orm/pg-core';
 import { building } from './building';
 
 export const common_areas = pgTable('common_areas', {
@@ -11,7 +11,7 @@ export const common_areas = pgTable('common_areas', {
     .notNull(),
   common_area_name: varchar({ length: 100 }).notNull(),
   common_area_description: text(),
-  batch_images: text(),
+  batch_images: jsonb().default([]),
   createdAt: timestamp('created_at').default(sql`now()`),
   updatedAt: timestamp('updated_at').default(sql`now()`),
 });
