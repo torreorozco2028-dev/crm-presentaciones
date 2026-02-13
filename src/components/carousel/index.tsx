@@ -15,7 +15,7 @@ interface CarouselProps {
 
 export default function Carousel({
   images,
-  height = 'h-64',
+  height = 'h-full',
   width = 'w-full',
   className = '',
   fallbackIcon = 'CameraOff',
@@ -37,13 +37,11 @@ export default function Carousel({
   };
 
   return (
-    <div
-      className={`relative ${height} ${width} overflow-hidden rounded-sm bg-default-100 ${className}`}
-    >
+    <div className={`relative ${height} ${width} rounded-sm ${className} `}>
       {filteredImages.length > 0 ? (
         <>
           <div
-            className='h-full w-full transition-transform duration-300 ease-in-out'
+            className='absolute inset-0 object-cover transition-transform duration-300 ease-in-out'
             style={{
               backgroundImage: `url(${filteredImages[currentImageIndex]})`,
               backgroundSize: 'cover',

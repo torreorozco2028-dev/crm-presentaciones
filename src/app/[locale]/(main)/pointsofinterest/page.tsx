@@ -102,11 +102,12 @@ export default function PointsOfInterestPage() {
 
       <div className='max-w-xs'>
         <Select
-          label="Filtrar por Edificio"
-          placeholder="Selecciona un edificio"
+          label='Filtrar por Edificio'
+          placeholder='Selecciona un edificio'
           selectedKeys={filterBuilding ? [filterBuilding] : []}
           onChange={(e) => setFilterBuilding(e.target.value)}
-          variant="flat"
+          variant='flat'
+          isLoading={loadingBuildings}
         >
           {(buildings ?? []).map((b) => (
             <SelectItem key={b.id} textValue={b.building_title}>
@@ -124,20 +125,26 @@ export default function PointsOfInterestPage() {
           <TableColumn>COORDENADAS</TableColumn>
           <TableColumn align='center'>ACCIONES</TableColumn>
         </TableHeader>
-        <TableBody 
-          emptyContent={filterBuilding ? 'No hay puntos registrados' : 'Selecciona un edificio para ver sus puntos'}
+        <TableBody
+          emptyContent={
+            filterBuilding
+              ? 'No hay puntos registrados'
+              : 'Selecciona un edificio para ver sus puntos'
+          }
           isLoading={loadingPoints}
-          loadingContent={<Spinner size="lg" />}
+          loadingContent={<Spinner size='lg' />}
         >
           {(points ?? []).map((p) => (
             <TableRow key={p.id}>
-              <TableCell className="font-medium">{p.point_name}</TableCell>
-              <TableCell className="max-w-xs truncate">{p.point_description}</TableCell>
+              <TableCell className='font-medium'>{p.point_name}</TableCell>
+              <TableCell className='max-w-xs truncate'>
+                {p.point_description}
+              </TableCell>
               <TableCell>{p.point_distance} m</TableCell>
               <TableCell>
-                <span className="text-tiny text-default-400">Lat: {p.lat}</span>
+                <span className='text-tiny text-default-400'>Lat: {p.lat}</span>
                 <br />
-                <span className="text-tiny text-default-400">Lon: {p.lon}</span>
+                <span className='text-tiny text-default-400'>Lon: {p.lon}</span>
               </TableCell>
               <TableCell>
                 <div className='flex justify-center gap-2'>
@@ -189,7 +196,7 @@ export default function PointsOfInterestPage() {
                 type='number'
                 variant='bordered'
               />
-              
+
               <Textarea
                 name='point_description'
                 label='Descripción breve'

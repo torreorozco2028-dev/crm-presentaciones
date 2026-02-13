@@ -5,7 +5,6 @@ import { eq, desc, type InferInsertModel } from 'drizzle-orm';
 type NewCommonArea = InferInsertModel<typeof common_areas>;
 
 export default class CommonAreasEntity {
-
   async createCommonArea(record: NewCommonArea) {
     try {
       const [newArea] = await db
@@ -14,8 +13,8 @@ export default class CommonAreasEntity {
         .returning();
       return newArea;
     } catch (error) {
-      console.error("Error creating Common Area:", error);
-      throw new Error("Could not create common area");
+      console.error('Error creating Common Area:', error);
+      throw new Error('Could not create common area');
     }
   }
 

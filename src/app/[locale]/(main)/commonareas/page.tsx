@@ -86,12 +86,8 @@ export default function CommonAreasPage() {
     <div className='space-y-6 p-8'>
       <div className='flex items-center justify-between'>
         <div>
-          <h1 className='text-2xl font-bold text-foreground'>
-            Areas Comunes
-          </h1>
-          <p className='text-default-500'>
-            Administra los espacios 
-          </p>
+          <h1 className='text-2xl font-bold text-foreground'>Areas Comunes</h1>
+          <p className='text-default-500'>Administra los espacios</p>
         </div>
         <Button
           color='primary'
@@ -104,11 +100,11 @@ export default function CommonAreasPage() {
 
       <div className='max-w-xs'>
         <Select
-          label="Filtrar por Edificio"
-          placeholder="Selecciona un edificio"
+          label='Filtrar por Edificio'
+          placeholder='Selecciona un edificio'
           selectedKeys={filterBuilding ? [filterBuilding] : []}
           onChange={(e) => setFilterBuilding(e.target.value)}
-          variant="flat"
+          variant='flat'
         >
           {(buildings ?? []).map((b) => (
             <SelectItem key={b.id} textValue={b.building_title}>
@@ -125,19 +121,32 @@ export default function CommonAreasPage() {
           <TableColumn>GALERIA</TableColumn>
           <TableColumn align='center'>ACCIONES</TableColumn>
         </TableHeader>
-        <TableBody 
-          emptyContent={filterBuilding ? 'No hay areas registradas' : 'Selecciona un edificio para ver sus areas'}
+        <TableBody
+          emptyContent={
+            filterBuilding
+              ? 'No hay areas registradas'
+              : 'Selecciona un edificio para ver sus areas'
+          }
           isLoading={loadingAreas}
-          loadingContent={<Spinner size="lg" />}
+          loadingContent={<Spinner size='lg' />}
         >
           {(areas ?? []).map((a) => {
             const images = a.batch_images ? JSON.parse(a.batch_images) : [];
             return (
               <TableRow key={a.id}>
-                <TableCell className="font-bold">{a.common_area_name}</TableCell>
-                <TableCell className="max-w-md text-default-500">{a.common_area_description}</TableCell>
+                <TableCell className='font-bold'>
+                  {a.common_area_name}
+                </TableCell>
+                <TableCell className='max-w-md text-default-500'>
+                  {a.common_area_description}
+                </TableCell>
                 <TableCell>
-                  <AvatarGroup isBordered max={3} size="sm" total={images.length}>
+                  <AvatarGroup
+                    isBordered
+                    max={3}
+                    size='sm'
+                    total={images.length}
+                  >
                     {images.map((img: string, index: number) => (
                       <Avatar key={index} src={img} />
                     ))}
@@ -163,7 +172,12 @@ export default function CommonAreasPage() {
         </TableBody>
       </Table>
 
-      <Modal isOpen={isOpen} onClose={onClose} size='2xl' scrollBehavior="inside">
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        size='2xl'
+        scrollBehavior='inside'
+      >
         <ModalContent>
           <form onSubmit={handleSubmit}>
             <ModalHeader>Registrar Nueva area Comun</ModalHeader>
@@ -173,6 +187,7 @@ export default function CommonAreasPage() {
                 label='Edificio'
                 isRequired
                 variant='bordered'
+                isLoading={loadingBuildings}
               >
                 {(buildings ?? []).map((b) => (
                   <SelectItem key={b.id} textValue={b.building_title}>
@@ -184,18 +199,18 @@ export default function CommonAreasPage() {
               <Input
                 name='common_area_name'
                 label='Nombre del Área'
-                placeholder="Ej: Piscina"
+                placeholder='Ej: Piscina'
                 isRequired
                 variant='bordered'
               />
-              
+
               <Textarea
                 name='common_area_description'
                 label='Descripción'
                 variant='bordered'
               />
 
-              <div className="rounded-lg border-2 border-dashed border-default-200 p-4">
+              <div className='rounded-lg border-2 border-dashed border-default-200 p-4'>
                 <p className='mb-2 text-small font-bold text-default-600'>
                   Fotos del Area
                 </p>
@@ -204,10 +219,10 @@ export default function CommonAreasPage() {
                   type='file'
                   accept='image/*'
                   multiple
-                  variant="flat"
-                  labelPlacement="outside"
+                  variant='flat'
+                  labelPlacement='outside'
                 />
-                <p className="mt-1 text-tiny text-default-400">
+                <p className='mt-1 text-tiny text-default-400'>
                   Puedes seleccionar varias imágenes a la vez
                 </p>
               </div>

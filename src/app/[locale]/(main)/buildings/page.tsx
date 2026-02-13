@@ -93,9 +93,7 @@ export default function BuildingsPage() {
           <h1 className='text-2xl font-bold text-foreground'>
             Gestion de Edificios
           </h1>
-          <p className='text-default-500'>
-            Administra tus proyectos
-          </p>
+          <p className='text-default-500'>Administra tus proyectos</p>
         </div>
         <Button
           color='primary'

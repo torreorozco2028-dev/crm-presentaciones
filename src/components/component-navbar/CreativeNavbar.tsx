@@ -122,7 +122,7 @@ export default function CreativeNavbar() {
         transition={{ duration: 0.3, ease: 'easeInOut' }}
         className='fixed left-0 right-0 top-4 z-50 flex justify-center px-4'
       >
-        <div className='flex w-full max-w-6xl items-center justify-between rounded-full border border-white/20 bg-white/70 px-6 py-3 shadow-lg backdrop-blur-xl dark:border-zinc-800/50 dark:bg-black/60'>
+        <div className='flex w-full max-w-6xl items-center justify-between rounded-full border border-white/20 bg-foreground-50/70 px-6 py-3 shadow-lg backdrop-blur-xl dark:border-zinc-800/50 dark:bg-black/60'>
           <Link
             href='/'
             className='relative flex h-10 w-auto items-center overflow-hidden rounded-full'

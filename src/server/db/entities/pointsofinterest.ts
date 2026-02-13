@@ -1,11 +1,10 @@
 import { db } from '../config';
 import { points_interest } from '../schema';
-import { type InferInsertModel , eq, desc} from 'drizzle-orm';
+import { type InferInsertModel, eq, desc } from 'drizzle-orm';
 
 type NewPoint = InferInsertModel<typeof points_interest>;
 
 export default class PointsOfInterestEntity {
-
   async createPointOfInterest(record: NewPoint) {
     try {
       const [insertedRecord] = await db
@@ -14,8 +13,8 @@ export default class PointsOfInterestEntity {
         .returning();
       return insertedRecord;
     } catch (error) {
-      console.error("Error creating Point of Interest:", error);
-      throw new Error("Failed to create point of interest");
+      console.error('Error creating Point of Interest:', error);
+      throw new Error('Failed to create point of interest');
     }
   }
   async getPointsByBuilding(buildingId: string) {
@@ -33,5 +32,11 @@ export default class PointsOfInterestEntity {
       .where(eq(points_interest.id, id))
       .limit(1);
     return point;
+  }
+  async deletePointOfInterest(id: string) {
+    return await db
+      .delete(points_interest)
+      .where(eq(points_interest.id, id))
+      .returning();
   }
 }

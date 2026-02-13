@@ -5,7 +5,9 @@ import {
   getDepartmentsByBuilding,
   getBuildingInfo,
 } from './actions/departments-actions';
-import Image from 'next/image';
+import { Modal, ModalBody, ModalHeader } from '@heroui/react';
+import dynamic from 'next/dynamic';
+const Carousel = dynamic(() => import('@/components/carousel'), { ssr: false });
 
 interface Building {
   id: string;
@@ -47,22 +49,6 @@ interface DepartmentModel {
   }>;
 }
 
-const STATE_COLORS: Record<number, { label: string; color: string }> = {
-  1: {
-    label: 'Disponible',
-    color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  },
-  2: {
-    label: 'Reservado',
-    color:
-      'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-  },
-  3: {
-    label: 'Vendido',
-    color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-  },
-};
-
 const isVideo = (url?: string) => {
   if (!url) return false;
   return /\.(mp4|webm|ogg|mov|avi)$/i.test(url);
@@ -77,6 +63,8 @@ function InteractiveSVGPlane({
   departments: DepartmentModel[];
 }) {
   const [hoveredZone, setHoveredZone] = useState<string | null>(null);
+  const [selectedZone, setSelectedZone] = useState<string | null>(null);
+  const [forceModal, setForceModal] = useState(false);
   const [svgContent, setSvgContent] = useState<string | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(
     null
@@ -93,70 +81,42 @@ function InteractiveSVGPlane({
         console.error('Error loading SVG:', error);
       }
     };
-
     fetchSvg();
   }, [svgUrl]);
   useEffect(() => {
     if (!containerRef.current || !svgContent) return;
-
-    const timer = setTimeout(() => {
-      const svg = containerRef.current?.querySelector('svg');
-      if (!svg) return;
-
-      const handleMouseMove = (e: MouseEvent) => {
-        const target = e.target as SVGElement;
-        // Buscamos el elemento con ID más cercano (hacia arriba)
-        const zoneElement = target.closest('[id]') as SVGElement | null;
-
-        if (
-          zoneElement &&
-          departments.some((d) => d.id_plan === zoneElement.id)
-        ) {
-          const id = zoneElement.id;
-
-          setHoveredZone(id);
-          setTooltipPos({ x: e.clientX, y: e.clientY });
-
-          // Aplicamos estilos al elemento encontrado
-          zoneElement.style.fill = '#f59e0b';
-          zoneElement.style.opacity = '0.8';
-          zoneElement.style.cursor = 'pointer';
-          zoneElement.style.transition = 'all 0.3s ease';
-        }
-      };
-
-      const handleMouseLeave = (e: MouseEvent) => {
-        const target = e.target as SVGElement;
-        const zoneElement = target.closest('[id]') as SVGElement | null;
-
-        if (zoneElement) {
-          zoneElement.style.fill = '';
-          zoneElement.style.opacity = '';
-        }
-        setHoveredZone(null);
-        setTooltipPos(null);
-      };
-
-      // Solo añadimos los listeners al padre (SVG)
-      svg.addEventListener('mousemove', handleMouseMove);
-      svg.addEventListener('mouseleave', handleMouseLeave);
-
-      return () => {
-        svg.removeEventListener('mousemove', handleMouseMove);
-        svg.removeEventListener('mouseleave', handleMouseLeave);
-        clearTimeout(timer); // Importante limpiar el timer también
-      };
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [svgContent, departments]); // Añade dependencias necesarias
+    const svg = containerRef.current.querySelector('svg');
+    if (!svg) return;
+    const handleMouseClick = (e: MouseEvent) => {
+      const target = e.target as SVGElement;
+      const zoneElement = target.closest('[id]') as SVGElement | null;
+      if (!zoneElement) return;
+      const zoneId = zoneElement.id?.trim();
+      const dept = departments.find((d) => String(d.id_plan).trim() === zoneId);
+      if (dept) {
+        setHoveredZone(zoneId);
+        setSelectedZone(zoneId);
+        // Aplicar estilos visuales
+        zoneElement.style.color = '#ff9900';
+        zoneElement.style.opacity = '0.8';
+        zoneElement.style.cursor = 'pointer';
+        zoneElement.style.transition = 'all 0.3s ease';
+      }
+    };
+    svg.addEventListener('click', handleMouseClick);
+    return () => {
+      svg.removeEventListener('click', handleMouseClick);
+      setSelectedZone(null);
+      setHoveredZone(null);
+      setTooltipPos(null);
+    };
+  }, [svgContent, departments]);
 
   const getHoveredDepartment = (zoneId: string) => {
     return departments.find((dept) => dept.id_plan === zoneId);
   };
-
   const hoveredDept = hoveredZone ? getHoveredDepartment(hoveredZone) : null;
-
+  const selectedDept = selectedZone ? getHoveredDepartment(selectedZone) : null;
   if (!svgContent) {
     return (
       <div className='flex h-full w-full items-center justify-center bg-zinc-200 dark:bg-zinc-800'>
@@ -164,10 +124,165 @@ function InteractiveSVGPlane({
       </div>
     );
   }
-
   return (
     <div className='relative h-full w-full'>
+      {selectedDept &&
+        selectedDept.batch_images &&
+        !forceModal &&
+        (() => {
+          let images: string[] = [];
+          const raw = selectedDept.batch_images;
+          if (typeof raw === 'string') {
+            try {
+              const parsed = JSON.parse(raw);
+              if (Array.isArray(parsed)) {
+                images = parsed.filter(Boolean) as string[];
+              } else if (typeof parsed === 'string') {
+                images = [parsed];
+              } else {
+                images = [];
+              }
+            } catch {
+              if (typeof raw === 'string') {
+                images = [raw];
+              }
+            }
+          } else if (Array.isArray(raw)) {
+            images = (raw as string[]).filter(Boolean);
+          }
+          return (
+            <div className='modal-enter-backdrop fixed inset-0 z-[200] flex flex-col items-center justify-center bg-white/20 backdrop-blur-xl dark:bg-black/40'>
+              <button
+                className='modal-close-btn absolute right-5 top-5 z-50 text-4xl text-white transition-all duration-300 hover:rotate-90 hover:text-gray-300'
+                onClick={() => {
+                  setSelectedZone(null);
+                  setHoveredZone(null);
+                  setTooltipPos(null);
+                  setSvgContent(null); // Forzar rerender del SVG para reiniciar listeners
+                  setTimeout(() => setSvgContent(svgContent), 10); // Restaurar SVG tras cerrar modal
+                }}
+                style={{ zIndex: 201 }}
+              >
+                &times;
+              </button>
+              <div className='absolute inset-0 flex items-center justify-center p-4 sm:p-4 md:p-8 lg:p-12'>
+                <div className='modal-content-enter w-full max-w-[95vw] sm:h-[85vh] sm:max-w-[95vw] md:h-[90vh] md:max-w-[90vw] lg:h-[90vh] lg:max-w-[80vw]'>
+                  {images.length > 0 ? (
+                    <Carousel
+                      images={images}
+                      className='!rounded-none !bg-foreground-50/10 !object-cover !shadow-none'
+                      height='h-64 md:h-full'
+                    />
+                  ) : (
+                    <div className='text-xl text-white'>
+                      No hay imágenes para mostrar
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+      {/* Modal de prueba forzado */}
+      {forceModal &&
+        (() => {
+          let images: string[] = [];
+          console.log('SELECTED DEPT', selectedDept);
+          const raw = selectedDept?.batch_images;
+          if (typeof raw === 'string') {
+            try {
+              const parsed = JSON.parse(raw);
+              if (Array.isArray(parsed)) {
+                images = parsed.filter(Boolean) as string[];
+              } else if (typeof parsed === 'string') {
+                images = [parsed];
+              } else {
+                images = [];
+              }
+            } catch {
+              if (typeof raw === 'string') {
+                images = [raw];
+              }
+            }
+          } else if (Array.isArray(raw)) {
+            images = (raw as string[]).filter(Boolean);
+          }
+          return (
+            <div className='modal-enter-backdrop fixed inset-0 z-[300] flex flex-col items-center justify-center bg-white/20 backdrop-blur-xl dark:bg-black/40'>
+              <button
+                className='modal-close-btn absolute right-5 top-5 z-50 text-4xl text-white transition-all duration-300 hover:rotate-90 hover:text-gray-300'
+                onClick={() => setForceModal(false)}
+                style={{ zIndex: 301 }}
+              >
+                &times;
+              </button>
+              <div className='absolute inset-0 flex items-center justify-center p-4 sm:p-4 md:p-8 lg:p-12'>
+                <div className='modal-content-enter max-h-64 w-full max-w-[95vw] sm:h-[85vh] sm:max-w-[95vw] md:h-[90vh] md:max-w-[90vw] lg:h-[90vh] lg:max-w-[80vw]'>
+                  {images.length > 0 ? (
+                    <Carousel
+                      images={images}
+                      height='h-full'
+                      width='w-full'
+                      className='!rounded-none !bg-foreground-800 !shadow-none'
+                    />
+                  ) : (
+                    <div className='text-xl text-white'>
+                      No hay imágenes para mostrar
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       <style>{`
+  /* Animaciones del Modal */
+  @keyframes modalBackdropEnter {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes modalContentEnter {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes closeButtonRotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(90deg);
+    }
+  }
+
+  .modal-enter-backdrop {
+    animation: modalBackdropEnter 0.3s ease-out forwards;
+  }
+
+  .modal-content-enter {
+    animation: modalContentEnter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  .modal-close-btn {
+    transform-origin: center;
+  }
+
+  .modal-close-btn:hover {
+    animation: closeButtonRotate 0.3s ease-in-out forwards;
+  }
+
   .interactive-svg-container svg {
     width: 100%;
     height: 100%;
@@ -179,7 +294,9 @@ function InteractiveSVGPlane({
   /* Selecciona elementos con ID dentro del SVG al hacer hover */
   .interactive-svg-container svg [id]:hover {
     /* Color naranja (Amber 400) con 50% de opacidad */
-    fill: rgba(251, 191, 36, 0.5) !important; 
+    fill: rgba(251, 191, 36, 0.5) !important;
+    color: rgba(251, 191, 36, 1) !important;
+    stroke: rgba(251, 191, 36, 1) !important;
     
     /* Opcional: añadir un borde naranja sólido para definir mejor el área */
     stroke: #fbbf24;
@@ -244,10 +361,7 @@ export default function DepartmentsPage() {
   const [departments, setDepartments] = useState<DepartmentModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedDept, setSelectedDept] = useState<DepartmentModel | null>(
-    null
-  );
-
+  const [isZoomed, setIsZoomed] = useState(false);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -300,13 +414,14 @@ export default function DepartmentsPage() {
       </div>
     );
   }
+  console.log('SSOOMED', isZoomed);
 
   return (
-    <div className='min-h-screen bg-white dark:bg-zinc-950'>
+    <div className='min-h-screen rounded-xl bg-white dark:bg-zinc-950'>
       {/* Sección Hero con fondo del edificio */}
       <section
         id='departamentos-hero'
-        className='relative h-64 w-full overflow-hidden pt-20 sm:h-80 sm:pt-16 md:h-96 md:pt-12 lg:h-screen lg:pt-0'
+        className='relative h-64 w-full overflow-hidden rounded-xl pt-20 sm:h-80 sm:pt-16 md:h-96 md:pt-12 lg:h-screen lg:pt-0'
       >
         {/* Fondo - Video o Imagen del edificio */}
         {building?.prymary_image && (
@@ -317,7 +432,7 @@ export default function DepartmentsPage() {
                 muted
                 loop
                 playsInline
-                className='absolute inset-0 h-full w-full object-cover'
+                className='absolute inset-0 h-full w-full rounded-xl object-cover'
               >
                 <source src={building.prymary_image} type='video/mp4' />
               </video>
@@ -361,13 +476,38 @@ export default function DepartmentsPage() {
               {/* Distribution Image - Izquierda */}
               {building.distribution_image && (
                 <div className='flex items-center justify-center'>
-                  <div className='relative h-64 w-full overflow-hidden rounded-2xl sm:h-80 md:h-[750px]'>
+                  {/* Imagen Miniatura (Trigger) */}
+                  <div
+                    className='relative h-64 w-full cursor-zoom-in overflow-hidden rounded-2xl sm:h-80 md:h-[750px]'
+                    onClick={() => setIsZoomed(true)}
+                  >
                     <img
                       src={building.distribution_image}
+                      onClick={() => setIsZoomed(true)}
                       alt='Distribución del proyecto'
-                      className='h-full w-full object-contain'
+                      className='h-full w-full object-contain transition-transform duration-300 hover:scale-105'
                     />
                   </div>
+
+                  {/* Modal Full Screen */}
+
+                  <Modal
+                    className='animate-in fade-in fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 duration-200 md:p-10'
+                    onClick={() => setIsZoomed(false)}
+                    size='full'
+                    isOpen={isZoomed}
+                    onClose={() => setIsZoomed(false)}
+                  >
+                    {' '}
+                    <ModalHeader></ModalHeader>
+                    <ModalBody>
+                      <img
+                        src={building.distribution_image}
+                        alt='Distribución completa'
+                        className='max-h-full max-w-full object-contain shadow-2xl transition-all'
+                      />
+                    </ModalBody>
+                  </Modal>
                 </div>
               )}
 
@@ -443,247 +583,6 @@ export default function DepartmentsPage() {
             </div>
           </div>
         </section>
-      )}
-      <section
-        id='departamentos-grid'
-        className='px-4 py-12 sm:px-6 md:py-16 lg:py-20'
-      >
-        <div className='mx-auto max-w-6xl'>
-          <div className='mb-8 grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3'>
-            {departments.map((dept) => (
-              <div
-                key={dept.id}
-                onClick={() => setSelectedDept(dept)}
-                className='group cursor-pointer overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-md transition-all hover:border-amber-400 hover:shadow-2xl dark:border-zinc-800 dark:bg-zinc-900'
-              >
-                {/* Imagen del Departamento */}
-                {dept.prymary_image && (
-                  <div className='relative h-48 w-full overflow-hidden bg-zinc-200 dark:bg-zinc-800 sm:h-56 md:h-64'>
-                    <img
-                      src={dept.prymary_image}
-                      alt={dept.name_model_department || 'Departamento'}
-                      className='h-full w-full object-cover transition-transform group-hover:scale-110'
-                    />
-                  </div>
-                )}
-
-                {/* Contenido */}
-                <div className='p-4 sm:p-6'>
-                  {/* Nombre Modelo */}
-                  <h3 className='mb-2 text-lg font-bold text-zinc-900 dark:text-white sm:mb-3 sm:text-2xl'>
-                    {dept.name_model_department || 'Modelo'}
-                  </h3>
-
-                  {/* Información Básica */}
-                  <div className='mb-3 space-y-2 border-b border-zinc-200 pb-3 dark:border-zinc-700 sm:mb-4 sm:pb-4'>
-                    {dept.base_square_meters && (
-                      <p className='text-xs text-zinc-600 dark:text-zinc-400 sm:text-sm'>
-                        📏 {dept.base_square_meters} m²
-                      </p>
-                    )}
-                    {dept.balcony && (
-                      <p className='text-xs text-amber-600 dark:text-amber-400 sm:text-sm'>
-                        ✨ Con Balcón
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Contador de Unidades */}
-                  <div className='mb-3 sm:mb-4'>
-                    <p className='text-xs font-medium text-zinc-700 dark:text-zinc-300 sm:text-sm'>
-                      <span className='text-base font-bold text-amber-600 dark:text-amber-400 sm:text-lg'>
-                        {dept.units?.length || 0}
-                      </span>{' '}
-                      {dept.units?.length === 1 ? 'Unidad' : 'Unidades'}
-                    </p>
-                  </div>
-
-                  {/* Estados de Unidades */}
-                  {dept.units && dept.units.length > 0 && (
-                    <div className='mb-3 space-y-1 text-xs sm:mb-4'>
-                      {Object.entries(
-                        dept.units.reduce(
-                          (acc, unit) => {
-                            acc[unit.state] = (acc[unit.state] || 0) + 1;
-                            return acc;
-                          },
-                          {} as Record<number, number>
-                        )
-                      ).map(([state, count]) => (
-                        <div
-                          key={state}
-                          className={`mr-1 inline-block rounded-full px-2 py-1 ${STATE_COLORS[parseInt(state)].color}`}
-                        >
-                          {count} {STATE_COLORS[parseInt(state)].label}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Botón Ver Detalles */}
-                  <button className='w-full rounded-xl bg-amber-500 py-2 text-sm font-semibold text-white transition-all hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-500 sm:py-3 sm:text-base'>
-                    Ver Detalles
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Modal - Detalles del Departamento */}
-      {selectedDept && (
-        <div
-          className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6 backdrop-blur-sm'
-          onClick={() => setSelectedDept(null)}
-        >
-          <div
-            className='relative max-h-[95vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white dark:bg-zinc-900 sm:rounded-3xl'
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Botón Cerrar */}
-            <button
-              onClick={() => setSelectedDept(null)}
-              className='absolute right-3 top-3 z-10 rounded-full bg-black/20 p-2 text-white transition-all hover:bg-black/40 sm:right-6 sm:top-6 sm:p-3'
-            >
-              <svg
-                className='h-5 w-5 sm:h-6 sm:w-6'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M6 18L18 6M6 6l12 12'
-                />
-              </svg>
-            </button>
-
-            {/* Imagen Grande */}
-            {selectedDept.prymary_image && (
-              <div className='relative h-48 w-full overflow-hidden sm:h-64 md:h-96'>
-                <Image
-                  src={selectedDept.prymary_image}
-                  alt={selectedDept.name_model_department || 'Departamento'}
-                  fill
-                  className='object-cover'
-                />
-              </div>
-            )}
-
-            {/* Contenido */}
-            <div className='p-4 sm:p-6 md:p-8'>
-              {/* Título */}
-              <h2 className='mb-2 text-2xl font-black text-zinc-900 dark:text-white sm:mb-3 sm:text-3xl md:text-4xl'>
-                {selectedDept.name_model_department || 'Modelo'}
-              </h2>
-
-              {/* Información Principal */}
-              <div className='mb-6 flex flex-wrap gap-4 border-b border-zinc-200 pb-6 dark:border-zinc-700 sm:mb-8 sm:gap-6 sm:pb-8'>
-                {selectedDept.base_square_meters && (
-                  <div>
-                    <p className='text-xs text-zinc-600 dark:text-zinc-400 sm:text-sm'>
-                      Superficie Base
-                    </p>
-                    <p className='text-lg font-bold text-zinc-900 dark:text-white sm:text-2xl'>
-                      {selectedDept.base_square_meters} m²
-                    </p>
-                  </div>
-                )}
-                {selectedDept.balcony && (
-                  <div>
-                    <p className='text-xs text-zinc-600 dark:text-zinc-400 sm:text-sm'>
-                      Característica
-                    </p>
-                    <p className='text-lg font-bold text-amber-600 dark:text-amber-400 sm:text-2xl'>
-                      Con Balcón
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Características */}
-              {selectedDept.features && selectedDept.features.length > 0 && (
-                <div className='mb-6 sm:mb-8'>
-                  <h3 className='mb-3 text-lg font-bold text-zinc-900 dark:text-white sm:mb-4 sm:text-xl'>
-                    Características
-                  </h3>
-                  <div className='grid grid-cols-1 gap-2 sm:gap-3 md:grid-cols-2'>
-                    {selectedDept.features.map((feat) => (
-                      <div
-                        key={feat.feature.id}
-                        className='flex items-center gap-2 rounded-lg bg-amber-50 p-2 dark:bg-amber-900/20 sm:p-3'
-                      >
-                        <span className='text-amber-600 dark:text-amber-400'>
-                          ✓
-                        </span>
-                        <span className='text-xs text-zinc-900 dark:text-white sm:text-sm'>
-                          {feat.feature.dfeatures_name}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Unidades */}
-              {selectedDept.units && selectedDept.units.length > 0 && (
-                <div>
-                  <h3 className='mb-3 text-lg font-bold text-zinc-900 dark:text-white sm:mb-4 sm:text-xl'>
-                    Unidades Disponibles
-                  </h3>
-                  <div className='space-y-2 overflow-x-auto'>
-                    <table className='w-full text-xs sm:text-sm'>
-                      <thead>
-                        <tr className='border-b border-zinc-200 dark:border-zinc-700'>
-                          <th className='px-2 py-2 text-left font-semibold text-zinc-900 dark:text-white sm:px-4'>
-                            Unidad
-                          </th>
-                          <th className='px-2 py-2 text-left font-semibold text-zinc-900 dark:text-white sm:px-4'>
-                            Piso
-                          </th>
-                          <th className='px-2 py-2 text-left font-semibold text-zinc-900 dark:text-white sm:px-4'>
-                            m²
-                          </th>
-                          <th className='px-2 py-2 text-left font-semibold text-zinc-900 dark:text-white sm:px-4'>
-                            Estado
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedDept.units.map((unit) => (
-                          <tr
-                            key={unit.id}
-                            className='border-b border-zinc-100 dark:border-zinc-800'
-                          >
-                            <td className='px-2 py-2 text-zinc-900 dark:text-white sm:px-4 sm:py-3'>
-                              {unit.unit_number || '-'}
-                            </td>
-                            <td className='px-2 py-2 text-zinc-900 dark:text-white sm:px-4 sm:py-3'>
-                              {unit.floor}
-                            </td>
-                            <td className='px-2 py-2 text-zinc-900 dark:text-white sm:px-4 sm:py-3'>
-                              {unit.real_square_meters || '-'}
-                            </td>
-                            <td className='px-2 py-2 sm:px-4 sm:py-3'>
-                              <span
-                                className={`rounded-full px-2 py-1 text-xs font-medium ${STATE_COLORS[unit.state].color}`}
-                              >
-                                {STATE_COLORS[unit.state].label}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );

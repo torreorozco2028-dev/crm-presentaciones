@@ -2,7 +2,10 @@
 
 import { revalidatePath } from 'next/cache';
 import CommonAreasEntity from '@/server/db/entities/commonareas';
-import { uploadMultipleImages, deleteFilesFromStorage } from '@/services/storage';
+import {
+  uploadMultipleImages,
+  deleteFilesFromStorage,
+} from '@/services/storage';
 
 const entity = new CommonAreasEntity();
 
@@ -18,14 +21,17 @@ export async function getCommonAreasByBuildingAction(buildingId: string) {
 export async function createCommonAreaAction(formData: FormData) {
   try {
     const batchFiles = formData.getAll('batch_images') as File[];
-    const batchUrls = batchFiles.length > 0 && batchFiles[0].size > 0 
-      ? await uploadMultipleImages(batchFiles) 
-      : [];
+    const batchUrls =
+      batchFiles.length > 0 && batchFiles[0].size > 0
+        ? await uploadMultipleImages(batchFiles)
+        : [];
 
     const newArea = {
       buildingId: formData.get('buildingId') as string,
       common_area_name: formData.get('common_area_name') as string,
-      common_area_description: formData.get('common_area_description') as string,
+      common_area_description: formData.get(
+        'common_area_description'
+      ) as string,
       batch_images: JSON.stringify(batchUrls),
     };
 

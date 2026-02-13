@@ -4,6 +4,7 @@ import { routing } from '@/i18n/routing';
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 import { notFound } from 'next/navigation';
+import { ThemeProvider } from '@/providers/theme-provider';
 export default async function PresentationsLayout({
   children,
   params,
@@ -24,12 +25,14 @@ export default async function PresentationsLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className='antialiased'>
-        <main>
-          <header>
-            <CreativeNavbar />
-          </header>
-          {children}
-        </main>
+        <ThemeProvider>
+          <main>
+            <header>
+              <CreativeNavbar />
+            </header>
+            {children}
+          </main>
+        </ThemeProvider>
       </body>
     </html>
   );
