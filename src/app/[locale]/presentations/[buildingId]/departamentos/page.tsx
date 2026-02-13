@@ -5,7 +5,14 @@ import {
   getDepartmentsByBuilding,
   getBuildingInfo,
 } from './actions/departments-actions';
-import { Modal, ModalBody, ModalHeader } from '@heroui/react';
+import {
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalHeader,
+  Image,
+  useDisclosure,
+} from '@heroui/react';
 import dynamic from 'next/dynamic';
 const Carousel = dynamic(() => import('@/components/carousel'), { ssr: false });
 
@@ -361,7 +368,7 @@ export default function DepartmentsPage() {
   const [departments, setDepartments] = useState<DepartmentModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isZoomed, setIsZoomed] = useState(false);
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -414,16 +421,12 @@ export default function DepartmentsPage() {
       </div>
     );
   }
-  console.log('SSOOMED', isZoomed);
-
   return (
     <div className='min-h-screen rounded-xl bg-white dark:bg-zinc-950'>
-      {/* Sección Hero con fondo del edificio */}
       <section
         id='departamentos-hero'
         className='relative h-64 w-full overflow-hidden rounded-xl pt-20 sm:h-80 sm:pt-16 md:h-96 md:pt-12 lg:h-screen lg:pt-0'
       >
-        {/* Fondo - Video o Imagen del edificio */}
         {building?.prymary_image && (
           <>
             {isVideo(building.prymary_image) ? (
@@ -445,10 +448,8 @@ export default function DepartmentsPage() {
             )}
           </>
         )}
-
         {/* Overlay oscuro */}
-        <div className='absolute inset-0 bg-gradient-to-r from-black/70 via-black/60 to-black/50' />
-
+        <div className='absolute inset-0 bg-gradient-to-r from-foreground/60 via-black/50 to-black/40' />
         {/* Contenido */}
         <div className='relative z-10 flex h-full items-center justify-start px-4 py-8 sm:px-6 sm:py-12 md:px-12 lg:px-20'>
           <div className='flex w-full max-w-2xl flex-col justify-center space-y-2 sm:space-y-3 md:space-y-4 lg:max-w-3xl'>
@@ -479,34 +480,26 @@ export default function DepartmentsPage() {
                   {/* Imagen Miniatura (Trigger) */}
                   <div
                     className='relative h-64 w-full cursor-zoom-in overflow-hidden rounded-2xl sm:h-80 md:h-[750px]'
-                    onClick={() => setIsZoomed(true)}
+                    onClick={onOpen}
                   >
                     <img
                       src={building.distribution_image}
-                      onClick={() => setIsZoomed(true)}
                       alt='Distribución del proyecto'
-                      className='h-full w-full object-contain transition-transform duration-300 hover:scale-105'
+                      className='h-full w-full object-contain transition-transform duration-300'
                     />
                   </div>
-
-                  {/* Modal Full Screen */}
-
                   <Modal
-                    className='animate-in fade-in fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 duration-200 md:p-10'
-                    onClick={() => setIsZoomed(false)}
+                    className='animate-in fade-in fixed inset-0 z-[100] flex items-center justify-center overflow-scroll bg-black/90 p-4 duration-200 md:p-10'
                     size='full'
-                    isOpen={isZoomed}
-                    onClose={() => setIsZoomed(false)}
+                    isOpen={isOpen}
+                    onOpenChange={onOpenChange}
                   >
-                    {' '}
-                    <ModalHeader></ModalHeader>
-                    <ModalBody>
-                      <img
-                        src={building.distribution_image}
-                        alt='Distribución completa'
-                        className='max-h-full max-w-full object-contain shadow-2xl transition-all'
-                      />
-                    </ModalBody>
+                    <ModalContent>
+                      <ModalHeader></ModalHeader>
+                      <ModalBody>
+                        <Image src={building.distribution_image} />
+                      </ModalBody>
+                    </ModalContent>
                   </Modal>
                 </div>
               )}
