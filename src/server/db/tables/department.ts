@@ -96,3 +96,18 @@ export const unitDepartmentRelations = relations(
     sales: many(sales),
   })
 );
+
+export const modelToFeaturesRelations = relations(modelToFeatures, ({ one }) => ({
+  model: one(department_model, {
+    fields: [modelToFeatures.modelId],
+    references: [department_model.id],
+  }),
+  feature: one(department_features, {
+    fields: [modelToFeatures.featureId],
+    references: [department_features.id],
+  }),
+}));
+
+export const departmentFeaturesRelations = relations(department_features, ({ many }) => ({
+  models: many(modelToFeatures),
+}));

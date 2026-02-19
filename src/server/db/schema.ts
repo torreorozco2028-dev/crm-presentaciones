@@ -11,6 +11,8 @@ import {
   modelToFeatures,
   departmentModelRelations,
   unitDepartmentRelations,
+  modelToFeaturesRelations,
+  departmentFeaturesRelations
 } from './tables/department';
 import {
   building,
@@ -46,6 +48,8 @@ export {
   department_model,
   unit_department,
   department_features,
+  modelToFeaturesRelations,
+  departmentFeaturesRelations,
   generalFeaturesRelations,
   buildingToFeaturesRelations,
   building_to_features,

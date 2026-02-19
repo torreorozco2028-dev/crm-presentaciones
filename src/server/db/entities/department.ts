@@ -46,14 +46,24 @@ export default class DepartmentEntity {
     });
   }
 
-  async getModelsByBuilding(buildingId: string) {
-    return await db.query.department_model.findMany({
+async getModelsByBuilding(buildingId: string) {
+    const results = await db.query.department_model.findMany({
       where: eq(department_model.buildingId, buildingId),
       with: {
         units: true,
+        features: {
+          with: {
+            feature: true,
+          },
+        },
       },
       orderBy: [desc(department_model.createdAt)],
     });
+
+    return results.map(model => ({
+      ...model,
+      features: model.features.map(f => f.feature)
+    }));
   }
 
   async updateModel(id: string, data: ModelUpdate, featureIds?: string[]) {

@@ -1,25 +1,14 @@
 'use server';
 
 import DepartmentEntity from '@/server/db/entities/department';
-import Building from '@/server/db/entities/building';
-
-const departmentEntity = new DepartmentEntity();
-const buildingEntity = new Building();
+import BuildingEntity from '@/server/db/entities/building';
 
 export async function getDepartmentsByBuilding(buildingId: string) {
-  try {
-    return await departmentEntity.getModelsByBuilding(buildingId);
-  } catch (err) {
-    console.error(err);
-    return [];
-  }
+  const entity = new DepartmentEntity();
+  return await entity.getModelsByBuilding(buildingId);
 }
 
 export async function getBuildingInfo(buildingId: string) {
-  try {
-    return await buildingEntity.getBuildingById(buildingId);
-  } catch (err) {
-    console.error(err);
-    return null;
-  }
+  const entity = new BuildingEntity();
+  return await entity.getBuildingById(buildingId);
 }
