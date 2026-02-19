@@ -7,15 +7,21 @@ interface Props {
   selectedIdPlan: string | null;
 }
 
-export default function InteractiveSVG({ svgUrl, onSelectModel, selectedIdPlan }: Props) {
+export default function InteractiveSVG({
+  svgUrl,
+  onSelectModel,
+  selectedIdPlan,
+}: Props) {
   const [svgContent, setSvgContent] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch(svgUrl)
-      .then(res => res.text())
-      .then(text => {
-        const cleanText = text.replace(/fill="[^"]*"/g, '').replace(/stroke="[^"]*"/g, '');
+      .then((res) => res.text())
+      .then((text) => {
+        const cleanText = text
+          .replace(/fill="[^"]*"/g, '')
+          .replace(/stroke="[^"]*"/g, '');
         setSvgContent(cleanText);
       });
   }, [svgUrl]);
@@ -36,23 +42,30 @@ export default function InteractiveSVG({ svgUrl, onSelectModel, selectedIdPlan }
   }, [svgContent, onSelectModel]);
 
   return (
-    <div className="w-full h-full flex items-center justify-center p-4">
-      <div 
+    <div className='flex h-full w-full items-center justify-center p-4'>
+      <div
         ref={containerRef}
-        className="interactive-svg-container w-full h-full"
+        className='interactive-svg-container h-full w-full'
         dangerouslySetInnerHTML={{ __html: svgContent || '' }}
       />
       <style jsx global>{`
-        .interactive-svg-container svg { width: 100%; height: 100%; }
-        .interactive-svg-container [id] { 
-          cursor: pointer; 
-          transition: all 0.3s; 
-          fill: rgba(0,0,0,0.1); 
+        .interactive-svg-container svg {
+          width: 100%;
+          height: 100%;
+        }
+        .interactive-svg-container [id] {
+          cursor: pointer;
+          transition: all 0.3s;
+          fill: rgba(0, 0, 0, 0.1);
           stroke: #ccc;
         }
-        .interactive-svg-container [id]:hover { fill: rgba(251, 191, 36, 0.4); }
+        .interactive-svg-container [id]:hover {
+          fill: rgba(251, 191, 36, 0.4);
+        }
         /* Resaltar el seleccionado */
-        ${selectedIdPlan ? `.interactive-svg-container #[id="${selectedIdPlan}"] { fill: #fbbf24 !important; stroke: #b45309; }` : ''}
+        ${selectedIdPlan
+          ? `.interactive-svg-container #[id="${selectedIdPlan}"] { fill: #fbbf24 !important; stroke: #b45309; }`
+          : ''}
       `}</style>
     </div>
   );

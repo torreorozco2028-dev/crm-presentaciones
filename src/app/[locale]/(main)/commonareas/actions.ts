@@ -51,7 +51,9 @@ export async function deleteCommonAreaAction(id: string) {
 
     await entity.deleteCommonArea(id);
 
-    const images = area.batch_images ? JSON.parse(area.batch_images) : [];
+    const images = area.batch_images
+      ? JSON.parse(area.batch_images as string)
+      : [];
     if (images.length > 0) {
       await deleteFilesFromStorage(images);
     }

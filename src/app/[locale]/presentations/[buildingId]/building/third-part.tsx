@@ -1,7 +1,12 @@
 'use client';
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
+import {
+  motion,
+  useScroll,
+  useTransform,
+  AnimatePresence,
+} from 'framer-motion';
 import Image from 'next/image';
 import { Plus, X, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -25,8 +30,9 @@ const LAYOUT_PATTERN = [
   { width: '600px', height: '610px', top: '25%', left: '1650px' },
 ];
 
-
-export default function CommonAreasSection({ commonAreas }: CommonAreasSectionProps) {
+export default function CommonAreasSection({
+  commonAreas,
+}: CommonAreasSectionProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [selectedArea, setSelectedArea] = useState<CommonArea | null>(null);
 
@@ -34,7 +40,7 @@ export default function CommonAreasSection({ commonAreas }: CommonAreasSectionPr
     target: containerRef,
   });
 
-  const x = useTransform(scrollYProgress, [0, 1], ["0%", "-70%"]);
+  const x = useTransform(scrollYProgress, [0, 1], ['0%', '-70%']);
 
   useEffect(() => {
     if (selectedArea) {
@@ -48,47 +54,57 @@ export default function CommonAreasSection({ commonAreas }: CommonAreasSectionPr
   const totalBlocks = Math.ceil(commonAreas.length / itemsPerBlock);
 
   return (
-    <section ref={containerRef} className="relative h-[400vh] bg-white">
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
-        
-        <div className="absolute top-12 left-12 z-0">
-          <h2 className="text-[#0a192f] text-[12vw] font-serif opacity-[0.03] leading-none select-none">
+    <section
+      ref={containerRef}
+      id='areas-comunes'
+      className='relative h-[400vh] bg-white dark:bg-slate-950'
+    >
+      <div className='sticky top-0 flex h-screen w-full items-center overflow-hidden'>
+        <div className='absolute left-12 top-12 z-0'>
+          <h2 className='select-none font-serif text-[12vw] leading-none text-[#0a192f] opacity-[0.03]'>
             AMENITIES
           </h2>
         </div>
 
-        <motion.div style={{ x }} className="flex relative h-full items-center pl-[10vw]">
-          
-          <div className="min-w-[40vw] flex flex-col justify-center pr-20">
-            <motion.span 
+        <motion.div
+          style={{ x }}
+          className='relative flex h-full items-center pl-[10vw]'
+        >
+          <div className='flex min-w-[40vw] flex-col justify-center pr-20'>
+            <motion.span
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
-              className="text-[10px] tracking-[0.8em] uppercase text-[#0a192f]/40 font-bold mb-6"
+              className='mb-6 text-[10px] font-bold uppercase tracking-[0.8em] text-[#0a192f]/40'
             >
               Espacios Compartidos
             </motion.span>
-            <h3 className="text-[#0a192f] text-6xl lg:text-8xl font-serif leading-tight">
-              ÁREAS <br /> <span className="italic">COMUNES</span>
+            <h3 className='font-serif text-6xl leading-tight text-[#0a192f] lg:text-8xl'>
+              ÁREAS <br /> <span className='italic'>COMUNES</span>
             </h3>
-            <p className="text-[#0a192f]/60 text-sm max-w-xs mt-8 font-light leading-relaxed">
-              Diseño pensado en la comunidad y el bienestar. Desliza para explorar cada detalle arquitectónico.
+            <p className='mt-8 max-w-xs text-sm font-light leading-relaxed text-[#0a192f]/60'>
+              Diseño pensado en la comunidad y el bienestar. Desliza para
+              explorar cada detalle arquitectónico.
             </p>
-            <div className="flex items-center gap-4 mt-12 text-[#0a192f]">
-               <div className="w-12 h-[1px] bg-[#0a192f]/20" />
-               <span className="text-[10px] font-bold tracking-widest uppercase animate-pulse">Scroll para explorar</span>
-               <ArrowRight size={20} />
+            <div className='mt-12 flex items-center gap-4 text-[#0a192f]'>
+              <div className='h-[1px] w-12 bg-[#0a192f]/20' />
+              <span className='animate-pulse text-[10px] font-bold uppercase tracking-widest'>
+                Scroll para explorar
+              </span>
+              <ArrowRight size={20} />
             </div>
           </div>
 
           <div
-            className="flex relative h-[80vh]"
-            style={{ minWidth: `${totalBlocks * 140}vw` }}>
-              
+            className='relative flex h-[80vh]'
+            style={{ minWidth: `${totalBlocks * 140}vw` }}
+          >
             {commonAreas?.map((area, index) => {
               const layout = LAYOUT_PATTERN[index % LAYOUT_PATTERN.length];
-              const images = Array.isArray(area.batch_images) ? area.batch_images : [];
+              const images = Array.isArray(area.batch_images)
+                ? area.batch_images
+                : [];
               if (images.length === 0) return null;
-              
+
               return (
                 <motion.div
                   key={area.id}
@@ -99,21 +115,20 @@ export default function CommonAreasSection({ commonAreas }: CommonAreasSectionPr
                     left: `calc(${layout.left} + ${Math.floor(index / 6) * 180}vw)`,
                     zIndex: (commonAreas.length - index) * 10,
                   }}
-                  className="absolute group rounded-[2vw] overflow-hidden shadow-2xl bg-gray-100"
-
+                  className='group absolute overflow-hidden rounded-[2vw] bg-gray-100 shadow-2xl'
                 >
-                  <div className="relative w-full h-full">
+                  <div className='relative h-full w-full'>
                     <ImageSlider images={images} index={index} />
-                    
-                    <div className="absolute top-0 left-0 w-full p-6 bg-gradient-to-b from-black/60 to-transparent z-20">
-                        <h4 className="text-white text-xs tracking-[0.3em] font-bold uppercase">
-                           {area.common_area_name}
-                        </h4>
+
+                    <div className='absolute left-0 top-0 z-20 w-full bg-gradient-to-b from-black/60 to-transparent p-6'>
+                      <h4 className='text-xs font-bold uppercase tracking-[0.3em] text-white'>
+                        {area.common_area_name}
+                      </h4>
                     </div>
 
-                    <button 
+                    <button
                       onClick={() => setSelectedArea(area)}
-                      className="absolute bottom-6 left-6 z-30 w-12 h-12 bg-white/90 text-[#0a192f] rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95"
+                      className='absolute bottom-6 left-6 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-[#0a192f] shadow-lg transition-transform hover:scale-110 active:scale-95'
                     >
                       <Plus size={24} />
                     </button>
@@ -127,9 +142,9 @@ export default function CommonAreasSection({ commonAreas }: CommonAreasSectionPr
 
       <AnimatePresence>
         {selectedArea && (
-          <AreaDetailModal 
-            area={selectedArea} 
-            onClose={() => setSelectedArea(null)} 
+          <AreaDetailModal
+            area={selectedArea}
+            onClose={() => setSelectedArea(null)}
           />
         )}
       </AnimatePresence>
@@ -137,7 +152,13 @@ export default function CommonAreasSection({ commonAreas }: CommonAreasSectionPr
   );
 }
 
-function AreaDetailModal({ area, onClose }: { area: CommonArea, onClose: () => void }) {
+function AreaDetailModal({
+  area,
+  onClose,
+}: {
+  area: CommonArea;
+  onClose: () => void;
+}) {
   const [currentIdx, setCurrentIdx] = useState(0);
 
   const nextImage = useCallback(() => {
@@ -145,83 +166,103 @@ function AreaDetailModal({ area, onClose }: { area: CommonArea, onClose: () => v
   }, [area.batch_images.length]);
 
   const prevImage = useCallback(() => {
-    setCurrentIdx((prev) => (prev - 1 + area.batch_images.length) % area.batch_images.length);
+    setCurrentIdx(
+      (prev) => (prev - 1 + area.batch_images.length) % area.batch_images.length
+    );
   }, [area.batch_images.length]);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10">
+    <div className='fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10'>
       {/* Backdrop */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="absolute inset-0 bg-black/80 backdrop-blur-xl"
+        className='absolute inset-0 bg-black/80 backdrop-blur-xl'
       />
 
       <motion.div
         initial={{ opacity: 0, y: 50, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 50, scale: 0.95 }}
-        className="relative z-[110] w-full max-w-6xl bg-white dark:bg-neutral-900 rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-full max-h-[90vh]"
+        className='relative z-[110] flex h-full max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-neutral-900 md:flex-row'
       >
-        <div className="relative flex-1 bg-black flex items-center justify-center group">
-          <button onClick={onClose} className="absolute top-6 left-6 z-50 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full md:hidden">
+        <div className='group relative flex flex-1 items-center justify-center bg-black'>
+          <button
+            onClick={onClose}
+            className='absolute left-6 top-6 z-50 rounded-full bg-black/20 p-2 text-white hover:bg-black/40 md:hidden'
+          >
             <X size={20} />
           </button>
 
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode='wait'>
             <motion.div
               key={currentIdx}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="relative w-full h-full"
+              className='relative h-full w-full'
             >
-              <Image 
-                src={area.batch_images[currentIdx]} 
+              <Image
+                src={area.batch_images[currentIdx]}
                 alt={area.common_area_name}
                 fill
-                className="object-contain md:object-cover"
+                className='object-contain md:object-cover'
               />
             </motion.div>
           </AnimatePresence>
 
-          <div className="absolute inset-x-4 flex justify-between items-center pointer-events-none">
-            <button onClick={prevImage} className="pointer-events-auto w-12 h-12 rounded-full bg-white/10 backdrop-blur-md text-white flex items-center justify-center hover:bg-white/20 transition-all">
+          <div className='pointer-events-none absolute inset-x-4 flex items-center justify-between'>
+            <button
+              onClick={prevImage}
+              className='pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition-all hover:bg-white/20'
+            >
               <ChevronLeft size={32} />
             </button>
-            <button onClick={nextImage} className="pointer-events-auto w-12 h-12 rounded-full bg-white/10 backdrop-blur-md text-white flex items-center justify-center hover:bg-white/20 transition-all">
+            <button
+              onClick={nextImage}
+              className='pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition-all hover:bg-white/20'
+            >
               <ChevronRight size={32} />
             </button>
           </div>
         </div>
 
-        <div className="w-full md:w-[400px] p-8 md:p-12 overflow-y-auto flex flex-col">
-          <div className="flex justify-between items-start mb-8">
+        <div className='flex w-full flex-col overflow-y-auto p-8 md:w-[400px] md:p-12'>
+          <div className='mb-8 flex items-start justify-between'>
             <div>
-              <span className="text-[10px] tracking-[0.3em] font-bold text-orange-500 uppercase">Detalle de Amenidad</span>
-              <h2 className="text-3xl font-serif text-[#0a192f] dark:text-white mt-2">{area.common_area_name}</h2>
+              <span className='text-[10px] font-bold uppercase tracking-[0.3em] text-orange-500'>
+                Detalle de Amenidad
+              </span>
+              <h2 className='mt-2 font-serif text-3xl text-[#0a192f] dark:text-white'>
+                {area.common_area_name}
+              </h2>
             </div>
-            <button onClick={onClose} className="hidden md:flex p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-black">
+            <button
+              onClick={onClose}
+              className='hidden rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-black md:flex'
+            >
               <X size={24} />
             </button>
           </div>
 
-          <p className="text-gray-600 dark:text-gray-400 font-light leading-relaxed mb-10 text-lg">
-            {area.common_area_description || "Sin descripción disponible."}
+          <p className='mb-10 text-lg font-light leading-relaxed text-gray-600 dark:text-gray-400'>
+            {area.common_area_description || 'Sin descripción disponible.'}
           </p>
 
-          <div className="mt-auto">
-            <h4 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Galería de imágenes</h4>
-            <div className="grid grid-cols-4 gap-2">
+          <div className='mt-auto'>
+            <h4 className='mb-4 text-xs font-bold uppercase tracking-widest text-gray-400'>
+              Galería de imágenes
+            </h4>
+            <div className='grid grid-cols-4 gap-2'>
               {area.batch_images.map((img, i) => (
-                <button 
-                  key={i} 
+                <button
+                  key={i}
                   onClick={() => setCurrentIdx(i)}
-                  className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${currentIdx === i ? 'border-orange-500 scale-95' : 'border-transparent opacity-50 hover:opacity-100'}`}
+                  className={`relative aspect-square overflow-hidden rounded-lg border-2 transition-all ${currentIdx === i ? 'scale-95 border-orange-500' : 'border-transparent opacity-50 hover:opacity-100'}`}
                 >
-                  <Image src={img} alt="Thumb" fill className="object-cover" />
+                  <Image src={img} alt='Thumb' fill className='object-cover' />
                 </button>
               ))}
             </div>
@@ -257,22 +298,22 @@ function ImageSlider({ images, index }: { images: string[]; index: number }) {
   }, [images, index]);
 
   return (
-    <div className="w-full h-full relative bg-gray-200 overflow-hidden">
+    <div className='relative h-full w-full overflow-hidden bg-gray-200'>
       <AnimatePresence initial={false}>
         <motion.div
           key={images[current]}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 2, ease: "easeInOut" }}
-          className="absolute inset-0 w-full h-full"
+          transition={{ duration: 2, ease: 'easeInOut' }}
+          className='absolute inset-0 h-full w-full'
         >
           <Image
             src={images[current]}
-            alt="Common Area"
+            alt='Common Area'
             fill
-            sizes="(max-width: 1200px) 50vw, 33vw"
-            className="object-cover"
+            sizes='(max-width: 1200px) 50vw, 33vw'
+            className='object-cover'
             priority={index < 3}
           />
         </motion.div>

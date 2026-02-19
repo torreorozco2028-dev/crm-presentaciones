@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Modal,
@@ -12,7 +12,10 @@ import {
 } from '@heroui/react';
 import { Layers } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { getDepartmentsByBuilding, getBuildingInfo } from './actions/departments-actions';
+import {
+  getDepartmentsByBuilding,
+  getBuildingInfo,
+} from './actions/departments-actions';
 
 const Carousel = dynamic(() => import('@/components/carousel'), { ssr: false });
 
@@ -25,14 +28,13 @@ interface DepartmentModel {
   batch_images?: any;
 }
 
-function InteractiveSVG({ 
-  svgUrl, 
-  departments, 
-  onSelect, 
-  selectedId 
-}: { 
-  svgUrl: string; 
-  departments: DepartmentModel[]; 
+function InteractiveSVG({
+  svgUrl,
+  departments,
+  onSelect,
+}: {
+  svgUrl: string;
+  departments: DepartmentModel[];
   onSelect: (model: DepartmentModel) => void;
   selectedId?: string;
 }) {
@@ -41,11 +43,14 @@ function InteractiveSVG({
 
   useEffect(() => {
     fetch(svgUrl)
-      .then(res => res.text())
-      .then(text => {
+      .then((res) => res.text())
+      .then((text) => {
         const cleanSvg = text
-          .replace(/<style([\s\S]*?)<\/style>/gi, '') 
-          .replace(/<text/g, '<text style="pointer-events: none; user-select: none;"');
+          .replace(/<style([\s\S]*?)<\/style>/gi, '')
+          .replace(
+            /<text/g,
+            '<text style="pointer-events: none; user-select: none;"'
+          );
         setSvgContent(cleanSvg);
       });
   }, [svgUrl]);
@@ -57,11 +62,13 @@ function InteractiveSVG({
     const handleSvgClick = (e: MouseEvent) => {
       const target = e.target as SVGElement;
       const zone = target.closest('[id]');
-      
+
       if (zone) {
         const zoneId = zone.id.trim();
-        const model = departments.find(d => String(d.id_plan).trim() === zoneId);
-        
+        const model = departments.find(
+          (d) => String(d.id_plan).trim() === zoneId
+        );
+
         if (model) {
           onSelect(model);
         }
@@ -73,9 +80,9 @@ function InteractiveSVG({
   }, [svgContent, departments, onSelect]);
 
   return (
-    <div 
-      ref={containerRef} 
-      className="interactive-svg-container w-full h-full flex items-center justify-center p-6"
+    <div
+      ref={containerRef}
+      className='interactive-svg-container flex h-full w-full items-center justify-center p-6'
       dangerouslySetInnerHTML={{ __html: svgContent || '' }}
     />
   );
@@ -83,15 +90,20 @@ function InteractiveSVG({
 
 export default function DepartmentsPage() {
   const { buildingId } = useParams();
-  const [data, setData] = useState<{ building: any; models: DepartmentModel[] } | null>(null);
-  const [selectedModel, setSelectedModel] = useState<DepartmentModel | null>(null);
+  const [data, setData] = useState<{
+    building: any;
+    models: DepartmentModel[];
+  } | null>(null);
+  const [selectedModel, setSelectedModel] = useState<DepartmentModel | null>(
+    null
+  );
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   useEffect(() => {
     if (buildingId) {
       Promise.all([
         getBuildingInfo(buildingId as string),
-        getDepartmentsByBuilding(buildingId as string)
+        getDepartmentsByBuilding(buildingId as string),
       ]).then(([b, m]) => {
         setData({ building: b as any, models: m as any });
         if (m && m.length > 0) setSelectedModel(m[0] as any);
@@ -99,10 +111,16 @@ export default function DepartmentsPage() {
     }
   }, [buildingId]);
 
-  if (!data) return <div className="h-screen flex items-center justify-center bg-[#0a192f] text-white">Cargando...</div>;
+  if (!data)
+    return (
+      <div className='flex h-screen items-center justify-center bg-[#0a192f] text-white'>
+        Cargando...
+      </div>
+    );
 
-  const currentImage = selectedModel?.prymary_image || data.building.distribution_image;
-  
+  const currentImage =
+    selectedModel?.prymary_image || data.building.distribution_image;
+
   const getGallery = () => {
     const raw = selectedModel?.batch_images;
     if (!raw) return [];
@@ -113,42 +131,55 @@ export default function DepartmentsPage() {
     }
   };
   const galleryImages = getGallery();
-
+  console.log('Gallery Images:', galleryImages);
   return (
-    <div className="min-h-screen bg-[#0a192f] p-4 lg:p-10 flex flex-col items-center">
-      
-      <div className="w-full max-w-[1700px] flex flex-col lg:flex-row gap-8 h-[calc(100vh-140px)]">
-        
-        <section className="w-full lg:w-[70%] relative rounded-[40px] overflow-hidden bg-zinc-900/40 border border-white/5 shadow-2xl">
-          <AnimatePresence mode="wait">
+    <div
+      id='distribucion'
+      className='flex min-h-screen flex-col items-center bg-[#0a192f] p-4 lg:p-10'
+    >
+      <div className='flex h-[calc(100vh-140px)] w-full max-w-[1700px] flex-col gap-8 lg:flex-row'>
+        <section className='relative w-full overflow-hidden rounded-[40px] border border-white/5 bg-zinc-900/40 shadow-2xl lg:w-[70%]'>
+          <AnimatePresence mode='wait'>
             <motion.div
               key={selectedModel?.id || 'base'}
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.02 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-              className="w-full h-full flex items-center justify-center p-12"
+              transition={{ duration: 0.5, ease: 'easeInOut' }}
+              className='flex h-full w-full items-center justify-center p-12'
             >
               {currentImage ? (
-                <img src={currentImage} className="w-full h-full object-contain" alt="Plan" />
+                <img
+                  src={currentImage}
+                  className='h-full w-full object-contain'
+                  alt='Plan'
+                />
               ) : (
-                <p className="text-zinc-500 font-serif text-2xl uppercase tracking-widest">Seleccione un área en el mapa</p>
+                <p className='font-serif text-2xl uppercase tracking-widest text-zinc-500'>
+                  Seleccione un área en el mapa
+                </p>
               )}
             </motion.div>
           </AnimatePresence>
 
           {selectedModel && (
-            <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end">
-              <div className="bg-black/20 backdrop-blur-md p-8 rounded-3xl border border-white/10">
-                <p className="text-[#ffffff] font-bold text-[10px] tracking-[0.4em] uppercase mb-2">Detalles del Modelo</p>
-                <h1 className="text-white text-5xl font-serif mb-2">{selectedModel.name_model_department}</h1>
-                <p className="text-zinc-400 text-2xl">{selectedModel.base_square_meters} m² totales</p>
+            <div className='absolute bottom-12 left-12 right-12 flex items-end justify-between'>
+              <div className='rounded-3xl border border-white/10 bg-black/20 p-8 backdrop-blur-md'>
+                <p className='mb-2 text-[10px] font-bold uppercase tracking-[0.4em] text-[#ffffff]'>
+                  Detalles del Modelo
+                </p>
+                <h1 className='mb-2 font-serif text-5xl text-white'>
+                  {selectedModel.name_model_department}
+                </h1>
+                <p className='text-2xl text-zinc-400'>
+                  {selectedModel.base_square_meters} m² totales
+                </p>
               </div>
 
               {galleryImages.length > 0 && (
-                <Button 
+                <Button
                   onPress={onOpen}
-                  className="bg-white text-black h-20 px-10 rounded-3xl font-bold text-lg shadow-2xl hover:scale-105 transition-all flex gap-3"
+                  className='flex h-20 gap-3 rounded-3xl bg-white px-10 text-lg font-bold text-black shadow-2xl transition-all hover:scale-105'
                 >
                   <Layers size={24} /> GALERIA ({galleryImages.length})
                 </Button>
@@ -157,15 +188,16 @@ export default function DepartmentsPage() {
           )}
         </section>
 
-        <aside className="w-full lg:w-[30%] flex flex-col gap-6">
-
-          <div className="h-[100%] bg-white rounded-[40px] overflow-hidden relative shadow-2xl">
-            <div className="absolute top-6 left-8 z-10 bg-zinc-100 px-4 py-2 rounded-2xl border border-zinc-200">
-              <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-black">Mapa Interactivo</p>
+        <aside className='flex w-full flex-col gap-6 lg:w-[30%]'>
+          <div className='relative h-[100%] overflow-hidden rounded-[40px] bg-white shadow-2xl'>
+            <div className='absolute left-8 top-6 z-10 rounded-2xl border border-zinc-200 bg-zinc-100 px-4 py-2'>
+              <p className='text-[10px] font-black uppercase tracking-widest text-zinc-500'>
+                Mapa Interactivo
+              </p>
             </div>
-            
-            <InteractiveSVG 
-              svgUrl={data.building.plan_image} 
+
+            <InteractiveSVG
+              svgUrl={data.building.plan_image}
               departments={data.models}
               onSelect={setSelectedModel}
               selectedId={selectedModel?.id_plan}
@@ -174,18 +206,18 @@ export default function DepartmentsPage() {
         </aside>
       </div>
 
-      <Modal 
-        isOpen={isOpen} 
-        onOpenChange={onOpenChange} 
-        size="5xl" 
-        backdrop="blur"
-        className="bg-zinc-950/90 border border-white/10"
+      <Modal
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        size='5xl'
+        backdrop='blur'
+        className='border border-white/10 bg-zinc-950/90'
       >
         <ModalContent>
-          <ModalBody className="p-0">
-             <div className="h-[85vh] w-full">
-                <Carousel images={galleryImages} height="h-full" />
-             </div>
+          <ModalBody className='p-0'>
+            <div className='h-[85vh] w-full'>
+              <Carousel images={galleryImages} height='h-full' />
+            </div>
           </ModalBody>
         </ModalContent>
       </Modal>
@@ -207,14 +239,16 @@ export default function DepartmentsPage() {
           stroke: #232789;
           stroke-width: 2px;
         }
-        ${selectedModel ? `
+        ${selectedModel
+          ? `
           .interactive-svg-container #[id="${selectedModel.id_plan}"] {
             fill: #13fcc5 !important; /* Zinc 900 */
             stroke: #0bf54d !important;
             stroke-width: 3px !important;
             filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.3));
           }
-        ` : ''}
+        `
+          : ''}
       `}</style>
     </div>
   );

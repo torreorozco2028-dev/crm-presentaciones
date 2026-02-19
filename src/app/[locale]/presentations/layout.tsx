@@ -23,7 +23,7 @@ export default async function PresentationsLayout({
   }
 
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning className='scroll-smooth'>
       <body className='antialiased'>
         <ThemeProvider>
           <main>

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useParams } from 'next/navigation';
+import { useTheme } from 'next-themes';
 import {
   motion,
   AnimatePresence,
@@ -12,7 +12,8 @@ import {
 } from 'framer-motion';
 import { FiMenu, FiX, FiChevronDown } from 'react-icons/fi';
 
-const LOGO_SRC = '/logo1.png';
+const LOGO_WHITE = '/logo2.png';
+const LOGO_DARK = '/logo1.png';
 
 const BASE_NAV_LINKS = [
   {
@@ -25,31 +26,27 @@ const BASE_NAV_LINKS = [
     ],
   },
   { title: 'AREAS COMUNES', href: '#areas-comunes' },
-  { title: 'DISTRIBUCION', href: '#distribucion' },
   { title: 'EQUIPO', href: '#equipo' },
 ];
 
 export default function CreativeNavbar() {
-  const params = useParams();
-  const buildingId = params?.buildingId as string | undefined;
-  const locale = params?.locale as string | undefined;
-
+  const { theme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
-
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  const logoSrc = mounted && theme === 'dark' ? LOGO_WHITE : LOGO_DARK;
   const NAV_LINKS = BASE_NAV_LINKS.map((link) => {
-    if (link.title === 'DISTRIBUCION') {
+    if (link.title === 'INICIO') {
       return {
         ...link,
         dropdown: [
-          {
-            title: 'Departamentos',
-            href: buildingId
-              ? `/${locale}/presentations/${buildingId}/departamentos`
-              : '#distribucion',
-          },
-          { title: 'Precio', href: '#precio' },
+          { title: 'Introducción', href: '#introduccion' },
+          { title: 'Ubicación', href: '#ubicacion' },
+          { title: 'Departamentos', href: '#departamentos' },
         ],
       };
     }
@@ -121,13 +118,13 @@ export default function CreativeNavbar() {
         transition={{ duration: 0.3, ease: 'easeInOut' }}
         className='fixed left-0 right-0 top-4 z-50 flex justify-center px-4'
       >
-        <div className='flex w-full max-w-6xl items-center justify-between rounded-full border border-white/20 bg-foreground-50/70 px-6 py-3 shadow-lg backdrop-blur-xl dark:border-zinc-800/50 dark:bg-black/60'>
+        <div className='flex w-full max-w-6xl items-center justify-between rounded-full border border-white/20 bg-foreground-50/10 px-6 py-3 shadow-lg backdrop-blur-sm dark:border-zinc-800/50 dark:bg-black/20'>
           <Link
             href='/'
-            className='relative flex h-10 w-auto items-center overflow-hidden rounded-full'
+            className='relative flex h-10 w-auto items-center overflow-hidden rounded-full backdrop-blur-none'
           >
             <Image
-              src={LOGO_SRC}
+              src={logoSrc}
               alt='Logo'
               width={120}
               height={40}

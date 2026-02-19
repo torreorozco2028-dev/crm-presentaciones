@@ -33,6 +33,13 @@ export const menuOptions = {
       displayDivider: false,
     },
     {
+      key: 'pointsofinterest',
+      label: 'menu.pointsofinterest',
+      path: '/pointsofinterest',
+      icon: 'MapPin',
+      displayDivider: true,
+    },
+    {
       key: 'generalfeatures',
       label: 'menu.generalfeatures',
       path: '/generalfeatures',

@@ -68,8 +68,10 @@ export default class BuildingEntity {
             feature: true,
           },
         },
-        pointsOfInterest: true, 
+        pointsOfInterest: true,
         commonAreas: true,
+        salesStages: true,
+        units: true,
       },
     });
   }

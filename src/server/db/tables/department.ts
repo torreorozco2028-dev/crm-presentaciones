@@ -37,6 +37,9 @@ export const unit_department = pgTable('unit_department', {
   unit_number: varchar({ length: 20 }),
   floor: integer().notNull(),
   real_square_meters: integer(),
+  buildingId: uuid('building_id')
+    .references(() => building.id)
+    .notNull(),
   modelId: uuid('model_id')
     .references(() => department_model.id)
     .notNull(),
@@ -93,21 +96,31 @@ export const unitDepartmentRelations = relations(
       fields: [unit_department.modelId],
       references: [department_model.id],
     }),
+    building: one(building, {
+      fields: [unit_department.buildingId],
+      references: [building.id],
+    }),
     sales: many(sales),
   })
 );
 
-export const modelToFeaturesRelations = relations(modelToFeatures, ({ one }) => ({
-  model: one(department_model, {
-    fields: [modelToFeatures.modelId],
-    references: [department_model.id],
-  }),
-  feature: one(department_features, {
-    fields: [modelToFeatures.featureId],
-    references: [department_features.id],
-  }),
-}));
+export const modelToFeaturesRelations = relations(
+  modelToFeatures,
+  ({ one }) => ({
+    model: one(department_model, {
+      fields: [modelToFeatures.modelId],
+      references: [department_model.id],
+    }),
+    feature: one(department_features, {
+      fields: [modelToFeatures.featureId],
+      references: [department_features.id],
+    }),
+  })
+);
 
-export const departmentFeaturesRelations = relations(department_features, ({ many }) => ({
-  models: many(modelToFeatures),
-}));
+export const departmentFeaturesRelations = relations(
+  department_features,
+  ({ many }) => ({
+    models: many(modelToFeatures),
+  })
+);

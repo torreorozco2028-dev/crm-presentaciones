@@ -9,7 +9,7 @@ import {
   jsonb,
   primaryKey,
 } from 'drizzle-orm/pg-core';
-import { department_model } from './department';
+import { department_model, unit_department } from './department';
 import { common_areas } from './common_areas';
 import { construction_phases } from './construction_phases';
 import { points_interest } from './pointsofinterest';
@@ -62,6 +62,7 @@ export const building_to_features = pgTable(
 export const buildingRelations = relations(building, ({ many }) => ({
   buildingToFeatures: many(building_to_features),
   models: many(department_model),
+  units: many(unit_department),
   commonAreas: many(common_areas),
   constructionPhases: many(construction_phases),
   pointsOfInterest: many(points_interest),

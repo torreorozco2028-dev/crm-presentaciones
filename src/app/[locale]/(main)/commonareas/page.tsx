@@ -131,7 +131,11 @@ export default function CommonAreasPage() {
           loadingContent={<Spinner size='lg' />}
         >
           {(areas ?? []).map((a) => {
-            const images = a.batch_images ? JSON.parse(a.batch_images) : [];
+            const images = a.batch_images
+              ? typeof a.batch_images === 'string'
+                ? JSON.parse(a.batch_images)
+                : a.batch_images
+              : [];
             return (
               <TableRow key={a.id}>
                 <TableCell className='font-bold'>
