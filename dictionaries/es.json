@@ -24,14 +24,16 @@
       "building": "Edificios",
       "settings": "Configuración",
       "avatar": "Avatar",
-      "generalfeatures": "Acabados generales"
+      "generalfeatures": "Acabados generales",
+      "pointsofinterest": "Puntos de interés"
     },
     "intros": {
       "users": "Gestiona tu equipo y controla el acceso a tu sistema de manera eficiente.",
       "launch": "Lanza tus presentaciones facilmente",
       "buildings": "Gestiona y supervisa todos tus presentaciones de proyectos con facilidad.",
       "settings": "Configuraciones",
-      "generalfeatures": "Acabados generales"
+      "generalfeatures": "Acabados generales",
+      "pointsofinterest": "Administra los puntos de interés cerca de tu edificio para proporcionar una experiencia más inmersiva para tus clientes."
     }
   },
   "Auth": {

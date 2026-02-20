@@ -83,14 +83,7 @@ export default function PointsOfInterestPage() {
   return (
     <div className='space-y-6 p-8'>
       <div className='flex items-center justify-between'>
-        <div>
-          <h1 className='text-2xl font-bold text-foreground'>
-            Puntos de Interes
-          </h1>
-          <p className='text-default-500'>
-            Gestiona lugares cercanos y estrategicos para cada proyecto
-          </p>
-        </div>
+        <div></div>
         <Button
           color='primary'
           onPress={onOpen}

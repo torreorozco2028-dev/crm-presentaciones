@@ -19,7 +19,6 @@ export const sales = pgTable('sales', {
   sales_date: timestamp().default(sql`now()`),
   payment_method: varchar({ length: 50 }),
   payment_notes: text(),
-
   clientId: uuid('client_id')
     .references(() => client.id)
     .notNull(),
@@ -29,7 +28,6 @@ export const sales = pgTable('sales', {
   userId: uuid('user_id')
     .references(() => users.id)
     .notNull(),
-
   createdAt: timestamp('created_at').default(sql`now()`),
   updatedAt: timestamp('updated_at').default(sql`now()`),
 });
