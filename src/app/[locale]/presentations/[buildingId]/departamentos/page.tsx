@@ -1,6 +1,5 @@
 'use client';
 
-import { useParams } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -12,10 +11,6 @@ import {
 } from '@heroui/react';
 import { Layers } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import {
-  getDepartmentsByBuilding,
-  getBuildingInfo,
-} from './actions/departments-actions';
 
 const Carousel = dynamic(() => import('@/components/carousel'), { ssr: false });
 
@@ -32,6 +27,7 @@ function InteractiveSVG({
   svgUrl,
   departments,
   onSelect,
+  selectedId,
 }: {
   svgUrl: string;
   departments: DepartmentModel[];
@@ -68,16 +64,21 @@ function InteractiveSVG({
         const model = departments.find(
           (d) => String(d.id_plan).trim() === zoneId
         );
-
         if (model) {
-          onSelect(model);
+          // Si el modelo ya está seleccionado, deseleccionar
+          if (model.id_plan === selectedId) {
+            onSelect(null as any);
+          } else {
+            // Si no está seleccionado, seleccionar
+            onSelect(model);
+          }
         }
       }
     };
 
     container.addEventListener('click', handleSvgClick);
     return () => container.removeEventListener('click', handleSvgClick);
-  }, [svgContent, departments, onSelect]);
+  }, [svgContent, departments, onSelect, selectedId]);
 
   return (
     <div
@@ -88,28 +89,11 @@ function InteractiveSVG({
   );
 }
 
-export default function DepartmentsPage() {
-  const { buildingId } = useParams();
-  const [data, setData] = useState<{
-    building: any;
-    models: DepartmentModel[];
-  } | null>(null);
+export default function DepartmentsPage({ data }: { data: any }) {
   const [selectedModel, setSelectedModel] = useState<DepartmentModel | null>(
     null
   );
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-
-  useEffect(() => {
-    if (buildingId) {
-      Promise.all([
-        getBuildingInfo(buildingId as string),
-        getDepartmentsByBuilding(buildingId as string),
-      ]).then(([b, m]) => {
-        setData({ building: b as any, models: m as any });
-        if (m && m.length > 0) setSelectedModel(m[0] as any);
-      });
-    }
-  }, [buildingId]);
 
   if (!data)
     return (
@@ -118,9 +102,7 @@ export default function DepartmentsPage() {
       </div>
     );
 
-  const currentImage =
-    selectedModel?.prymary_image || data.building.distribution_image;
-
+  const currentImage = selectedModel?.prymary_image || data.distribution_image;
   const getGallery = () => {
     const raw = selectedModel?.batch_images;
     if (!raw) return [];
@@ -131,14 +113,13 @@ export default function DepartmentsPage() {
     }
   };
   const galleryImages = getGallery();
-  console.log('Gallery Images:', galleryImages);
   return (
     <div
       id='distribucion'
-      className='flex min-h-screen flex-col items-center bg-[#ffffff] p-4 lg:p-10'
+      className='flex min-h-screen flex-col items-center bg-[#ffffff] p-4 dark:bg-[#0a192f] lg:p-10'
     >
       <div className='flex h-[calc(100vh-140px)] w-full max-w-[1700px] flex-col gap-8 lg:flex-row'>
-        <section className='relative w-full overflow-hidden rounded-[30px] border border-white/5 bg-[#ffffff] shadow-2xl lg:w-[70%]'>
+        <section className='relative w-full overflow-hidden rounded-[30px] border border-white/5 bg-[#ffffff] shadow-2xl dark:bg-transparent lg:w-[70%]'>
           <AnimatePresence mode='wait'>
             <motion.div
               key={selectedModel?.id || 'base'}
@@ -155,9 +136,11 @@ export default function DepartmentsPage() {
                   alt='Plan'
                 />
               ) : (
-                <p className='font-serif text-2xl uppercase tracking-widest text-zinc-500'>
-                  Seleccione un área en el mapa
-                </p>
+                <img
+                  src={currentImage}
+                  className='h-full w-full object-contain'
+                  alt='Distribucion'
+                />
               )}
             </motion.div>
           </AnimatePresence>
@@ -189,15 +172,15 @@ export default function DepartmentsPage() {
         </section>
 
         <aside className='flex w-full flex-col gap-6 lg:w-[30%]'>
-          <div className='relative h-[100%] overflow-hidden rounded-[40px] bg-white shadow-2xl'>
-            <div className='absolute left-8 top-6 z-10 rounded-2xl border border-zinc-200 bg-zinc-100 px-4 py-2'>
-              <p className='text-[10px] font-black uppercase tracking-widest text-zinc-500'>
+          <div className='relative h-[100%] overflow-hidden rounded-[40px] border border-white/5 bg-white shadow-2xl dark:bg-transparent'>
+            <div className='absolute left-8 top-6 z-10 rounded-2xl border border-zinc-200 bg-zinc-100 px-4 py-2 dark:border-zinc-700 dark:bg-zinc-800'>
+              <p className='text-[10px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-300'>
                 Mapa Interactivo
               </p>
             </div>
 
             <InteractiveSVG
-              svgUrl={data.building.plan_image}
+              svgUrl={data.plan_image}
               departments={data.models}
               onSelect={setSelectedModel}
               selectedId={selectedModel?.id_plan}
@@ -211,7 +194,7 @@ export default function DepartmentsPage() {
         onOpenChange={onOpenChange}
         size='5xl'
         backdrop='blur'
-        className='border border-white/10 bg-zinc-950/90'
+        className='border border-white/10 bg-[#ffffff]/30 shadow-2xl backdrop-blur-md'
       >
         <ModalContent>
           <ModalBody className='p-0'>
@@ -228,24 +211,48 @@ export default function DepartmentsPage() {
           height: 100%;
           padding: 30px;
         }
+        /* Light Mode */
         .interactive-svg-container [id] {
           cursor: pointer;
           transition: all 0.3s ease;
-          stroke: #e4e4e7; /* Zinc 200 */
+          stroke: #5c5c5c;
+          fill: rgba(255, 255, 255, 0.99);
           stroke-width: 1px;
         }
         .interactive-svg-container [id]:hover {
-          fill: rgba(25, 177, 83, 0.2) !important;
-          stroke: #232789;
+          fill: rgba(0, 100, 139, 0.2) !important;
+          stroke: #000000;
           stroke-width: 2px;
         }
+        /* Dark Mode */
+        :is(.dark) .interactive-svg-container [id] {
+          stroke: #a1a1a1;
+          fill: rgba(30, 30, 30, 0.95);
+        }
+        :is(.dark) .interactive-svg-container [id]:hover {
+          fill: rgba(0, 150, 180, 0.3) !important;
+          stroke: #ffffff;
+          stroke-width: 2px;
+        }
+        /* Selected State - Light */
         ${selectedModel
           ? `
           .interactive-svg-container #[id="${selectedModel.id_plan}"] {
-            fill: #13fcc5 !important; /* Zinc 900 */
-            stroke: #0bf54d !important;
+            fill: #007c5f !important;
+            stroke: #4a00ac !important;
             stroke-width: 3px !important;
             filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.3));
+          }
+        `
+          : ''}
+        /* Selected State - Dark */
+        ${selectedModel
+          ? `
+          :is(.dark) .interactive-svg-container #[id="${selectedModel.id_plan}"] {
+            fill: #10b981 !important;
+            stroke: #7c3aed !important;
+            stroke-width: 3px !important;
+            filter: drop-shadow(0 0 10px rgba(167, 139, 250, 0.5));
           }
         `
           : ''}

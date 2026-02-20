@@ -72,6 +72,7 @@ export default class BuildingEntity {
         commonAreas: true,
         salesStages: true,
         units: true,
+        models: true,
       },
     });
   }

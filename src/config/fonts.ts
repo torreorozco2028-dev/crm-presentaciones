@@ -10,16 +10,22 @@ export const fontMono = FontMono({
   variable: '--font-mono',
 });
 
-import { Lora, Dancing_Script, Cinzel_Decorative, Cormorant_Unicase, Metamorphous } from 'next/font/google';
+import {
+  Lora,
+  Dancing_Script,
+  Cinzel_Decorative,
+  Cormorant_Unicase,
+  Metamorphous,
+} from 'next/font/google';
 
 export const poppins = Lora({
   subsets: ['latin'],
-  weight: ['400','600','700'],
+  weight: ['400', '600', '700'],
 });
 
 export const dancing = Dancing_Script({
   subsets: ['latin'],
-  weight: ['400','700'],
+  weight: ['400', '700'],
 });
 
 //candidato1

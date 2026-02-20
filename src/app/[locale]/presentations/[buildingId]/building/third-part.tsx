@@ -65,14 +65,26 @@ export default function CommonAreasSection({
 
   const mobileContainerWidth = totalBlocks * 330;
 
+  // Calcular ancho basado en proporción de elementos reales
+  const desktopContainerWidth = (() => {
+    if (commonAreas.length === 0) return 140;
+    const itemsInLastBlock =
+      commonAreas.length % itemsPerBlock || itemsPerBlock;
+    const baseWidth =
+      (totalBlocks - 1) * 140 + (itemsInLastBlock / itemsPerBlock) * 140;
+    return Math.ceil(baseWidth);
+  })();
+
   return (
     <section id='areas-comunes'>
-      <div className='block md:hidden bg-white dark:bg-slate-950 py-16 overflow-hidden'>
-        <div className='mb-8 px-6 relative z-50'>
+      <div className='block overflow-hidden bg-white py-16 dark:bg-slate-950 md:hidden'>
+        <div className='relative z-50 mb-8 px-6'>
           <span className='mb-4 block text-[10px] font-bold uppercase tracking-[0.8em] text-[#0a192f]/40 dark:text-white/40'>
             Espacios Compartidos
           </span>
-          <h3 className={`${fonts.inter.className} text-4xl leading-tight text-[#0a192f] dark:text-white`}>
+          <h3
+            className={`${fonts.inter.className} text-4xl leading-tight text-[#0a192f] dark:text-white`}
+          >
             ÁREAS <br /> <span className='italic'>COMUNES</span>
           </h3>
           <p className='mt-4 max-w-sm text-sm font-light leading-relaxed text-[#0a192f]/60 dark:text-gray-400'>
@@ -92,8 +104,11 @@ export default function CommonAreasSection({
             style={{ minWidth: `${mobileContainerWidth}vw` }}
           >
             {commonAreas?.map((area, index) => {
-              const layout = MOBILE_LAYOUT_PATTERN[index % MOBILE_LAYOUT_PATTERN.length];
-              const images = Array.isArray(area.batch_images) ? area.batch_images : [];
+              const layout =
+                MOBILE_LAYOUT_PATTERN[index % MOBILE_LAYOUT_PATTERN.length];
+              const images = Array.isArray(area.batch_images)
+                ? area.batch_images
+                : [];
               if (images.length === 0) return null;
               const blockIndex = Math.floor(index / 6);
               const leftOffset = blockIndex * 310;
@@ -134,7 +149,7 @@ export default function CommonAreasSection({
       </div>
       <div
         ref={containerRef}
-        className='hidden md:block relative h-[400vh] bg-white dark:bg-slate-950'
+        className='relative hidden h-[400vh] bg-white dark:bg-slate-950 md:block'
       >
         <div className='sticky top-0 flex h-screen w-full items-center overflow-hidden'>
           <div className='absolute left-12 top-12 z-0'>
@@ -155,7 +170,9 @@ export default function CommonAreasSection({
               >
                 Espacios Compartidos
               </motion.span>
-              <h3 className={`${fonts.inter.className} text-6xl leading-tight text-[#0a192f] dark:text-white lg:text-8xl`}>
+              <h3
+                className={`${fonts.inter.className} text-6xl leading-tight text-[#0a192f] dark:text-white lg:text-8xl`}
+              >
                 ÁREAS <br /> <span className='italic'>COMUNES</span>
               </h3>
               <p className='mt-8 max-w-xs text-sm font-light leading-relaxed text-[#0a192f]/60 dark:text-gray-400'>
@@ -173,7 +190,7 @@ export default function CommonAreasSection({
 
             <div
               className='relative flex h-[80vh]'
-              style={{ minWidth: `${totalBlocks * 140}vw` }}
+              style={{ minWidth: `${desktopContainerWidth}vw` }}
             >
               {commonAreas?.map((area, index) => {
                 const layout = LAYOUT_PATTERN[index % LAYOUT_PATTERN.length];
@@ -308,10 +325,14 @@ function AreaDetailModal({
         <div className='flex w-full flex-col overflow-y-auto p-8 md:w-[400px] md:p-12'>
           <div className='mb-8 flex items-start justify-between'>
             <div>
-              <span className={`${fonts.inter.className} text-[12px] uppercase tracking-[0.3em] text-[#0A192F]`}>
+              <span
+                className={`${fonts.inter.className} text-[12px] uppercase tracking-[0.3em] text-[#0A192F]`}
+              >
                 Detalle de Amenidad
               </span>
-              <h2 className={`mt-2 ${fonts.inter.className} text-3xl text-[#0a192f] dark:text-white`}>
+              <h2
+                className={`mt-2 ${fonts.inter.className} text-3xl text-[#0a192f] dark:text-white`}
+              >
                 {area.common_area_name}
               </h2>
             </div>

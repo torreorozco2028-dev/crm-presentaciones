@@ -27,14 +27,13 @@ export default async function BuildingPage({ params }: PageProps) {
       <BuildingHero building={buildingData} />
       <BuildingLocation building={buildingData as any} />
       <CommonAreasSection commonAreas={buildingData.commonAreas as any} />
-      <DepartmentsPage></DepartmentsPage>
+      <DepartmentsPage data={buildingData} />
       <Floors units={buildingData.units as any} />
       <section className='flex h-[50vh] items-center justify-center border-t border-white/5 bg-[#0a192f]'>
         <p className='text-[10px] font-bold uppercase tracking-[1em] text-zinc-600'>
           Structec • 2026
         </p>
       </section>
-
     </div>
   );
 }
