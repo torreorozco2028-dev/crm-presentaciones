@@ -34,6 +34,7 @@ export default async function BuildingPage({ params }: PageProps) {
           Structec • 2026
         </p>
       </section>
+
     </div>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { fonts } from '@/config/fonts';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
   motion,
@@ -30,6 +31,15 @@ const LAYOUT_PATTERN = [
   { width: '600px', height: '610px', top: '25%', left: '1650px' },
 ];
 
+const MOBILE_LAYOUT_PATTERN = [
+  { width: '90vw', height: '30vh', top: '42vh', left: '5vw', zIndex: 10 },
+  { width: '85vw', height: '30vh', top: '5vh', left: '130vw', zIndex: 30 },
+  { width: '60vw', height: '65vh', top: '0vh', left: '85vw', zIndex: 20 },
+  { width: '65vw', height: '45vh', top: '30vh', left: '180vw', zIndex: 40 },
+  { width: '70vw', height: '70vh', top: '2vh', left: '240vw', zIndex: 50 },
+  { width: '80vw', height: '40vh', top: '12vh', left: '305vw', zIndex: 60 },
+];
+
 export default function CommonAreasSection({
   commonAreas,
 }: CommonAreasSectionProps) {
@@ -49,97 +59,164 @@ export default function CommonAreasSection({
       document.body.style.overflow = 'auto';
     }
   }, [selectedArea]);
-  //
-  const itemsPerBlock = LAYOUT_PATTERN.length; // 6
+
+  const itemsPerBlock = LAYOUT_PATTERN.length;
   const totalBlocks = Math.ceil(commonAreas.length / itemsPerBlock);
 
+  const mobileContainerWidth = totalBlocks * 330;
+
   return (
-    <section
-      ref={containerRef}
-      id='areas-comunes'
-      className='relative h-[400vh] bg-white dark:bg-slate-950'
-    >
-      <div className='sticky top-0 flex h-screen w-full items-center overflow-hidden'>
-        <div className='absolute left-12 top-12 z-0'>
-          <h2 className='select-none font-serif text-[12vw] leading-none text-[#0a192f] opacity-[0.03]'>
-            AMENITIES
-          </h2>
-        </div>
-
-        <motion.div
-          style={{ x }}
-          className='relative flex h-full items-center pl-[10vw]'
-        >
-          <div className='flex min-w-[40vw] flex-col justify-center pr-20'>
-            <motion.span
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              className='mb-6 text-[10px] font-bold uppercase tracking-[0.8em] text-[#0a192f]/40'
-            >
-              Espacios Compartidos
-            </motion.span>
-            <h3 className='font-serif text-6xl leading-tight text-[#0a192f] lg:text-8xl'>
-              ÁREAS <br /> <span className='italic'>COMUNES</span>
-            </h3>
-            <p className='mt-8 max-w-xs text-sm font-light leading-relaxed text-[#0a192f]/60'>
-              Diseño pensado en la comunidad y el bienestar. Desliza para
-              explorar cada detalle arquitectónico.
-            </p>
-            <div className='mt-12 flex items-center gap-4 text-[#0a192f]'>
-              <div className='h-[1px] w-12 bg-[#0a192f]/20' />
-              <span className='animate-pulse text-[10px] font-bold uppercase tracking-widest'>
-                Scroll para explorar
-              </span>
-              <ArrowRight size={20} />
-            </div>
+    <section id='areas-comunes'>
+      <div className='block md:hidden bg-white dark:bg-slate-950 py-16 overflow-hidden'>
+        <div className='mb-8 px-6 relative z-50'>
+          <span className='mb-4 block text-[10px] font-bold uppercase tracking-[0.8em] text-[#0a192f]/40 dark:text-white/40'>
+            Espacios Compartidos
+          </span>
+          <h3 className={`${fonts.inter.className} text-4xl leading-tight text-[#0a192f] dark:text-white`}>
+            ÁREAS <br /> <span className='italic'>COMUNES</span>
+          </h3>
+          <p className='mt-4 max-w-sm text-sm font-light leading-relaxed text-[#0a192f]/60 dark:text-gray-400'>
+            Diseño pensado en la comunidad. Desliza a la derecha para explorar.
+          </p>
+          <div className='mt-6 flex items-center gap-4 text-[#0a192f] dark:text-white'>
+            <div className='h-[1px] w-8 bg-[#0a192f]/20 dark:bg-white/20' />
+            <span className='animate-pulse text-[10px] font-bold uppercase tracking-widest'>
+              Desliza
+            </span>
+            <ArrowRight size={16} />
           </div>
-
+        </div>
+        <div className='w-full overflow-x-auto overflow-y-hidden pb-10 [&::-webkit-scrollbar]:hidden'>
           <div
-            className='relative flex h-[80vh]'
-            style={{ minWidth: `${totalBlocks * 140}vw` }}
+            className='relative h-[80vh]'
+            style={{ minWidth: `${mobileContainerWidth}vw` }}
           >
             {commonAreas?.map((area, index) => {
-              const layout = LAYOUT_PATTERN[index % LAYOUT_PATTERN.length];
-              const images = Array.isArray(area.batch_images)
-                ? area.batch_images
-                : [];
+              const layout = MOBILE_LAYOUT_PATTERN[index % MOBILE_LAYOUT_PATTERN.length];
+              const images = Array.isArray(area.batch_images) ? area.batch_images : [];
               if (images.length === 0) return null;
+              const blockIndex = Math.floor(index / 6);
+              const leftOffset = blockIndex * 310;
 
               return (
-                <motion.div
+                <div
                   key={area.id}
                   style={{
                     width: layout.width,
                     height: layout.height,
                     top: layout.top,
-                    left: `calc(${layout.left} + ${Math.floor(index / 6) * 180}vw)`,
-                    zIndex: (commonAreas.length - index) * 10,
+                    left: `calc(${layout.left} + ${leftOffset}vw)`,
+                    zIndex: layout.zIndex,
                   }}
-                  className='group absolute overflow-hidden rounded-[2vw] bg-gray-100 shadow-2xl'
+                  className='absolute overflow-hidden rounded-[6vw] bg-gray-100 shadow-2xl transition-transform active:scale-[0.98]'
                 >
                   <div className='relative h-full w-full'>
                     <ImageSlider images={images} index={index} />
 
-                    <div className='absolute left-0 top-0 z-20 w-full bg-gradient-to-b from-black/60 to-transparent p-6'>
-                      <h4 className='text-xs font-bold uppercase tracking-[0.3em] text-white'>
+                    <div className='absolute left-0 top-0 z-20 w-full bg-gradient-to-b from-black/60 to-transparent p-5'>
+                      <h4 className='text-[11px] font-bold uppercase tracking-[0.2em] text-white'>
                         {area.common_area_name}
                       </h4>
                     </div>
 
                     <button
                       onClick={() => setSelectedArea(area)}
-                      className='absolute bottom-6 left-6 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-[#0a192f] shadow-lg transition-transform hover:scale-110 active:scale-95'
+                      className='absolute bottom-4 left-4 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-[#0a192f] shadow-lg transition-transform hover:scale-110 active:scale-95'
                     >
-                      <Plus size={24} />
+                      <Plus size={20} />
                     </button>
                   </div>
-                </motion.div>
+                </div>
               );
             })}
           </div>
-        </motion.div>
+        </div>
       </div>
+      <div
+        ref={containerRef}
+        className='hidden md:block relative h-[400vh] bg-white dark:bg-slate-950'
+      >
+        <div className='sticky top-0 flex h-screen w-full items-center overflow-hidden'>
+          <div className='absolute left-12 top-12 z-0'>
+            <h2 className='select-none font-serif text-[12vw] leading-none text-[#0a192f] opacity-[0.05] dark:text-white'>
+              AMENITIES
+            </h2>
+          </div>
 
+          <motion.div
+            style={{ x }}
+            className='relative flex h-full items-center pl-[10vw]'
+          >
+            <div className='flex min-w-[40vw] flex-col justify-center pr-20'>
+              <motion.span
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                className='mb-6 text-[10px] font-bold uppercase tracking-[0.8em] text-[#0a192f]/40 dark:text-white/40'
+              >
+                Espacios Compartidos
+              </motion.span>
+              <h3 className={`${fonts.inter.className} text-6xl leading-tight text-[#0a192f] dark:text-white lg:text-8xl`}>
+                ÁREAS <br /> <span className='italic'>COMUNES</span>
+              </h3>
+              <p className='mt-8 max-w-xs text-sm font-light leading-relaxed text-[#0a192f]/60 dark:text-gray-400'>
+                Diseño pensado en la comunidad y el bienestar. Desliza para
+                explorar cada detalle arquitectónico.
+              </p>
+              <div className='mt-12 flex items-center gap-4 text-[#0a192f] dark:text-white'>
+                <div className='h-[1px] w-12 bg-[#0a192f]/20 dark:bg-white/20' />
+                <span className='animate-pulse text-[10px] font-bold uppercase tracking-widest'>
+                  Scroll para explorar
+                </span>
+                <ArrowRight size={20} />
+              </div>
+            </div>
+
+            <div
+              className='relative flex h-[80vh]'
+              style={{ minWidth: `${totalBlocks * 140}vw` }}
+            >
+              {commonAreas?.map((area, index) => {
+                const layout = LAYOUT_PATTERN[index % LAYOUT_PATTERN.length];
+                const images = Array.isArray(area.batch_images)
+                  ? area.batch_images
+                  : [];
+                if (images.length === 0) return null;
+
+                return (
+                  <motion.div
+                    key={area.id}
+                    style={{
+                      width: layout.width,
+                      height: layout.height,
+                      top: layout.top,
+                      left: `calc(${layout.left} + ${Math.floor(index / 6) * 180}vw)`,
+                      zIndex: (commonAreas.length - index) * 10,
+                    }}
+                    className='group absolute overflow-hidden rounded-[2vw] bg-gray-100 shadow-2xl'
+                  >
+                    <div className='relative h-full w-full'>
+                      <ImageSlider images={images} index={index} />
+
+                      <div className='absolute left-0 top-0 z-20 w-full bg-gradient-to-b from-black/60 to-transparent p-6'>
+                        <h4 className='text-xs font-bold uppercase tracking-[0.3em] text-white'>
+                          {area.common_area_name}
+                        </h4>
+                      </div>
+
+                      <button
+                        onClick={() => setSelectedArea(area)}
+                        className='absolute bottom-6 left-6 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-[#0a192f] shadow-lg transition-transform hover:scale-110 active:scale-95'
+                      >
+                        <Plus size={24} />
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
+        </div>
+      </div>
       <AnimatePresence>
         {selectedArea && (
           <AreaDetailModal
@@ -173,7 +250,6 @@ function AreaDetailModal({
 
   return (
     <div className='fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10'>
-      {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -232,10 +308,10 @@ function AreaDetailModal({
         <div className='flex w-full flex-col overflow-y-auto p-8 md:w-[400px] md:p-12'>
           <div className='mb-8 flex items-start justify-between'>
             <div>
-              <span className='text-[10px] font-bold uppercase tracking-[0.3em] text-orange-500'>
+              <span className={`${fonts.inter.className} text-[12px] uppercase tracking-[0.3em] text-[#0A192F]`}>
                 Detalle de Amenidad
               </span>
-              <h2 className='mt-2 font-serif text-3xl text-[#0a192f] dark:text-white'>
+              <h2 className={`mt-2 ${fonts.inter.className} text-3xl text-[#0a192f] dark:text-white`}>
                 {area.common_area_name}
               </h2>
             </div>
@@ -247,7 +323,7 @@ function AreaDetailModal({
             </button>
           </div>
 
-          <p className='mb-10 text-lg font-light leading-relaxed text-gray-600 dark:text-gray-400'>
+          <p className='mb-10 text-[25px] font-light leading-relaxed text-gray-600 dark:text-gray-400'>
             {area.common_area_description || 'Sin descripción disponible.'}
           </p>
 

@@ -135,10 +135,10 @@ export default function DepartmentsPage() {
   return (
     <div
       id='distribucion'
-      className='flex min-h-screen flex-col items-center bg-[#0a192f] p-4 lg:p-10'
+      className='flex min-h-screen flex-col items-center bg-[#ffffff] p-4 lg:p-10'
     >
       <div className='flex h-[calc(100vh-140px)] w-full max-w-[1700px] flex-col gap-8 lg:flex-row'>
-        <section className='relative w-full overflow-hidden rounded-[40px] border border-white/5 bg-zinc-900/40 shadow-2xl lg:w-[70%]'>
+        <section className='relative w-full overflow-hidden rounded-[30px] border border-white/5 bg-[#ffffff] shadow-2xl lg:w-[70%]'>
           <AnimatePresence mode='wait'>
             <motion.div
               key={selectedModel?.id || 'base'}

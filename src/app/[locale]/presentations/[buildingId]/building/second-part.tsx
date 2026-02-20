@@ -1,5 +1,6 @@
 'use client';
 
+import { fonts } from '@/config/fonts';
 import React from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -66,7 +67,7 @@ export default function BuildingLocation({ building }: BuildingLocationProps) {
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
-            className='absolute inset-0 z-0 brightness-[0.8] contrast-[1.2] grayscale hue-rotate-[190deg] invert sepia-[0.1] transition-all duration-1000 hover:brightness-100 hover:grayscale-0 hover:invert-0 dark:brightness-[0.6]'
+            className='absolute inset-0 z-0 brightness-[0.8] contrast-[1.2] grayscale hue-rotate-[190deg] invert sepia-[0.1] transition-all duration-1000 hover:brightness-100 hover:grayscale-0  dark:brightness-[0.6]'
           >
             {mapUrl ? (
               <iframe
@@ -96,9 +97,9 @@ export default function BuildingLocation({ building }: BuildingLocationProps) {
             >
               Conectividad
             </motion.span>
-            <h2 className='mb-6 font-serif text-4xl leading-tight lg:mb-8 lg:text-6xl'>
+            <h2 className={`${fonts.inter.className} mb-6 text-4xl leading-tight lg:mb-8 lg:text-6xl`}>
               Entorno <br />{' '}
-              <span className='italic text-[#0a192f] dark:text-white'>
+              <span className={`${fonts.inter.className} text-[#0a192f] dark:text-white`}>
                 Privilegiado
               </span>
             </h2>
@@ -135,7 +136,7 @@ export default function BuildingLocation({ building }: BuildingLocationProps) {
                     <div>
                       <div className='mb-4 flex items-center gap-2'>
                         <span className='h-[1px] w-6 bg-blue-600 dark:bg-blue-500'></span>
-                        <span className='text-[10px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400'>
+                        <span className='text-[10px] font-bold uppercase tracking-widest text-[4f7cac] dark:text-blue-400'>
                           CERCA
                         </span>
                       </div>

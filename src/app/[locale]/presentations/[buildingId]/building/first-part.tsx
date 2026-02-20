@@ -3,6 +3,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { fonts } from '@/config/fonts';
+
 
 interface BuildingHeroProps {
   building: any;
@@ -27,10 +29,11 @@ export default function BuildingHero({ building }: BuildingHeroProps) {
             transition={{ duration: 0.8 }}
             className='mb-12 pl-6 lg:mb-24 lg:pl-12'
           >
-            <h1 className='mb-4 font-serif text-5xl leading-tight md:text-7xl lg:text-8xl'>
+            <h1 className={`mb-4 ${fonts.inter.className} text-5xl leading-tight md:text-7xl lg:text-8xl`}>
               {building.building_title}
             </h1>
-            <p className='ml-1 text-xs font-bold uppercase tracking-[0.5em] text-[#0a192f] opacity-60 dark:text-white'>
+            <p className='ml-2 text-xl font-bold uppercase tracking-[0.5em] text-[#474545] dark:text-white'>
+              
               {building.building_location}
             </p>
           </motion.div>
@@ -46,7 +49,7 @@ export default function BuildingHero({ building }: BuildingHeroProps) {
               <p className='mb-8 text-lg font-light leading-relaxed text-[#0a192f] opacity-80 dark:text-slate-300 md:text-[20px]'>
                 {building.building_description}
               </p>
-              <div className='inline-block border-b border-[#0a192f]/30 pb-2 dark:border-white/30'>
+              <div className='text-[#000000] inline-block border-b border-[#0a192f]/30 pb-2 dark:border-white/30'>
                 <span className='text-[10px] uppercase tracking-[0.4em]'>
                   STRUCTEC
                 </span>
