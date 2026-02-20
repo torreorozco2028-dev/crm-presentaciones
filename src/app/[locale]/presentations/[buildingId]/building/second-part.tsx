@@ -67,7 +67,7 @@ export default function BuildingLocation({ building }: BuildingLocationProps) {
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
-            className='absolute inset-0 z-0 brightness-[0.8] contrast-[1.2] grayscale hue-rotate-[190deg] invert sepia-[0.1] transition-all duration-1000 hover:brightness-100 hover:grayscale-0 dark:brightness-[0.6]'
+            className='absolute inset-0 z-0 transition-all duration-1000 [filter:brightness(0.75)_saturate(0.9)_sepia(0.15)] hover:[filter:brightness(1)_saturate(1)_sepia(0)] dark:[filter:brightness(0.6)_invert(0.05)_saturate(0.8)] dark:hover:[filter:brightness(0.85)_invert(0.05)_saturate(1)]'
           >
             {mapUrl ? (
               <iframe
