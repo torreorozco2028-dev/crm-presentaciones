@@ -2,14 +2,16 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { fonts } from '@/config/fonts';
 import {
   Modal,
   ModalBody,
   ModalContent,
+  ModalHeader,
   Button,
   useDisclosure,
 } from '@heroui/react';
-import { Layers } from 'lucide-react';
+import { Layers, X } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
 const Carousel = dynamic(() => import('@/components/carousel'), { ssr: false });
@@ -31,7 +33,7 @@ function InteractiveSVG({
 }: {
   svgUrl: string;
   departments: DepartmentModel[];
-  onSelect: (model: DepartmentModel) => void;
+  onSelect: (model: DepartmentModel | null) => void;
   selectedId?: string;
 }) {
   const [svgContent, setSvgContent] = useState<string | null>(null);
@@ -43,10 +45,7 @@ function InteractiveSVG({
       .then((text) => {
         const cleanSvg = text
           .replace(/<style([\s\S]*?)<\/style>/gi, '')
-          .replace(
-            /<text/g,
-            '<text style="pointer-events: none; user-select: none;"'
-          );
+          .replace(/<text/g, '<text style="pointer-events: none; user-select: none;"');
         setSvgContent(cleanSvg);
       });
   }, [svgUrl]);
@@ -58,20 +57,11 @@ function InteractiveSVG({
     const handleSvgClick = (e: MouseEvent) => {
       const target = e.target as SVGElement;
       const zone = target.closest('[id]');
-
       if (zone) {
         const zoneId = zone.id.trim();
-        const model = departments.find(
-          (d) => String(d.id_plan).trim() === zoneId
-        );
+        const model = departments.find((d) => String(d.id_plan).trim() === zoneId);
         if (model) {
-          // Si el modelo ya está seleccionado, deseleccionar
-          if (model.id_plan === selectedId) {
-            onSelect(null as any);
-          } else {
-            // Si no está seleccionado, seleccionar
-            onSelect(model);
-          }
+          onSelect(model.id_plan === selectedId ? null : model);
         }
       }
     };
@@ -83,179 +73,163 @@ function InteractiveSVG({
   return (
     <div
       ref={containerRef}
-      className='interactive-svg-container flex h-full w-full items-center justify-center p-6'
+      className='interactive-svg-container flex h-full w-full items-center justify-center p-4 lg:p-10'
       dangerouslySetInnerHTML={{ __html: svgContent || '' }}
     />
   );
 }
 
 export default function DepartmentsPage({ data }: { data: any }) {
-  const [selectedModel, setSelectedModel] = useState<DepartmentModel | null>(
-    null
-  );
+  const [selectedModel, setSelectedModel] = useState<DepartmentModel | null>(null);
+  const [mobileTab, setMobileTab] = useState<'map' | 'model'>('map');
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
-  if (!data)
-    return (
-      <div className='flex h-screen items-center justify-center bg-[#0a192f] text-white'>
-        Cargando...
-      </div>
-    );
+  if (!data) return <div className='flex h-screen items-center justify-center bg-[#0a192f] text-white'>Cargando...</div>;
 
   const currentImage = selectedModel?.prymary_image || data.distribution_image;
+
   const getGallery = () => {
     const raw = selectedModel?.batch_images;
     if (!raw) return [];
     try {
       return typeof raw === 'string' ? JSON.parse(raw) : raw;
-    } catch {
-      return [raw];
-    }
+    } catch { return [raw]; }
   };
   const galleryImages = getGallery();
+
+  const handleSelectModel = (model: DepartmentModel | null) => {
+    setSelectedModel(model);
+    if (model && typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setMobileTab('model');
+    }
+  };
+
+  const onDragEnd = (event: any, info: any) => {
+    const threshold = 50;
+    if (info.offset.x < -threshold) setMobileTab('map');
+    else if (info.offset.x > threshold && selectedModel) setMobileTab('model');
+  };
+
   return (
-    <div
-      id='distribucion'
-      className='flex min-h-screen flex-col items-center bg-[#ffffff] p-4 dark:bg-[#0a192f] lg:p-10'
-    >
-      <div className='flex h-[calc(100vh-140px)] w-full max-w-[1700px] flex-col gap-8 lg:flex-row'>
-        <section className='relative w-full overflow-hidden rounded-[30px] border border-white/5 bg-[#ffffff] shadow-2xl dark:bg-transparent lg:w-[70%]'>
+    <div id='distribucion' className='flex min-h-screen flex-col items-center bg-[#ffffff] p-4 dark:bg-[#0a192f] lg:p-10'>
+      <div className="mb-10 flex flex-col items-center">
+        <motion.span 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-xs font-bold tracking-[0.5em] text-zinc-500 dark:text-zinc-400 uppercase mb-2"
+        >
+          Explora tu próximo hogar
+        </motion.span>
+        <h1 className={`${fonts.inter.className} text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-zinc-800 to-zinc-400 dark:from-white dark:to-zinc-500 uppercase`}>
+          plan Interactivo
+        </h1>
+      </div>
+
+      <div className='flex h-auto lg:h-[calc(100vh-250px)] w-full max-w-[1700px] flex-col gap-8 lg:flex-row'>
+        <section className='relative w-full overflow-hidden rounded-[30px] border border-zinc-100 bg-[#fcfcfc] shadow-xl dark:border-white/5 dark:bg-transparent lg:w-[70%]'>
           <AnimatePresence mode='wait'>
-            <motion.div
-              key={selectedModel?.id || 'base'}
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.02 }}
-              transition={{ duration: 0.5, ease: 'easeInOut' }}
-              className='flex h-full w-full items-center justify-center p-12'
-            >
-              {currentImage ? (
-                <img
-                  src={currentImage}
-                  className='h-full w-full object-contain'
-                  alt='Plan'
+            {mobileTab === 'map' && (
+              <motion.div
+                key="mobile-map"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="flex min-h-[50vh] items-center justify-center lg:hidden"
+              >
+                <InteractiveSVG 
+                  svgUrl={data.plan_image} 
+                  departments={data.models} 
+                  onSelect={handleSelectModel} 
+                  selectedId={selectedModel?.id_plan} 
                 />
-              ) : (
-                <img
-                  src={currentImage}
-                  className='h-full w-full object-contain'
-                  alt='Distribucion'
-                />
-              )}
-            </motion.div>
+              </motion.div>
+            )}
+
+            {(mobileTab === 'model' || (typeof window !== 'undefined' && window.innerWidth >= 1024)) && (
+              <motion.div
+                key={selectedModel?.id || 'base-view'}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                drag={typeof window !== 'undefined' && window.innerWidth < 1024 ? "x" : false}
+                dragConstraints={{ left: 0, right: 0 }}
+                onDragEnd={onDragEnd}
+                className={`flex flex-col w-full h-full lg:relative ${mobileTab === 'model' ? 'p-4' : ''}`}
+              >
+                <div className="w-full flex justify-center items-center mb-6 lg:mb-0 lg:absolute lg:inset-0 lg:p-10">
+                  <img 
+                    src={currentImage} 
+                    className='max-h-[50vh] lg:max-h-full w-auto lg:w-full object-contain transition-all duration-500'
+                    alt='Vista Departamento' 
+                  />
+                </div>
+                
+                  {selectedModel && (
+                    <div className='z-10 w-full flex flex-col items-center gap-6 px-4 lg:absolute lg:bottom-10 lg:left-0 lg:right-0 lg:flex-row lg:justify-between lg:items-end lg:px-10'>
+                      <div className='w-full lg:w-auto rounded-3xl border border-zinc-200 dark:border-white/10 bg-white/80 dark:bg-black/40 p-6 backdrop-blur-xl shadow-lg'>
+                        <p className='mb-1 text-[10px] font-bold uppercase tracking-[0.3em] text-blue-600 dark:text-blue-400'>
+                          Modelo Seleccionado
+                        </p>
+                        <h2 className='mb-1 font-serif text-3xl dark:text-white'>
+                          {selectedModel.name_model_department}
+                        </h2>
+                        <p className='text-lg text-zinc-500 dark:text-zinc-400'>
+                          {selectedModel.base_square_meters} m² totales
+                        </p>
+                      </div>
+                      {galleryImages.length > 0 && (
+                        <div className="w-full lg:w-auto"> 
+                          <Button 
+                            onPress={onOpen} 
+                            className='w-full lg:w-auto h-16 lg:h-20 px-8 gap-3 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-black font-bold shadow-2xl transition-transform hover:scale-105 active:scale-95'
+                          >
+                            <Layers size={18} /> VER GALERIA ({galleryImages.length})
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+              </motion.div>
+            )}
           </AnimatePresence>
-
-          {selectedModel && (
-            <div className='absolute bottom-12 left-12 right-12 flex items-end justify-between'>
-              <div className='rounded-3xl border border-white/10 bg-black/20 p-8 backdrop-blur-md'>
-                <p className='mb-2 text-[10px] font-bold uppercase tracking-[0.4em] text-[#ffffff]'>
-                  Detalles del Modelo
-                </p>
-                <h1 className='mb-2 font-serif text-5xl text-white'>
-                  {selectedModel.name_model_department}
-                </h1>
-                <p className='text-2xl text-zinc-400'>
-                  {selectedModel.base_square_meters} m² totales
-                </p>
-              </div>
-
-              {galleryImages.length > 0 && (
-                <Button
-                  onPress={onOpen}
-                  className='flex h-20 gap-3 rounded-3xl bg-white px-10 text-lg font-bold text-black shadow-2xl transition-all hover:scale-105'
-                >
-                  <Layers size={24} /> GALERIA ({galleryImages.length})
-                </Button>
-              )}
-            </div>
-          )}
         </section>
-
-        <aside className='flex w-full flex-col gap-6 lg:w-[30%]'>
-          <div className='relative h-[100%] overflow-hidden rounded-[40px] border border-white/5 bg-white shadow-2xl dark:bg-transparent'>
-            <div className='absolute left-8 top-6 z-10 rounded-2xl border border-zinc-200 bg-zinc-100 px-4 py-2 dark:border-zinc-700 dark:bg-zinc-800'>
-              <p className='text-[10px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-300'>
-                Mapa Interactivo
-              </p>
-            </div>
-
-            <InteractiveSVG
-              svgUrl={data.plan_image}
-              departments={data.models}
-              onSelect={setSelectedModel}
-              selectedId={selectedModel?.id_plan}
+        <aside className='hidden h-full flex-col gap-6 lg:flex lg:w-[30%]'>
+          <div className='relative h-full overflow-hidden rounded-[40px] border border-zinc-100 bg-white shadow-xl dark:border-white/5 dark:bg-transparent'>
+            <InteractiveSVG 
+              svgUrl={data.plan_image} 
+              departments={data.models} 
+              onSelect={handleSelectModel} 
+              selectedId={selectedModel?.id_plan} 
             />
           </div>
         </aside>
       </div>
-
-      <Modal
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
-        size='5xl'
-        backdrop='blur'
-        className='border border-white/10 bg-[#ffffff]/30 shadow-2xl backdrop-blur-md'
-      >
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange} size='5xl' backdrop='blur' className='bg-black/95'>
         <ModalContent>
-          <ModalBody className='p-0'>
-            <div className='h-[85vh] w-full'>
-              <Carousel images={galleryImages} height='h-full' />
-            </div>
-          </ModalBody>
+          {(onClose) => (
+            <>
+              <ModalHeader className="absolute right-4 top-4 z-50">
+                <Button isIconOnly variant="flat" onPress={onClose} className="rounded-full bg-white/10 text-white backdrop-blur-xl"><X size={24} /></Button>
+              </ModalHeader>
+              <ModalBody className='p-0'>
+                <div className='h-[85vh] w-full'><Carousel images={galleryImages} height='h-full' /></div>
+              </ModalBody>
+            </>
+          )}
         </ModalContent>
       </Modal>
 
       <style jsx global>{`
-        .interactive-svg-container svg {
-          width: 100%;
-          height: 100%;
-          padding: 30px;
-        }
-        /* Light Mode */
-        .interactive-svg-container [id] {
-          cursor: pointer;
-          transition: all 0.3s ease;
-          stroke: #5c5c5c;
-          fill: rgba(255, 255, 255, 0.99);
-          stroke-width: 1px;
-        }
-        .interactive-svg-container [id]:hover {
-          fill: rgba(0, 100, 139, 0.2) !important;
-          stroke: #000000;
-          stroke-width: 2px;
-        }
-        /* Dark Mode */
-        :is(.dark) .interactive-svg-container [id] {
-          stroke: #a1a1a1;
-          fill: rgba(30, 30, 30, 0.95);
-        }
-        :is(.dark) .interactive-svg-container [id]:hover {
-          fill: rgba(0, 150, 180, 0.3) !important;
-          stroke: #ffffff;
-          stroke-width: 2px;
-        }
-        /* Selected State - Light */
-        ${selectedModel
-          ? `
+        .interactive-svg-container svg { width: 100%; height: 100%; }
+        .interactive-svg-container [id] { cursor: pointer; transition: all 0.3s ease; stroke: #ccc; fill: #fff; }
+        .interactive-svg-container [id]:hover { fill: #f0f7ff !important; stroke: #3b82f6; stroke-width: 2px; }
+        :is(.dark) .interactive-svg-container [id] { stroke: #333; fill: #111; }
+        
+        ${selectedModel ? `
           .interactive-svg-container #[id="${selectedModel.id_plan}"] {
-            fill: #007c5f !important;
-            stroke: #4a00ac !important;
+            fill: #3b82f6 !important;
+            stroke: #2563eb !important;
             stroke-width: 3px !important;
-            filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.3));
           }
-        `
-          : ''}
-        /* Selected State - Dark */
-        ${selectedModel
-          ? `
-          :is(.dark) .interactive-svg-container #[id="${selectedModel.id_plan}"] {
-            fill: #10b981 !important;
-            stroke: #7c3aed !important;
-            stroke-width: 3px !important;
-            filter: drop-shadow(0 0 10px rgba(167, 139, 250, 0.5));
-          }
-        `
-          : ''}
+        ` : ''}
       `}</style>
     </div>
   );

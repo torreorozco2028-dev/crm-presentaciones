@@ -32,12 +32,12 @@ const LAYOUT_PATTERN = [
 ];
 
 const MOBILE_LAYOUT_PATTERN = [
-  { width: '90vw', height: '30vh', top: '42vh', left: '5vw', zIndex: 10 },
-  { width: '85vw', height: '30vh', top: '5vh', left: '130vw', zIndex: 30 },
-  { width: '60vw', height: '65vh', top: '0vh', left: '85vw', zIndex: 20 },
-  { width: '65vw', height: '45vh', top: '30vh', left: '180vw', zIndex: 40 },
-  { width: '70vw', height: '70vh', top: '2vh', left: '240vw', zIndex: 50 },
-  { width: '80vw', height: '40vh', top: '12vh', left: '305vw', zIndex: 60 },
+  { width: '60vw', height: '70vh', top: '0vh', left: '5vw', zIndex: 10 },
+  { width: '65vw', height: '40vh', top: '30vh', left: '90vw', zIndex: 30 },
+  { width: '90vw', height: '35vh', top: '3vh', left: '50vw', zIndex: 20 },
+  { width: '55vw', height: '60vh', top: '0vh', left: '150vw', zIndex: 40 },
+  { width: '80vw', height: '25vh', top: '40vh', left: '190vw', zIndex: 50 },
+  { width: '80vw', height: '40vh', top: '6vh', left: '225vw', zIndex: 60 },
 ];
 
 export default function CommonAreasSection({
@@ -65,7 +65,6 @@ export default function CommonAreasSection({
 
   const mobileContainerWidth = totalBlocks * 330;
 
-  // Calcular ancho basado en proporción de elementos reales
   const desktopContainerWidth = (() => {
     if (commonAreas.length === 0) return 140;
     const itemsInLastBlock =

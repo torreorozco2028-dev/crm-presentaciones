@@ -57,31 +57,32 @@ export default function BuildingHero({ building }: BuildingHeroProps) {
             </motion.div>
           </div>
         </div>
-
-        <div className='relative flex min-h-[80vh] flex-col lg:block lg:min-h-[100vh] lg:w-1/2'>
+        <div className='relative flex min-h-[70vh] items-center justify-center lg:block lg:min-h-[100vh] lg:w-1/2'>
           <motion.div
-            initial={{ opacity: 0, scale: 1.1 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.5 }}
-            className='relative right-0 top-0 z-0 ml-auto h-[350px] w-[90%] overflow-hidden md:h-[500px] lg:absolute lg:top-[85px] lg:ml-0 lg:h-[800px] lg:w-[750px]'
+            initial={{ opacity: 0, scale: 1.05, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+
+            className='relative z-0 mx-auto h-[450px] w-[88%] overflow-hidden rounded-3xl border-[12px] border-white shadow-2xl dark:border-[#162a4a] md:h-[550px] lg:absolute lg:right-0 lg:top-[85px] lg:ml-0 lg:h-[800px] lg:w-[750px] lg:rounded-none lg:border-0 lg:shadow-none'
           >
             <Image
               src={primaryImage}
               alt='Vista Principal'
               fill
-              className='object-cover shadow-2xl lg:shadow-none'
+              className='object-cover'
               priority
             />
-            <div className='absolute inset-0 bg-gradient-to-l from-transparent to-white/10 dark:to-[#0a192f]/20 lg:hidden' />
+            <div className='absolute inset-0 bg-gradient-to-t from-black/20 to-transparent lg:hidden' />
           </motion.div>
         </div>
       </div>
+
       <motion.div
-        initial={{ opacity: 0, scale: 1.1 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         transition={{ duration: 1.5 }}
         className='flex h-[1px] w-full flex-row bg-black/10 dark:bg-white/10'
-      ></motion.div>
+      />
     </section>
   );
 }
