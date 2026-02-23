@@ -21,7 +21,6 @@ export default async function BuildingPage({ params }: PageProps) {
   if (!buildingData) {
     notFound();
   }
-
   return (
     <div className='min-h-screen'>
       <BuildingHero building={buildingData} />

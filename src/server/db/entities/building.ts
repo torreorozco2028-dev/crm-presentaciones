@@ -60,7 +60,7 @@ export default class BuildingEntity {
   }
 
   async getBuildingById(id: string) {
-    return await db.query.building.findFirst({
+    const result = await db.query.building.findFirst({
       where: eq(building.id, id),
       with: {
         buildingToFeatures: {
@@ -71,10 +71,48 @@ export default class BuildingEntity {
         pointsOfInterest: true,
         commonAreas: true,
         salesStages: true,
-        units: true,
-        models: true,
+        units: {
+          with: {
+            model: {
+              with: {
+                features: {
+                  with: {
+                    feature: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        models: {
+          with: {
+            features: {
+              with: {
+                feature: true,
+              },
+            },
+          },
+        },
       },
     });
+
+    if (result) {
+      return {
+        ...result,
+        units: result.units.map((unit) => ({
+          ...unit,
+          model: {
+            ...unit.model,
+            features: unit.model.features.map((f) => f.feature),
+          },
+        })),
+        models: result.models.map((model) => ({
+          ...model,
+          features: model.features.map((f) => f.feature),
+        })),
+      };
+    }
+    return result;
   }
 
   async updateBuilding(

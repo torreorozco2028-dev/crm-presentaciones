@@ -61,8 +61,7 @@ export default function BuildingHero({ building }: BuildingHeroProps) {
           <motion.div
             initial={{ opacity: 0, scale: 1.05, y: 50 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
-
+            transition={{ duration: 1.2, ease: 'easeOut' }}
             className='relative z-0 mx-auto h-[450px] w-[88%] overflow-hidden rounded-3xl border-[12px] border-white shadow-2xl dark:border-[#162a4a] md:h-[550px] lg:absolute lg:right-0 lg:top-[85px] lg:ml-0 lg:h-[800px] lg:w-[750px] lg:rounded-none lg:border-0 lg:shadow-none'
           >
             <Image
