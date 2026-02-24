@@ -1,12 +1,11 @@
 'use server';
-
 import { auth } from '@/auth';
 import { db } from '@/server/db/config';
 import { users } from '@/server/db/schema';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { revalidatePath } from 'next/cache';
-import { uploadSingleImage, deleteFileFromStorage } from '@/services/storage';
+import { uploadSingleImage, deleteFilesFromStorage } from '@/services/storage';
 
 type UpdateUserData = {
   name?: string;
@@ -60,21 +59,19 @@ export async function updateUserProfile(
 
     const userId = session.user.id;
     const updateData: Record<string, any> = {};
-
     if (formData && formData.has('upload')) {
       const file = formData.get('upload') as File;
 
       if (file && file.size > 0) {
         const currentUser = await getUserProfile();
-
-        const newImageUrl = await uploadSingleImage(formData);
+        const newImageUrl = await uploadSingleImage(file);
         updateData.image = newImageUrl;
 
         if (
           currentUser?.image &&
           currentUser.image.includes('public.blob.vercel-storage.com')
         ) {
-          await deleteFileFromStorage(currentUser.image);
+          await deleteFilesFromStorage(currentUser.image);
         }
       }
     }

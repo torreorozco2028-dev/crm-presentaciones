@@ -32,7 +32,7 @@ export default function Component() {
       try {
         await login(data as z.infer<typeof signInSchema>);
 
-        router.push('/users');
+        router.push('/');
       } catch (error) {
         console.log(error);
         if (error instanceof Error) {

@@ -14,88 +14,36 @@ export type MenuItem = {
 
 export type MenuOptions = {
   home: MenuItem[];
-  planning: MenuItem[];
-  inventory: MenuItem[];
-  accounting: MenuItem[];
-  admin: MenuItem[];
 };
 
 export const menuOptions = {
   home: [
     {
-      key: 'dashboard',
-      label: 'menu.dashboard',
-      path: '/dashboard',
-      icon: 'LayoutDashboard',
-      displayDivider: true,
-    },
-  ],
-  planning: [
-    {
-      key: 'projects',
-      label: 'menu.projects',
-      path: '/projects',
-      icon: 'CopyCheck',
+      key: 'launch',
+      label: 'menu.launch',
+      path: '/launch',
+      icon: 'Rocket',
       displayDivider: true,
     },
     {
-      key: 'unit-costs',
-      label: 'menu.unitCosts',
-      path: '/unit-costs',
-      icon: 'Boxes',
-      displayDivider: true,
-    },
-    {
-      key: 'unit-prices',
-      label: 'menu.unit-prices',
-      path: '/unit-prices',
-      icon: 'Receipt',
-      displayDivider: true,
-    },
-  ],
-  inventory: [
-    {
-      key: 'providers',
-      label: 'menu.providers',
-      path: '/inventory/providers',
-      icon: 'Box',
+      key: 'building',
+      label: 'menu.building',
+      path: '/buildings',
+      icon: 'Building',
       displayDivider: false,
     },
     {
-      key: 'warehouse',
-      label: 'menu.warehouse',
-      path: '/inventory/warehouse',
-      icon: 'Warehouse',
-      displayDivider: false,
-    },
-    {
-      key: 'renting',
-      label: 'menu.renting',
-      path: '/inventory/renting',
-      icon: 'Banknote',
+      key: 'pointsofinterest',
+      label: 'menu.pointsofinterest',
+      path: '/pointsofinterest',
+      icon: 'MapPin',
       displayDivider: true,
     },
-  ],
-  accounting: [
     {
-      key: 'accounting',
-      label: 'menu.accounts',
-      path: '/accounting/accounts',
-      icon: 'FileUser',
-      displayDivider: false,
-    },
-    {
-      key: 'daily-book',
-      label: 'menu.dailyBook',
-      path: '/accounting/daily-book',
-      icon: 'BookOpenText',
-      displayDivider: false,
-    },
-    {
-      key: 'ledger-book',
-      label: 'menu.ledgerBook',
-      path: '/accounting/ledger-book',
-      icon: 'BookOpen',
+      key: 'generalfeatures',
+      label: 'menu.generalfeatures',
+      path: '/generalfeatures',
+      icon: 'BrickWall',
       displayDivider: true,
     },
   ],

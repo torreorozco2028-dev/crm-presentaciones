@@ -9,6 +9,7 @@ import {
   text,
 } from 'drizzle-orm/pg-core';
 import { profiles } from './profile-table';
+import { sales } from './sales';
 
 export const users = pgTable(
   'user',
@@ -33,9 +34,10 @@ export const users = pgTable(
   })
 );
 
-export const userRelations = relations(users, ({ one }) => ({
+export const userRelations = relations(users, ({ one, many }) => ({
   profile: one(profiles, {
     fields: [users.id],
     references: [profiles.userId],
   }),
+  sales: many(sales),
 }));
