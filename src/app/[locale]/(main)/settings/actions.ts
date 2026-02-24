@@ -99,7 +99,7 @@ export async function updateUserProfile(
       throw new Error('Failed to update user');
     }
 
-    revalidatePath('/settings');
+    revalidatePath('/launch');
     return updatedUser[0];
   } catch (error) {
     console.error('Error updating user profile:', error);

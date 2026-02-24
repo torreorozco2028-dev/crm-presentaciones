@@ -3,7 +3,7 @@ import { Metadata, Viewport } from 'next';
 import { siteConfig } from '@/config/site';
 import { fontSans } from '@/config/fonts';
 import { Toaster } from 'react-hot-toast';
-
+import { SessionProvider } from 'next-auth/react';
 import { auth } from '@/auth';
 import { ThemeProvider } from '@/providers/theme-provider';
 import { redirect } from 'next/navigation';
@@ -58,36 +58,38 @@ export default async function RootLayout({
     <html lang={locale} suppressHydrationWarning>
       {process.env.NODE_ENV === 'development' && <ReactScan />}
       <body className={fontSans.variable}>
-        <ServiceProvider>
-          <NextIntlClientProvider messages={messages}>
-            <Toaster
-              position='top-right'
-              containerClassName=''
-              toastOptions={{
-                className: 'dark:bg-default-200 dark:text-slate-400',
-                duration: 5000,
-              }}
-            />
-            <ThemeProvider>
-              <ToastProvider placement='top-right' />
-              <div className='flex min-h-screen bg-background'>
-                <aside className='fixed hidden h-screen w-64 border-r border-divider bg-default-50/50 shadow-sm dark:border-zinc-700/50 md:block'>
-                  <SideBarLeft />
-                </aside>
-                <main className='flex-1'>
-                  <div className='flex min-h-screen flex-col md:ml-64'>
-                    <header className='sticky top-0 z-40 border-b border-none bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
-                      <NavBarTop user={session} />
-                    </header>
-                    <div className='flex flex-grow flex-col gap-4 p-6'>
-                      {children}
+        <SessionProvider session={session}>
+          <ServiceProvider>
+            <NextIntlClientProvider messages={messages}>
+              <Toaster
+                position='top-right'
+                containerClassName=''
+                toastOptions={{
+                  className: 'dark:bg-default-200 dark:text-slate-400',
+                  duration: 5000,
+                }}
+              />
+              <ThemeProvider>
+                <ToastProvider placement='top-right' />
+                <div className='flex min-h-screen bg-background'>
+                  <aside className='fixed hidden h-screen w-64 border-r border-divider bg-default-50/50 shadow-sm dark:border-zinc-700/50 md:block'>
+                    <SideBarLeft />
+                  </aside>
+                  <main className='flex-1'>
+                    <div className='flex min-h-screen flex-col md:ml-64'>
+                      <header className='sticky top-0 z-40 border-b border-none bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
+                        <NavBarTop user={session} />
+                      </header>
+                      <div className='flex flex-grow flex-col gap-4 p-6'>
+                        {children}
+                      </div>
                     </div>
-                  </div>
-                </main>
-              </div>
-            </ThemeProvider>
-          </NextIntlClientProvider>
-        </ServiceProvider>
+                  </main>
+                </div>
+              </ThemeProvider>
+            </NextIntlClientProvider>
+          </ServiceProvider>
+        </SessionProvider>
       </body>
     </html>
   );
