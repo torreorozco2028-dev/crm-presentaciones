@@ -36,12 +36,22 @@ interface Props {
 
 // Mapeo de iconos por categoría
 const categoryIcons: Record<string, React.ReactNode> = {
-  Habitaciones: <Bed className='h-5 w-5' />,
-  Cocina: <UtensilsCrossed className='h-5 w-5' />,
-  Baños: <Bath className='h-5 w-5' />,
-  'Espacios Exteriores': <Wind className='h-5 w-5' />,
-  Servicios: <Zap className='h-5 w-5' />,
   General: <Check className='h-5 w-5' />,
+  Dormitorios: <Bed className='h-5 w-5' />,
+  Cocina: <UtensilsCrossed className='h-5 w-5' />,
+  Baño: <Bath className='h-5 w-5' />,
+  Sala: <Wind className='h-5 w-5' />,
+  Lavanderia: <Zap className='h-5 w-5' />,
+};
+
+// Orden personalizado para los tipos de espacios
+const roomOrder = {
+  General: 0,
+  Dormitorios: 1,
+  Cocina: 2,
+  Baño: 3,
+  Sala: 4,
+  Lavanderia: 5,
 };
 
 export default function Floors({ units }: Props) {
@@ -89,7 +99,11 @@ export default function Floors({ units }: Props) {
           (a: any, b: any) => (a.order || 0) - (b.order || 0)
         ),
       }))
-      .sort((a, b) => a.room.localeCompare(b.room));
+      .sort((a, b) => {
+        const orderA = roomOrder[a.room as keyof typeof roomOrder] ?? 999;
+        const orderB = roomOrder[b.room as keyof typeof roomOrder] ?? 999;
+        return orderA - orderB;
+      });
   }, [units]);
 
   // 1. Agrupar y ordenar datos dinámicamente

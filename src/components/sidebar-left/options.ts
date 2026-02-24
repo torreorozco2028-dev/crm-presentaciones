@@ -10,6 +10,7 @@ export type MenuItem = {
   path: string;
   icon: IconName;
   displayDivider: boolean;
+  roles: string[];
 };
 
 export type MenuOptions = {
@@ -24,6 +25,7 @@ export const menuOptions = {
       path: '/launch',
       icon: 'Rocket',
       displayDivider: true,
+      roles: ['user', 'admin'],
     },
     {
       key: 'building',
@@ -31,6 +33,7 @@ export const menuOptions = {
       path: '/buildings',
       icon: 'Building',
       displayDivider: false,
+      roles: ['admin'],
     },
     {
       key: 'pointsofinterest',
@@ -38,6 +41,7 @@ export const menuOptions = {
       path: '/pointsofinterest',
       icon: 'MapPin',
       displayDivider: true,
+      roles: ['admin'],
     },
     {
       key: 'generalfeatures',
@@ -45,6 +49,7 @@ export const menuOptions = {
       path: '/generalfeatures',
       icon: 'BrickWall',
       displayDivider: true,
+      roles: ['admin'],
     },
   ],
   admin: [
@@ -54,6 +59,7 @@ export const menuOptions = {
       path: '/users',
       icon: 'Users',
       displayDivider: true,
+      roles: ['admin'],
     },
   ],
 };
