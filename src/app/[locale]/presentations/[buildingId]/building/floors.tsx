@@ -276,14 +276,14 @@ export default function Floors({ units }: Props) {
                                 <img
                                   src={
                                     categoryIcons[masterGroup.room] ??
-                                    '/clogo1.png'
+                                    '/clogo5.png'
                                   }
                                   alt={`${masterGroup.room} — logo claro`}
                                   loading='lazy'
                                   decoding='async'
                                 />
                                 <img
-                                  src={darkIcons?.[masterGroup.room]}
+                                  src={darkIcons?.[masterGroup.room] ?? '/dlogo5.png'}
                                   alt={`${masterGroup.room} — logo oscuro`}
                                   className='absolute inset-0 h-full w-full object-contain opacity-0 grayscale transition-opacity duration-300 dark:opacity-100'
                                   loading='lazy'
