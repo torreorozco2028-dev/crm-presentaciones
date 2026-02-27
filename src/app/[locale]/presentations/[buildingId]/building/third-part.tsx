@@ -325,7 +325,7 @@ function AreaDetailModal({
           <div className='mb-8 flex items-start justify-between'>
             <div>
               <span
-                className={`${fonts.inter.className} text-[12px] uppercase tracking-[0.3em] text-[#0A192F]`}
+                className={`${fonts.inter.className} text-[12px] uppercase tracking-[0.3em] text-[#0A192F] dark:text-[#ffffff]`}
               >
                 Detalle de Amenidad
               </span>
@@ -349,14 +349,14 @@ function AreaDetailModal({
 
           <div className='mt-auto'>
             <h4 className='mb-4 text-xs font-bold uppercase tracking-widest text-gray-400'>
-              Galería de imágenes
+              Galería de imagenes
             </h4>
             <div className='grid grid-cols-4 gap-2'>
               {area.batch_images.map((img, i) => (
                 <button
                   key={i}
                   onClick={() => setCurrentIdx(i)}
-                  className={`relative aspect-square overflow-hidden rounded-lg border-2 transition-all ${currentIdx === i ? 'scale-95 border-orange-500' : 'border-transparent opacity-50 hover:opacity-100'}`}
+                  className={`relative aspect-square overflow-hidden rounded-lg border-2 transition-all ${currentIdx === i ? 'scale-95 border-[#0a192f]' : 'border-transparent opacity-50 hover:opacity-100'}`}
                 >
                   <Image src={img} alt='Thumb' fill className='object-cover' />
                 </button>
