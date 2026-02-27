@@ -146,9 +146,9 @@ export default function Carousel({
     <div
       ref={containerRef}
       tabIndex={0}
-      role="region"
-      aria-roledescription="carousel"
-      aria-label="Image carousel"
+      role='region'
+      aria-roledescription='carousel'
+      aria-label='Image carousel'
       className={`relative overflow-hidden ${height} ${width} rounded-sm ${className}`}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
@@ -159,7 +159,7 @@ export default function Carousel({
     >
       {filteredImages.length > 0 ? (
         <>
-          <div className="absolute inset-0 flex items-center justify-center bg-black/80 lg:bg-black/90">
+          <div className='absolute inset-0 flex items-center justify-center bg-black/80 lg:bg-black/90'>
             {filteredImages.map((src, idx) => {
               const isActive = idx === currentImageIndex;
               return (
@@ -169,13 +169,7 @@ export default function Carousel({
                   alt={`Imagen ${idx + 1} de ${filteredImages.length}`}
                   onLoad={() => handleImageLoad(idx)}
                   loading={idx === currentImageIndex ? 'eager' : 'lazy'}
-                  className={`
-                    absolute inset-0 m-auto
-                    transition-opacity duration-300 ease-in-out
-                    ${isActive ? 'opacity-100 z-20' : 'opacity-0 z-10'}
-                    max-h-full max-w-full
-                    object-contain lg:h-full lg:w-full lg:object-cover
-                    `}
+                  className={`absolute inset-0 m-auto transition-opacity duration-300 ease-in-out ${isActive ? 'z-20 opacity-100' : 'z-10 opacity-0'} ${loaded[idx] ? 'opacity-100' : 'opacity-0'} max-h-full max-w-full object-contain lg:h-full lg:w-full lg:object-cover`}
                   style={{ maxHeight: '100%', maxWidth: '100%' }}
                   draggable={false}
                 />
@@ -187,29 +181,29 @@ export default function Carousel({
             <>
               <Button
                 isIconOnly
-                className="absolute left-2 top-1/2 -translate-y-1/2 bg-default-100/80 hover:bg-default-200/80 z-30"
-                size="sm"
-                variant="flat"
+                className='absolute left-2 top-1/2 z-30 -translate-y-1/2 bg-default-100/80 hover:bg-default-200/80'
+                size='sm'
+                variant='flat'
                 onPress={handlePrevImage}
-                aria-label="Imagen anterior"
+                aria-label='Imagen anterior'
               >
-                <LucideIcon name="ChevronLeft" size="20" />
+                <LucideIcon name='ChevronLeft' size='20' />
               </Button>
 
               <Button
                 isIconOnly
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-default-100/80 hover:bg-default-200/80 z-30"
-                size="sm"
-                variant="flat"
+                className='absolute right-2 top-1/2 z-30 -translate-y-1/2 bg-default-100/80 hover:bg-default-200/80'
+                size='sm'
+                variant='flat'
                 onPress={handleNextImage}
-                aria-label="Siguiente imagen"
+                aria-label='Siguiente imagen'
               >
-                <LucideIcon name="ChevronRight" size="20" />
+                <LucideIcon name='ChevronRight' size='20' />
               </Button>
             </>
           )}
           {filteredImages.length > 1 && showIndicators && (
-            <div className="absolute bottom-3 left-1/2 z-30 flex -translate-x-1/2 gap-2">
+            <div className='absolute bottom-3 left-1/2 z-30 flex -translate-x-1/2 gap-2'>
               {filteredImages.map((_, idx) => (
                 <button
                   key={idx}
@@ -218,14 +212,14 @@ export default function Carousel({
                     resetAutoplay();
                   }}
                   aria-label={`Ir a la imagen ${idx + 1}`}
-                  className={`h-2 w-2 rounded-full transition-all ${idx === currentImageIndex ? 'bg-white scale-110' : 'bg-white/50'}`}
+                  className={`h-2 w-2 rounded-full transition-all ${idx === currentImageIndex ? 'scale-110 bg-white' : 'bg-white/50'}`}
                 />
               ))}
             </div>
           )}
         </>
       ) : (
-        <div className="flex h-full w-full items-center justify-center">
+        <div className='flex h-full w-full items-center justify-center'>
           <LucideIcon name={fallbackIcon as any} size={fallbackIconSize} />
         </div>
       )}

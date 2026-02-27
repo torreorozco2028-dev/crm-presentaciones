@@ -356,7 +356,7 @@ function AreaDetailModal({
                 <button
                   key={i}
                   onClick={() => setCurrentIdx(i)}
-                  className={`relative aspect-square overflow-hidden rounded-lg border-2 transition-all ${currentIdx === i ? 'scale-95 border-[#0a192f] ' : 'border-transparent opacity-50 hover:opacity-100'}`}
+                  className={`relative aspect-square overflow-hidden rounded-lg border-2 transition-all ${currentIdx === i ? 'scale-95 border-[#0a192f]' : 'border-transparent opacity-50 hover:opacity-100'}`}
                 >
                   <Image src={img} alt='Thumb' fill className='object-cover' />
                 </button>

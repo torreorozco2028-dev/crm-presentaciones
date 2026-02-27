@@ -140,10 +140,12 @@ export default function Floors({ units }: Props) {
   return (
     <div
       id='equipo'
-      className='min-h-screen bg-background p-4 pt-10 font-sans text-foreground transition-colors sm:p-10 dark:bg-slate-950'
+      className='min-h-screen bg-background p-4 pt-10 font-sans text-foreground transition-colors dark:bg-slate-950 sm:p-10'
     >
       <div className='mb-10 text-center'>
-        <h1 className={`mb-4 ${fonts.inter.className} text-5xl  tracking-tight text-foreground sm:text-5xl md:text-6xl`}>
+        <h1
+          className={`mb-4 ${fonts.inter.className} text-5xl tracking-tight text-foreground sm:text-5xl md:text-6xl`}
+        >
           Nuestras Unidades
         </h1>
         <p className='text-xs uppercase tracking-widest text-default-500'>
@@ -270,21 +272,22 @@ export default function Floors({ units }: Props) {
                             className='flex flex-col items-center text-center'
                           >
                             <div className='mb-4 flex h-[70px] flex-col items-center justify-center gap-2'>
-                              <div className="relative h-10 w-10 flex items-center justify-center">
-                                <img
-                                  src={categoryIcons[masterGroup.room] ?? '/clogo1.png'}
-                                  alt={`${masterGroup.room} — logo claro`}
-                                  loading="lazy"
-                                  decoding="async"
-                                />
+                              <div className='relative flex h-10 w-10 items-center justify-center'>
                                 <img
                                   src={
-                                    (darkIcons?.[masterGroup.room])
+                                    categoryIcons[masterGroup.room] ??
+                                    '/clogo1.png'
                                   }
+                                  alt={`${masterGroup.room} — logo claro`}
+                                  loading='lazy'
+                                  decoding='async'
+                                />
+                                <img
+                                  src={darkIcons?.[masterGroup.room]}
                                   alt={`${masterGroup.room} — logo oscuro`}
-                                  className="absolute inset-0 h-full w-full object-contain transition-opacity duration-300 opacity-0 dark:opacity-100 grayscale"
-                                  loading="lazy"
-                                  aria-hidden="false"
+                                  className='absolute inset-0 h-full w-full object-contain opacity-0 grayscale transition-opacity duration-300 dark:opacity-100'
+                                  loading='lazy'
+                                  aria-hidden='false'
                                 />
                               </div>
                               <p className='text-[10px] font-black uppercase tracking-[0.2em] text-default-500'>
@@ -323,9 +326,9 @@ export default function Floors({ units }: Props) {
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
-            className='pointer-events-none fixed  lg:bottom-10 lg:bottom-10  right-0 z-50 flex justify-center px-4'
+            className='pointer-events-none fixed right-0 z-50 flex justify-center px-4 lg:bottom-10'
           >
-            <Card className='pointer-events-auto flex  max-w-md flex-row justify-between border border-white/10 bg-black/80 p-4 text-white shadow-2xl backdrop-blur-xl dark:bg-content1  opacity-60'>
+            <Card className='pointer-events-auto flex max-w-md flex-row justify-between border border-white/10 bg-black/80 p-4 text-white opacity-60 shadow-2xl backdrop-blur-xl dark:bg-content1'>
               <div className='flex flex-col gap-1'>
                 <p className='text-[9px] font-bold uppercase tracking-[0.2em] opacity-50'>
                   Unidades seleccionadas

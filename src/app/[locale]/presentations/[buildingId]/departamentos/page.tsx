@@ -145,7 +145,7 @@ export default function DepartmentsPage({ data }: { data: any }) {
       </div>
 
       <div className='flex h-auto w-full max-w-[1700px] flex-col gap-8 lg:h-[calc(100vh-250px)] lg:flex-row'>
-        <section className='relative w-full overflow-hidden rounded-[30px] border-[2px]  border-zinc-100 bg-[#fcfcfc] shadow-xl dark:border-[#949494] dark:bg-transparent lg:w-[70%]'>
+        <section className='relative w-full overflow-hidden rounded-[30px] border-[2px] border-zinc-100 bg-[#fcfcfc] shadow-xl dark:border-[#949494] dark:bg-transparent lg:w-[70%]'>
           <AnimatePresence mode='wait'>
             {mobileTab === 'map' && (
               <motion.div
@@ -219,7 +219,7 @@ export default function DepartmentsPage({ data }: { data: any }) {
           </AnimatePresence>
         </section>
         <aside className='hidden h-full flex-col gap-6 lg:flex lg:w-[30%]'>
-          <div className='relative h-full overflow-hidden rounded-[40px] border-[2px] border-[#0a192f]  bg-white shadow-xl dark:border-white/5 dark:bg-transparent dark:border-[#949494]'>
+          <div className='relative h-full overflow-hidden rounded-[40px] border-[2px] border-[#0a192f] bg-white shadow-xl dark:border-[#949494] dark:border-white/5 dark:bg-transparent'>
             <InteractiveSVG
               svgUrl={data.plan_image}
               departments={data.models}
@@ -249,9 +249,12 @@ export default function DepartmentsPage({ data }: { data: any }) {
                   <X size={24} />
                 </Button>
               </ModalHeader>
-              <ModalBody className='p-0' >
-                <div className='h-[85vh] w-full '>
-                  <Carousel images={galleryImages} height='h-full w-full object-contain' />
+              <ModalBody className='p-0'>
+                <div className='h-[85vh] w-full'>
+                  <Carousel
+                    images={galleryImages}
+                    height='h-full w-full object-contain'
+                  />
                 </div>
               </ModalBody>
             </>
@@ -276,7 +279,7 @@ export default function DepartmentsPage({ data }: { data: any }) {
           stroke: #bebdbd;
           fill: #6b6b6b;
         }
-          
+
         .interactive-svg-container [id]:hover {
           fill: #ffffff;
           stroke: #0a192f;
