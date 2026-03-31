@@ -145,7 +145,7 @@ export default function BuildingLocation({ building }: BuildingLocationProps) {
                         </span>
                       </div>
 
-                      <h3 className='mb-2 font-serif text-base uppercase tracking-tight transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-300 lg:text-lg'>
+                      <h3 className='mb-2 font-serif text-base uppercase tracking-tight transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-600 lg:text-lg'>
                         {poi.point_name}
                       </h3>
                       <p className='line-clamp-2 text-xs font-light leading-relaxed opacity-60 lg:line-clamp-3'>
@@ -158,7 +158,7 @@ export default function BuildingLocation({ building }: BuildingLocationProps) {
                         <Clock size={12} className='opacity-40' />
                         <span className='text-[10px] font-bold opacity-50'>
                           {poi.point_distance
-                            ? `${poi.point_distance} MIN`
+                            ? `${poi.point_distance} m`
                             : 'CERCANO'}
                         </span>
                       </div>

@@ -140,12 +140,12 @@ export default function DepartmentsPage({ data }: { data: any }) {
         <h1
           className={`${fonts.inter.className} bg-gradient-to-b from-zinc-800 to-zinc-400 bg-clip-text text-5xl font-black uppercase tracking-tighter text-transparent dark:from-white dark:to-zinc-500 md:text-7xl lg:text-8xl`}
         >
-          plan Interactivo
+          plano Interactivo
         </h1>
       </div>
 
       <div className='flex h-auto w-full max-w-[1700px] flex-col gap-8 lg:h-[calc(100vh-250px)] lg:flex-row'>
-        <section className='relative w-full overflow-hidden rounded-[30px] border border-zinc-100 bg-[#fcfcfc] shadow-xl dark:border-white/5 dark:bg-transparent lg:w-[70%]'>
+        <section className='relative w-full overflow-hidden rounded-[30px] border-[2px] border-zinc-100 bg-[#fcfcfc] shadow-xl dark:border-[#949494] dark:bg-transparent lg:w-[70%]'>
           <AnimatePresence mode='wait'>
             {mobileTab === 'map' && (
               <motion.div
@@ -219,7 +219,7 @@ export default function DepartmentsPage({ data }: { data: any }) {
           </AnimatePresence>
         </section>
         <aside className='hidden h-full flex-col gap-6 lg:flex lg:w-[30%]'>
-          <div className='relative h-full overflow-hidden rounded-[40px] border border-zinc-100 bg-white shadow-xl dark:border-white/5 dark:bg-transparent'>
+          <div className='relative h-full overflow-hidden rounded-[40px] border-[2px] border-[#0a192f] bg-white shadow-xl dark:border-[#949494] dark:border-white/5 dark:bg-transparent'>
             <InteractiveSVG
               svgUrl={data.plan_image}
               departments={data.models}
@@ -251,7 +251,10 @@ export default function DepartmentsPage({ data }: { data: any }) {
               </ModalHeader>
               <ModalBody className='p-0'>
                 <div className='h-[85vh] w-full'>
-                  <Carousel images={galleryImages} height='h-full' />
+                  <Carousel
+                    images={galleryImages}
+                    height='h-full w-full object-contain'
+                  />
                 </div>
               </ModalBody>
             </>
@@ -267,17 +270,20 @@ export default function DepartmentsPage({ data }: { data: any }) {
         .interactive-svg-container [id] {
           cursor: pointer;
           transition: all 0.3s ease;
-          stroke: #ccc;
-          fill: #fff;
-        }
-        .interactive-svg-container [id]:hover {
-          fill: #f0f7ff !important;
-          stroke: #3b82f6;
-          stroke-width: 2px;
+          stroke: #000000;
+          fill: #908e8e;
         }
         :is(.dark) .interactive-svg-container [id] {
-          stroke: #333;
-          fill: #111;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          stroke: #bebdbd;
+          fill: #6b6b6b;
+        }
+
+        .interactive-svg-container [id]:hover {
+          fill: #ffffff;
+          stroke: #0a192f;
+          stroke-width: 2px;
         }
 
         ${selectedModel

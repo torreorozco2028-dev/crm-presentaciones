@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, Chip } from '@heroui/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bed, UtensilsCrossed, Bath, Wind, Zap, Check } from 'lucide-react';
+import { fonts } from '@/config/fonts';
 
-// --- Tipos basados en tu esquema de DB ---
 interface DepartmentFeature {
   id: string;
   dfeatures_name: string;
@@ -26,7 +25,7 @@ interface UnitDepartment {
   unit_number: string;
   floor: number;
   real_square_meters: number | null;
-  state: number; // 1, 2, 3
+  state: number;
   model: DepartmentModel;
 }
 
@@ -48,24 +47,31 @@ interface Props {
   building?: Building;
 }
 
-// Mapeo de iconos por categoría
-const categoryIcons: Record<string, React.ReactNode> = {
-  General: <Check className='h-5 w-5' />,
-  Dormitorios: <Bed className='h-5 w-5' />,
-  Cocina: <UtensilsCrossed className='h-5 w-5' />,
-  Baño: <Bath className='h-5 w-5' />,
-  Sala: <Wind className='h-5 w-5' />,
-  Lavanderia: <Zap className='h-5 w-5' />,
+const categoryIcons: Record<string, string> = {
+  General: '/clogo1.png',
+  Cocina: '/clogo2.png',
+  Baño: '/clogo3.png',
+  Dormitorio: '/clogo4.png',
+  Lavanderia: '/clogo5.png',
+  Sala: '/clogo6.png',
 };
 
-// Orden personalizado para los tipos de espacios
-const roomOrder = {
+const darkIcons: Record<string, string> = {
+  General: '/dlogo1.png',
+  Cocina: '/dlogo2.png',
+  Baño: '/dlogo3.png',
+  Dormitorio: '/dlogo4.png',
+  Lavanderia: '/dlogo5.png',
+  Sala: '/dlogo6.png',
+};
+
+const roomOrder: Record<string, number> = {
   General: 0,
-  Dormitorios: 1,
-  Cocina: 2,
-  Baño: 3,
-  Sala: 4,
-  Lavanderia: 5,
+  Cocina: 1,
+  Baño: 2,
+  Dormitorio: 3,
+  Lavanderia: 4,
+  Sala: 5,
 };
 
 export default function Floors({ units, building }: Props) {
@@ -74,30 +80,25 @@ export default function Floors({ units, building }: Props) {
     typeof window !== 'undefined' ? window.innerWidth : 1024
   );
 
-  // Detectar tamaño de pantalla
-  React.useEffect(() => {
+  useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const maxSelections = windowWidth < 768 ? 2 : 4; // 2 en mobile, 4 en desktop
+  const maxSelections = windowWidth < 768 ? 2 : 4;
 
-  // Agrupar features por room y ordenar
   const groupedFeatures = useMemo(() => {
-    const allFeatures = new Map<
-      string,
-      Map<string | null, DepartmentFeature[]>
-    >();
+    const allFeatures = new Map<string, Map<string, DepartmentFeature>>();
 
-    units.forEach((unit: any) => {
+    units.forEach((unit) => {
       if (unit.model?.features) {
-        unit.model.features.forEach((feature: any) => {
-          const room = feature.room || 'General';
-          if (!allFeatures.has(room)) {
-            allFeatures.set(room, new Map());
+        unit.model.features.forEach((feature) => {
+          const roomName = feature.room || 'General';
+          if (!allFeatures.has(roomName)) {
+            allFeatures.set(roomName, new Map());
           }
-          const roomMap = allFeatures.get(room)!;
+          const roomMap = allFeatures.get(roomName)!;
           if (!roomMap.has(feature.id)) {
             roomMap.set(feature.id, feature);
           }
@@ -105,40 +106,32 @@ export default function Floors({ units, building }: Props) {
       }
     });
 
-    // Convertir a array y ordenar
     return Array.from(allFeatures.entries())
       .map(([room, featuresMap]) => ({
         room,
         features: Array.from(featuresMap.values()).sort(
-          (a: any, b: any) => (a.order || 0) - (b.order || 0)
+          (a, b) => (a.order || 0) - (b.order || 0)
         ),
       }))
       .sort((a, b) => {
-        const orderA = roomOrder[a.room as keyof typeof roomOrder] ?? 999;
-        const orderB = roomOrder[b.room as keyof typeof roomOrder] ?? 999;
+        const orderA = roomOrder[a.room] ?? 999;
+        const orderB = roomOrder[b.room] ?? 999;
         return orderA - orderB;
       });
   }, [units]);
 
-  // 1. Agrupar y ordenar datos dinámicamente
   const buildingMap = useMemo(() => {
     const floors: Record<number, UnitDepartment[]> = {};
-
     units.forEach((unit) => {
       if (!floors[unit.floor]) floors[unit.floor] = [];
       floors[unit.floor].push(unit);
     });
 
-    // Ordenar departamentos dentro de cada piso por su número/nombre
-    Object.keys(floors).forEach((f) => {
-      floors[Number(f)].sort((a, b) =>
-        a.unit_number.localeCompare(b.unit_number)
-      );
-    });
-
-    // Retornar pisos ordenados de mayor a menor (arquitectónico)
     return Object.entries(floors)
-      .map(([floor, depts]) => ({ floor: Number(floor), depts }))
+      .map(([floor, depts]) => ({
+        floor: Number(floor),
+        depts: depts.sort((a, b) => a.unit_number.localeCompare(b.unit_number)),
+      }))
       .sort((a, b) => b.floor - a.floor);
   }, [units]);
 
@@ -154,8 +147,9 @@ export default function Floors({ units, building }: Props) {
   };
 
   const selectedUnits = units.filter((u) => selectedIds.includes(u.id));
-
-  const hasFeatures = selectedUnits.some((u) => u.model?.features?.length > 0);
+  const hasFeatures = selectedUnits.some(
+    (u) => (u.model?.features?.length ?? 0) > 0
+  );
 
   // Calcular precios y ahorros por etapa
   const priceAnalysis = useMemo(() => {
@@ -205,28 +199,35 @@ export default function Floors({ units, building }: Props) {
   return (
     <div
       id='equipo'
-      className='min-h-screen bg-background p-4 pt-10 text-foreground transition-colors sm:p-10'
+      className='min-h-screen bg-background p-4 pt-10 font-sans text-foreground transition-colors dark:bg-slate-950 sm:p-10'
     >
-      <p className='text-xs text-default-500'>
-        Selecciona hasta {maxSelections} unidades para comparar
-      </p>
-      <div className='mx-auto flex max-w-3xl flex-col gap-4'>
+      <div className='mb-10 text-center'>
+        <h1
+          className={`mb-4 ${fonts.inter.className} text-5xl tracking-tight text-foreground sm:text-5xl md:text-6xl`}
+        >
+          Nuestras Unidades
+        </h1>
+        <p className='text-xs uppercase tracking-widest text-default-500'>
+          Selecciona hasta {maxSelections} unidades para comparar detalles
+        </p>
+      </div>
+
+      <div className='mx-auto mb-20 flex max-w-3xl flex-col gap-4'>
         {buildingMap.map(({ floor, depts }) => (
           <div
             key={floor}
-            className='group flex flex-col items-start gap-3 sm:flex-row sm:items-center'
+            className='group flex flex-col items-center gap-3 sm:flex-row sm:items-center'
           >
-            {/* Etiqueta de Piso Estilo Plano */}
-            <div className='min-w-[60px] border-l-2 border-default-300 pl-3'>
+            <div className='min-w-[70px] border-default-300 text-center sm:border-l-2 sm:pl-3 sm:text-left'>
               <span className='block font-mono text-[10px] uppercase tracking-tighter text-default-400'>
                 Nivel
               </span>
-              <span className='text-lg font-bold leading-none'>
+              <span className='text-xl font-bold leading-none'>
                 {floor.toString().padStart(2, '0')}
               </span>
             </div>
-            {/* Contenedor Flex Dinámico: Se adapta a cualquier cantidad de depts */}
-            <div className='flex w-full flex-wrap gap-2'>
+
+            <div className='flex w-full flex-wrap justify-center gap-2 sm:justify-start'>
               {depts.map((unit) => {
                 const isSelected = selectedIds.includes(unit.id);
                 const isAvailable = unit.state === 1;
@@ -235,25 +236,25 @@ export default function Floors({ units, building }: Props) {
                     key={unit.id}
                     disabled={!isAvailable}
                     onClick={() => handleSelect(unit)}
-                    className={`relative flex min-w-[80px] flex-1 flex-col items-start rounded-lg border-2 px-4 py-3 transition-all duration-300 sm:min-w-[100px] sm:flex-none ${
+                    className={`relative flex min-w-[90px] flex-1 flex-col items-center rounded-xl border-2 px-4 py-3 transition-all duration-400 sm:min-w-[110px] sm:flex-none ${
                       isSelected
-                        ? 'z-10 scale-[1.02] border-foreground bg-foreground text-background shadow-xl'
+                        ? 'z-10 scale-[1.05] border-foreground bg-foreground text-background shadow-2xl'
                         : isAvailable
-                          ? 'border-default-300 text-default-600 hover:border-primary dark:border-default-700 dark:text-default-400'
-                          : 'cursor-not-allowed border-default-100 bg-default-50/50 text-default-300 opacity-50 dark:border-default-900 dark:bg-default-900/20 dark:text-default-700'
-                    } `}
+                          ? 'border-default-200 text-default-600 hover:border-foreground dark:border-default-800'
+                          : 'cursor-not-allowed border-default-100 bg-default-50/30 text-default-300 opacity-40'
+                    }`}
                   >
-                    <span className='text-[10px] font-bold uppercase tracking-widest opacity-70'>
+                    <span className='text-[9px] font-bold uppercase tracking-[0.2em] opacity-70'>
                       Depto
                     </span>
-                    <span className='font-mono text-sm font-black'>
+                    <span className='font-mono text-base font-black'>
                       {unit.unit_number}
                     </span>
                     {unit.real_square_meters && (
                       <span
-                        className={`mt-1 text-[9px] ${isSelected ? 'opacity-80' : 'text-default-400'}`}
+                        className={`mt-1 text-[10px] font-medium ${isSelected ? 'opacity-90' : 'text-default-400'}`}
                       >
-                        {unit.real_square_meters}m²
+                        {unit.real_square_meters} m²
                       </span>
                     )}
                   </button>
@@ -263,113 +264,111 @@ export default function Floors({ units, building }: Props) {
           </div>
         ))}
       </div>
-
-      {/* Comparador de Características - Minimalista sin tabla */}
       <AnimatePresence>
         {selectedIds.length > 0 && hasFeatures && (
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className='mt-20'
+            className='mt-32 pb-40'
           >
-            <div className='mb-12 px-4 text-center'>
-              <h2 className='text-3xl font-bold text-foreground'>
-                Comparar Características
+            <div className='mb-16 px-4 text-center'>
+              <h2 className='font-serif text-4xl italic text-foreground'>
+                Detalles de Selección
               </h2>
-              <p className='mt-3 text-sm text-default-500'>
-                Visualiza los detalles de las unidades seleccionadas
-              </p>
+              <div className='mx-auto mt-4 h-px w-20 bg-primary/40' />
             </div>
-
-            {/* Columnas flexibles - Características minimalistas */}
-            <div className='w-full sm:mx-auto sm:max-w-7xl'>
-              <div className='flex flex-wrap justify-start gap-3 px-3 sm:justify-center sm:gap-12 sm:px-0 lg:gap-16'>
+            <div className='mx-auto max-w-[1400px] px-4'>
+              <div className='flex flex-wrap justify-center gap-2 sm:gap-6 lg:flex-nowrap lg:gap-4'>
                 {selectedUnits.map((unit) => (
                   <motion.div
                     key={unit.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className='flex w-[calc(50%-6px)] flex-col space-y-8 px-4 py-6 sm:w-72 lg:rounded-lg lg:shadow-lg'
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className='flex w-[calc(50%-0.5rem)] flex-col items-center space-y-4 rounded-xl border border-default-100 bg-content1/50 p-4 shadow-sm backdrop-blur-sm sm:w-[calc(50%-1.5rem)] sm:space-y-8 sm:p-8 lg:w-1/4'
                   >
-                    {/* Encabezado de la unidad */}
-                    <div className='space-y-3 p-4 lg:text-center'>
-                      <p className='text-xs font-semibold uppercase tracking-widest text-default-500'>
+                    <div className='space-y-3 text-center'>
+                      <p className='text-[10px] font-bold uppercase tracking-[0.3em] text-default-400'>
                         Departamento
                       </p>
-                      <h3 className='text-4xl font-black tracking-tight text-foreground'>
+                      <h3 className='text-5xl font-black tracking-tighter text-foreground'>
                         {unit.unit_number}
                       </h3>
-                      <div className='flex flex-col gap-2 pt-2 text-sm text-default-600'>
-                        <span>
-                          Piso{' '}
-                          <span className='font-semibold text-foreground'>
-                            {unit.floor}
-                          </span>
-                        </span>
-                        <span>
-                          <span className='font-semibold text-foreground'>
-                            {unit.real_square_meters}
-                          </span>
-                          m²
+
+                      <div className='flex flex-col items-center gap-1 text-sm text-default-600'>
+                        <span className='font-medium'>Nivel {unit.floor}</span>
+                        <span className='rounded bg-default-100 px-2 py-0.5 font-mono text-xs'>
+                          {unit.real_square_meters} m² totales
                         </span>
                       </div>
+
                       {unit.model?.name_model_department && (
-                        <p className='pt-2 text-xs font-semibold text-primary'>
+                        <p className='pt-2 text-xs font-bold uppercase tracking-widest text-primary'>
                           {unit.model.name_model_department}
                         </p>
                       )}
                     </div>
 
-                    {/* Estado */}
                     <Chip
                       variant='flat'
                       color={unit.state === 1 ? 'success' : 'default'}
-                      className='flex w-fit text-xs font-semibold lg:self-center'
+                      className='px-4 py-1 text-[10px] font-bold uppercase tracking-widest'
                     >
-                      {unit.state === 1 && 'Disponible'}
-                      {unit.state === 2 && 'Reservado'}
-                      {unit.state === 3 && 'Vendido'}
+                      {unit.state === 1 ? 'Disponible' : 'Consultar'}
                     </Chip>
-
-                    {/* Características agrupadas por categoría */}
-                    <div className='space-y-7'>
-                      {groupedFeatures.map((group) => {
-                        // Filtrar features que tiene esta unidad en esta categoría
-                        const unitFeaturesInGroup = group.features.filter(
-                          (feature: any) =>
+                    <div className='w-full space-y-12'>
+                      {groupedFeatures.map((masterGroup) => {
+                        const unitFeaturesInGroup = masterGroup.features.filter(
+                          (feature) =>
                             unit.model?.features?.some(
                               (f) => f.id === feature.id
                             )
                         );
 
-                        // Solo mostrar la categoría si la unidad tiene características en ella
-                        if (unitFeaturesInGroup.length === 0) {
-                          return null;
-                        }
-
                         return (
                           <div
-                            key={group.room}
-                            className='bg-tra flex-col space-y-3 lg:flex lg:items-center'
+                            key={masterGroup.room}
+                            className='flex flex-col items-center text-center'
                           >
-                            <div className='flex items-center gap-2.5'>
-                              <div className='text-default-400'>
-                                {categoryIcons[group.room]}
+                            <div className='mb-4 flex h-[70px] flex-col items-center justify-center gap-2'>
+                              <div className='relative flex h-10 w-10 items-center justify-center'>
+                                <img
+                                  src={
+                                    categoryIcons[masterGroup.room] ??
+                                    '/clogo5.png'
+                                  }
+                                  alt={`${masterGroup.room} — logo claro`}
+                                  loading='lazy'
+                                  decoding='async'
+                                />
+                                <img
+                                  src={
+                                    darkIcons?.[masterGroup.room] ??
+                                    '/dlogo5.png'
+                                  }
+                                  alt={`${masterGroup.room} — logo oscuro`}
+                                  className='absolute inset-0 h-full w-full object-contain opacity-0 grayscale transition-opacity duration-300 dark:opacity-100'
+                                  loading='lazy'
+                                  aria-hidden='false'
+                                />
                               </div>
-                              <p className='text-xs font-bold uppercase tracking-widest text-default-600 dark:text-default-400'>
-                                {group.room}
+                              <p className='text-[10px] font-black uppercase tracking-[0.2em] text-default-500'>
+                                {masterGroup.room}
                               </p>
                             </div>
-                            <div className='space-y-2.5 pl-8'>
-                              {unitFeaturesInGroup.map((feature: any) => (
-                                <p
-                                  key={feature.id}
-                                  className='text-sm font-medium leading-relaxed text-foreground'
-                                >
-                                  {feature.dfeatures_name}
-                                </p>
-                              ))}
+                            <div className='flex min-h-[60px] flex-col items-center justify-start space-y-2'>
+                              {unitFeaturesInGroup.length > 0 ? (
+                                unitFeaturesInGroup.map((feature) => (
+                                  <p
+                                    key={feature.id}
+                                    className='text-sm font-medium leading-tight text-foreground/80'
+                                  >
+                                    {feature.dfeatures_name}
+                                  </p>
+                                ))
+                              ) : (
+                                <div className='h-4 w-8 border-b border-default-100 opacity-20' />
+                              )}
                             </div>
                           </div>
                         );
@@ -659,41 +658,40 @@ export default function Floors({ units, building }: Props) {
       </AnimatePresence>
 
       {/* Selector Flotante Minimalista */}
-      {/* Selector Flotante Minimalista */}
       <AnimatePresence>
         {selectedIds.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: 50 }}
+            initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            className='pointer-events-none fixed right-0 z-50 flex justify-center px-4 lg:bottom-10 lg:right-10'
+            exit={{ opacity: 0, y: 100 }}
+            className='pointer-events-none fixed right-0 z-50 flex justify-center px-4 lg:bottom-10'
           >
-            <Card className='pointer-events-auto w-full max-w-lg border border-default-200 bg-content1 bg-transparent p-4 text-foreground shadow-2xl'>
-              <div className='flex items-center justify-between'>
-                <div className='flex flex-col'>
-                  <p className='text-[10px] uppercase tracking-widest text-default-500'>
-                    Seleccionados
-                  </p>
-                  <div className='mt-1 flex gap-2'>
-                    {selectedUnits.map((u) => (
-                      <Chip
-                        key={u.id}
-                        size='sm'
-                        variant='flat'
-                        className='bg-default-100 font-bold text-foreground'
-                      >
-                        {u.unit_number}
-                      </Chip>
-                    ))}
-                  </div>
+            <Card className='pointer-events-auto flex max-w-md flex-row justify-between border border-white/10 bg-black/80 p-4 text-white opacity-60 shadow-2xl backdrop-blur-xl dark:bg-content1'>
+              <div className='flex flex-col gap-1'>
+                <p className='text-[9px] font-bold uppercase tracking-[0.2em] opacity-50'>
+                  Unidades seleccionadas
+                </p>
+                <div className='mt-1 flex flex-wrap gap-2'>
+                  {selectedUnits.map((u) => (
+                    <Chip
+                      key={u.id}
+                      size='sm'
+                      variant='flat'
+                      className='border border-white/15 bg-white/10 font-mono text-xs font-bold text-white dark:border-white/15 dark:bg-white/10'
+                    >
+                      #{u.unit_number}
+                    </Chip>
+                  ))}
                 </div>
-                <div className='pl-2 text-right'>
-                  <p className='text-2xl font-black text-foreground'>
+              </div>
+              <div className='flex items-center gap-4'>
+                <div className='text-right'>
+                  <span className='text-2xl font-black'>
                     {selectedIds.length}
-                    <span className='ml-1 text-xs text-default-500'>
-                      / {maxSelections}
-                    </span>
-                  </p>
+                  </span>
+                  <span className='ml-1 text-[10px] opacity-40'>
+                    / {maxSelections}
+                  </span>
                 </div>
               </div>
             </Card>

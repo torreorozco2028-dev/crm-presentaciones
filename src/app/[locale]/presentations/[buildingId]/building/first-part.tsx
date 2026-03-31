@@ -15,7 +15,7 @@ export default function BuildingHero({ building }: BuildingHeroProps) {
   return (
     <section
       id='inicio'
-      className='relative w-full overflow-x-hidden bg-white font-sans text-[#0a192f] transition-colors duration-500 dark:bg-[#0a192f] dark:text-white'
+      className='relative w-full overflow-x-hidden bg-white font-sans text-[#0a192f] transition-colors duration-500 dark:bg-slate-950 dark:text-white'
     >
       <div className='relative flex min-h-screen flex-col lg:min-h-[110vh] lg:flex-row'>
         <div
