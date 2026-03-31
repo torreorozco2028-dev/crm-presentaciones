@@ -156,7 +156,7 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
         </AnimatePresence>
       </div>
       {/* Paginación */}
-      {total > 1 && (
+      {total >= 1 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

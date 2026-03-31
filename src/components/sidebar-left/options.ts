@@ -28,6 +28,14 @@ export const menuOptions = {
       roles: ['user', 'admin'],
     },
     {
+      key: 'calculator',
+      label: 'menu.calculator',
+      path: '/calculator',
+      icon: 'Calculator',
+      displayDivider: false,
+      roles: ['user', 'admin'],
+    },
+    {
       key: 'building',
       label: 'menu.building',
       path: '/buildings',
@@ -51,8 +59,6 @@ export const menuOptions = {
       displayDivider: true,
       roles: ['admin'],
     },
-  ],
-  admin: [
     {
       key: 'users',
       label: 'menu.users',
