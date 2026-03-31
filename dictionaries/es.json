@@ -17,6 +17,7 @@
     },
     "menu": {
       "launch": "Lanzamiento",
+      "calculator": "Calculadora de prestamo",
       "users": "Usuarios",
       "admin": "Administración",
       "home": "Inicio",
@@ -30,6 +31,7 @@
     "intros": {
       "users": "Gestiona tu equipo y controla el acceso a tu sistema de manera eficiente.",
       "launch": "Lanza tus presentaciones facilmente",
+      "calculator": "Simula cuotas, interes y cronograma de amortizacion para tus clientes.",
       "buildings": "Gestiona y supervisa todos tus presentaciones de proyectos con facilidad.",
       "settings": "Configuraciones",
       "generalfeatures": "Acabados generales",
@@ -142,14 +144,14 @@
   },
   "Email": {
     "invite": {
-      "subject": "Has sido invitado a unirte a StructSoft",
-      "welcome": "¡Bienvenido a Structsoft!",
-      "invited": "Has sido invitado a unirte a Structsoft. Estamos emocionados de tenerte a bordo.",
+      "subject": "Has sido invitado a unirte a Structec",
+      "welcome": "¡Bienvenido a Structec!",
+      "invited": "Has sido invitado a unirte a Structec. Estamos emocionados de tenerte a bordo.",
       "clickBelow": "Haz clic en el botón de abajo para comenzar tu proceso de registro:",
       "startRegistration": "Comenzar Registro",
       "buttonNotWorking": "Si el botón de arriba no funciona, puedes copiar y pegar el siguiente enlace en tu navegador:",
       "thankYou": "Gracias,",
-      "team": "Equipo Structsoft"
+      "team": "Equipo Structec"
     }
   },
   "Settings": {

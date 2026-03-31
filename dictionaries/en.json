@@ -17,6 +17,7 @@
     },
     "menu": {
       "launch": "Launch",
+      "calculator": "Calculator",
       "users": "Users",
       "admin": "Administration",
       "home": "Home",
@@ -30,6 +31,7 @@
     "intros": {
       "users": "Manage your team and control system access efficiently.",
       "launch": "Launch your presentations easily",
+      "calculator": "Simulate installments, interest, and full amortization schedule for clients.",
       "buildings": "Manage and supervise all your project presentations with ease.",
       "settings": "Settings",
       "generalfeatures": "General Features",
@@ -142,14 +144,14 @@
   },
   "Email": {
     "invite": {
-      "subject": "You were invited to join StructSoft",
-      "welcome": "Welcome to Structsoft!",
-      "invited": "You have been invited to join Structsoft. We are excited to have you on board.",
+      "subject": "You were invited to join Structec",
+      "welcome": "Welcome to Structec!",
+      "invited": "You have been invited to join Structec. We are excited to have you on board.",
       "clickBelow": "Click the button below to start your registration process:",
       "startRegistration": "Start Registration",
       "buttonNotWorking": "If the button above does not work, you can copy and paste the following link into your browser:",
       "thankYou": "Thank you,",
-      "team": "Structsoft Team"
+      "team": "Structec Team"
     }
   },
   "Navbar": {
