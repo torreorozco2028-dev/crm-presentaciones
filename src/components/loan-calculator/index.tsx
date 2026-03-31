@@ -414,7 +414,10 @@ export default function LoanCalculator() {
 
     const amortizationHtml = amortizationRows
       .map(
-        (row) => `<tr>
+        (
+          row,
+          index
+        ) => `<tr class="${index % 2 === 0 ? 'row-odd' : 'row-even'}">
           <td>${row.paymentNumber}</td>
           <td>${escapeHtml(row.paymentDate)}</td>
           <td class="right">${escapeHtml(toCurrency(row.startingBalance))}</td>
@@ -436,7 +439,13 @@ export default function LoanCalculator() {
     <style>
       @page { size: A4 landscape; margin: 6mm; }
       * { box-sizing: border-box; }
-      body { font-family: Arial, sans-serif; color: #111827; margin: 0; }
+      body {
+        font-family: Arial, sans-serif;
+        color: #111827;
+        margin: 0;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
       .header { display: flex; justify-content: space-between; align-items: end; margin-bottom: 10px; }
       .title { font-size: 20px; font-weight: 700; }
       .meta { font-size: 12px; text-align: right; }
@@ -447,8 +456,15 @@ export default function LoanCalculator() {
       .amort-title { background: #0e3344; color: #fff; padding: 6px 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
       .amort { width: 100%; border-collapse: collapse; }
       .amort thead th { background: #1f2937; color: #fff; border: 1px solid #111827; padding: 6px 4px; font-size: 10px; text-transform: uppercase; }
-      .amort tbody td { border: 1px solid #d1d5db; padding: 5px 4px; font-size: 10px; }
-      .amort tbody tr:nth-child(even) { background: #f8fafc; }
+      .amort tbody td {
+        border: 1px solid #d1d5db;
+        padding: 5px 4px;
+        font-size: 10px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .amort tbody tr.row-odd td { background: #ffffff; }
+      .amort tbody tr.row-even td { background: #e6edf2; }
       .right { text-align: right; }
       .footer { margin-top: 8px; font-size: 10px; color: #475569; display: flex; justify-content: space-between; }
       .page-break { page-break-before: always; }
