@@ -387,6 +387,8 @@ export default function LoanCalculator() {
     if (!printWindow) {
       return;
     }
+    const letterheadHeaderUrl = `${window.location.origin}/fondo-header.png`;
+    const letterheadFooterUrl = `${window.location.origin}/fondo-footer.png`;
 
     const summaryRows = [
       ['Cliente', clientName || 'No definido'],
@@ -401,24 +403,48 @@ export default function LoanCalculator() {
       ['Tasa de interes mensual', `${toNumber(monthlyInterestRate * 100)}%`],
       ['Mensualidad base', toCurrency(baseScheduledPayment)],
       ['Mensualidad en Bs', `Bs ${toNumber(monthlyPaymentInBs)}`],
-      ['Numero de pagos', String(amortizationRows.length)],
+      ['Numero de pagos', String(24 + amortizationRows.length)],
       ['Interes total', toCurrency(amortizationTotalInterest)],
     ];
 
-    const summaryHtml = summaryRows
-      .map(
-        (row) =>
-          `<tr><td class="label">${escapeHtml(row[0])}</td><td class="value">${escapeHtml(row[1])}</td></tr>`
-      )
-      .join('');
+    const phase2TotalScheduled = amortizationRows.reduce(
+      (acc, r) => acc + r.scheduledPayment,
+      0
+    );
+    const clampedLoanYears = clamp(loanYears, MIN_LOAN_YEARS, MAX_LOAN_YEARS);
 
-    const amortizationHtml = amortizationRows
-      .map(
-        (
-          row,
-          index
-        ) => `<tr class="${index % 2 === 0 ? 'row-odd' : 'row-even'}">
-          <td>${row.paymentNumber}</td>
+    const baseAmortDate = firstPaymentDate
+      ? new Date(`${firstPaymentDate}T00:00:00`)
+      : new Date();
+
+    const phase1Html = Array.from({ length: 24 }, (_, i) => {
+      const d = new Date(baseAmortDate);
+      d.setMonth(baseAmortDate.getMonth() + i);
+      const dateStr = d.toISOString().split('T')[0];
+      const payInBs = monthlyQuotaTwoYears * officialExchangeRate;
+      const balance = Math.max(
+        twoYearsNoInterestTotal - monthlyQuotaTwoYears * (i + 1),
+        0
+      );
+      const rowClass = i % 2 === 0 ? 'row-odd' : 'row-even';
+      return `<tr class="${rowClass}">
+        <td>${i + 1}</td>
+        <td>${escapeHtml(dateStr)}</td>
+        <td class="right">${escapeHtml(toCurrency(twoYearsNoInterestTotal - monthlyQuotaTwoYears * i))}</td>
+        <td class="right">${escapeHtml(toCurrency(monthlyQuotaTwoYears))}</td>
+        <td class="right">${escapeHtml(`Bs ${toNumber(payInBs)}`)}</td>
+        <td class="right">${escapeHtml(toCurrency(0))}</td>
+        <td class="right">${escapeHtml(toCurrency(0))}</td>
+        <td class="right">${escapeHtml(toCurrency(monthlyQuotaTwoYears))}</td>
+        <td class="right">${escapeHtml(toCurrency(balance))}</td>
+      </tr>`;
+    }).join('');
+
+    const phase2Html = amortizationRows
+      .map((row, index) => {
+        const rowClass = (24 + index) % 2 === 0 ? 'row-odd' : 'row-even';
+        return `<tr class="${rowClass}">
+          <td>${24 + index + 1}</td>
           <td>${escapeHtml(row.paymentDate)}</td>
           <td class="right">${escapeHtml(toCurrency(row.startingBalance))}</td>
           <td class="right">${escapeHtml(toCurrency(row.scheduledPayment))}</td>
@@ -427,8 +453,35 @@ export default function LoanCalculator() {
           <td class="right">${escapeHtml(toCurrency(row.interest))}</td>
           <td class="right">${escapeHtml(toCurrency(row.principal))}</td>
           <td class="right">${escapeHtml(toCurrency(row.remainingBalance))}</td>
-        </tr>`
-      )
+        </tr>`;
+      })
+      .join('');
+
+    const amortizationHtml = `
+      <tr class="phase-separator">
+        <td colspan="9">Fase 1 — 2 años sin interés (24 cuotas · Total: ${escapeHtml(toCurrency(twoYearsNoInterestTotal))})</td>
+      </tr>
+      ${phase1Html}
+      <tr class="phase-separator">
+        <td colspan="9">Fase 2 — ${escapeHtml(String(clampedLoanYears))} años con interés ${escapeHtml(toNumber(FIXED_ANNUAL_INTEREST_PERCENT))}% anual (${amortizationRows.length} cuotas · Total: ${escapeHtml(toCurrency(phase2TotalScheduled))})</td>
+      </tr>
+      ${phase2Html}
+    `;
+
+    const pairedSummaryRows: string[][][] = [];
+    for (let i = 0; i < summaryRows.length; i += 2) {
+      pairedSummaryRows.push(summaryRows.slice(i, i + 2));
+    }
+    const summaryHtml = pairedSummaryRows
+      .map((pair) => {
+        const left = pair[0];
+        const right = pair[1];
+        const leftHtml = `<td class="label">${escapeHtml(left[0])}</td><td class="value">${escapeHtml(left[1])}</td>`;
+        const rightHtml = right
+          ? `<td class="label label-right">${escapeHtml(right[0])}</td><td class="value">${escapeHtml(right[1])}</td>`
+          : `<td class="label label-right empty"></td><td class="value empty"></td>`;
+        return `<tr>${leftHtml}${rightHtml}</tr>`;
+      })
       .join('');
 
     const doc = `<!doctype html>
@@ -437,22 +490,66 @@ export default function LoanCalculator() {
     <meta charset="utf-8" />
     <title>Oferta de prestamo - ${escapeHtml(clientName || 'Cliente')}</title>
     <style>
-      @page { size: A4 landscape; margin: 6mm; }
+      @page { size: A4 portrait; margin: 0; }
       * { box-sizing: border-box; }
       body {
         font-family: Arial, sans-serif;
         color: #111827;
         margin: 0;
+        padding: 0;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+      }
+      .page-letterhead {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 32mm;
+        background: #ffffff url('${escapeHtml(letterheadHeaderUrl)}') center top/100% auto no-repeat;
+      }
+      .page-footer {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 29mm;
+        background: #ffffff url('${escapeHtml(letterheadFooterUrl)}') center bottom/100% auto no-repeat;
+      }
+      .print-shell {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .print-shell thead {
+        display: table-header-group;
+      }
+      .print-shell tfoot {
+        display: table-footer-group;
+      }
+      .print-shell .spacer-top {
+        height: 35mm;
+      }
+      .print-shell .spacer-bottom {
+        height: 33mm;
+      }
+      .print-shell td {
+        padding: 0;
+      }
+      .content {
+        padding: 0 10mm;
       }
       .header { display: flex; justify-content: space-between; align-items: end; margin-bottom: 10px; }
       .title { font-size: 20px; font-weight: 700; }
       .meta { font-size: 12px; text-align: right; }
-      .summary { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
-      .summary td { border: 1px solid #cbd5e1; padding: 6px 8px; font-size: 12px; }
-      .summary td.label { width: 65%; background: #f8fafc; font-weight: 700; text-transform: uppercase; }
-      .summary td.value { width: 35%; text-align: right; background: #ffffff; }
+      .summary-card { margin-bottom: 20px; }
+      .summary-card-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #0e3344; margin-bottom: 6px; }
+      .summary { width: auto; min-width: 420px; max-width: 620px; border-collapse: collapse; border-radius: 6px; overflow: hidden; border: 1px solid #cbd5e1; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+      .summary td { padding: 9px 12px; font-size: 11px; vertical-align: middle; }
+      .summary td.label { background: #f1f5f9; font-weight: 700; text-transform: uppercase; color: #0e3344; letter-spacing: 0.04em; border-right: 1px solid #cbd5e1; white-space: nowrap; }
+      .summary td.label-right { border-left: 2px solid #cbd5e1; }
+      .summary td.value { background: #ffffff; text-align: right; color: #1e293b; border-right: 1px solid #e2e8f0; min-width: 110px; }
+      .summary td.empty { background: #f8fafc; }
+      .summary tr { border-bottom: 1px solid #e2e8f0; }
       .amort-title { background: #0e3344; color: #fff; padding: 6px 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
       .amort { width: 100%; border-collapse: collapse; }
       .amort thead th { background: #1f2937; color: #fff; border: 1px solid #111827; padding: 6px 4px; font-size: 10px; text-transform: uppercase; }
@@ -463,17 +560,32 @@ export default function LoanCalculator() {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
+      .amort tbody tr.phase-separator td { background: #0e3344; color: #e2e8f0; font-weight: 700; padding: 7px 8px; font-size: 11px; letter-spacing: 0.03em; }
       .amort tbody tr.row-odd td { background: #ffffff; }
       .amort tbody tr.row-even td { background: #e6edf2; }
       .right { text-align: right; }
       .footer { margin-top: 8px; font-size: 10px; color: #475569; display: flex; justify-content: space-between; }
       .page-break { page-break-before: always; }
-      thead { display: table-header-group; }
       tr, td, th { page-break-inside: avoid; }
       @media print { .no-print { display: none; } }
     </style>
   </head>
   <body>
+    <div class="page-letterhead"></div>
+
+    <div class="page-footer"></div>
+
+    <table class="print-shell" aria-hidden="true">
+      <thead>
+        <tr><td><div class="spacer-top"></div></td></tr>
+      </thead>
+      <tfoot>
+        <tr><td><div class="spacer-bottom"></div></td></tr>
+      </tfoot>
+      <tbody>
+        <tr>
+          <td>
+            <div class="content">
     <div class="header">
       <div class="title">Oferta y cronograma de prestamo</div>
       <div class="meta">
@@ -483,7 +595,10 @@ export default function LoanCalculator() {
       </div>
     </div>
 
-    <table class="summary">${summaryHtml}</table>
+    <div class="summary-card">
+      <div class="summary-card-title">Resumen de oferta</div>
+      <table class="summary">${summaryHtml}</table>
+    </div>
 
     <div class="amort-title">Cronograma de amortizacion</div>
     <table class="amort">
@@ -502,10 +617,11 @@ export default function LoanCalculator() {
       </thead>
       <tbody>${amortizationHtml}</tbody>
     </table>
-    <div class="footer">
-      <span>Documento referencial. Tasas y montos sujetos a validacion comercial.</span>
-      <span>Structec</span>
-    </div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
     <script>
       window.onload = function () {
         window.print();
