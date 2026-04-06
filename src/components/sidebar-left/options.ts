@@ -67,5 +67,13 @@ export const menuOptions = {
       displayDivider: true,
       roles: ['admin'],
     },
+    {
+      key: 'sales',
+      label: 'menu.sales',
+      path: '/sales',
+      icon: 'Sales',
+      displayDivider: true,
+      roles: ['admin'],
+    },
   ],
 };

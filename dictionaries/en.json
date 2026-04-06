@@ -26,7 +26,8 @@
       "settings": "Settings",
       "avatar": "Avatar",
       "generalfeatures": "General Features",
-      "pointsofinterest": "Points of Interest"
+      "pointsofinterest": "Points of Interest",
+      "sales": "Sales"
     },
     "intros": {
       "users": "Manage your team and control system access efficiently.",
