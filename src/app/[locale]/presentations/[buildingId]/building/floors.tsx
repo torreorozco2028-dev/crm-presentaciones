@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card, Chip } from '@heroui/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fonts } from '@/config/fonts';
+import { fonts, inter } from '@/config/fonts';
 
 interface DepartmentFeature {
   id: string;
