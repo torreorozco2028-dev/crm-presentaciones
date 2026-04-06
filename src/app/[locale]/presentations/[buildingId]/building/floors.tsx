@@ -29,8 +29,22 @@ interface UnitDepartment {
   model: DepartmentModel;
 }
 
+interface SalesStage {
+  id: string;
+  stage_type: string;
+  price: number | null;
+  stage_description: string | null;
+}
+
+interface Building {
+  id: string;
+  building_title: string;
+  salesStages?: SalesStage[];
+}
+
 interface Props {
   units: UnitDepartment[];
+  building?: Building;
 }
 
 const categoryIcons: Record<string, string> = {
@@ -60,7 +74,7 @@ const roomOrder: Record<string, number> = {
   Sala: 5,
 };
 
-export default function Floors({ units }: Props) {
+export default function Floors({ units, building }: Props) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [windowWidth, setWindowWidth] = useState<number>(
     typeof window !== 'undefined' ? window.innerWidth : 1024
@@ -136,6 +150,51 @@ export default function Floors({ units }: Props) {
   const hasFeatures = selectedUnits.some(
     (u) => (u.model?.features?.length ?? 0) > 0
   );
+
+  // Calcular precios y ahorros por etapa
+  const priceAnalysis = useMemo(() => {
+    if (!building?.salesStages || building.salesStages.length === 0) {
+      return null;
+    }
+
+    const stagesWithPrices = building.salesStages.map((stage) => {
+      const stagePrice = stage.price || 0;
+      const selectedUnitsData = selectedUnits.map((unit) => {
+        const squareMeters = unit.real_square_meters || 0;
+        // stagePrice es el precio por m², multiplicamos por m² para obtener el total
+        const totalPrice = stagePrice * squareMeters;
+        const pricePerM2 = stagePrice;
+        return {
+          unit,
+          pricePerM2,
+          totalPrice,
+        };
+      });
+
+      // Calcular el promedio de precio por m² (que es el mismo stagePrice)
+      const avgPricePerM2 = stagePrice;
+
+      return {
+        stage,
+        avgPricePerM2,
+        selectedUnitsData,
+        stagePrice,
+      };
+    });
+
+    const minPrice = Math.min(...stagesWithPrices.map((s) => s.avgPricePerM2));
+    const maxPrice = Math.max(...stagesWithPrices.map((s) => s.avgPricePerM2));
+
+    const sortedStages = [...stagesWithPrices].sort(
+      (a, b) => a.avgPricePerM2 - b.avgPricePerM2
+    );
+
+    return {
+      sortedStages,
+      minPrice,
+      maxPrice,
+    };
+  }, [building?.salesStages, selectedUnits]);
 
   return (
     <div
@@ -283,7 +342,10 @@ export default function Floors({ units }: Props) {
                                   decoding='async'
                                 />
                                 <img
-                                  src={darkIcons?.[masterGroup.room] ?? '/dlogo5.png'}
+                                  src={
+                                    darkIcons?.[masterGroup.room] ??
+                                    '/dlogo5.png'
+                                  }
                                   alt={`${masterGroup.room} — logo oscuro`}
                                   className='absolute inset-0 h-full w-full object-contain opacity-0 grayscale transition-opacity duration-300 dark:opacity-100'
                                   loading='lazy'
@@ -320,6 +382,282 @@ export default function Floors({ units }: Props) {
         )}
       </AnimatePresence>
 
+      {/* Calculadora de Precio por Metro Cuadrado */}
+      <AnimatePresence>
+        {selectedIds.length > 0 && priceAnalysis && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className='mt-20'
+          >
+            <div className='mb-12 px-4 text-center'>
+              <h2 className='text-3xl font-bold text-foreground'>
+                Análisis de Precio por Metro Cuadrado
+              </h2>
+              <p className='mt-3 text-sm text-default-500'>
+                Invierta ahora, obtenga ganancias mañana - Vea el potencial de
+                ahorro en cada etapa
+              </p>
+            </div>
+
+            {/* Resumen de Ahorro Total */}
+            <div className='mx-auto max-w-7xl px-4'>
+              {/* Grilla de Precios por Sales Stage - Ordenada */}
+              <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3'>
+                {priceAnalysis.sortedStages.map(
+                  (
+                    { stage, avgPricePerM2, selectedUnitsData, stagePrice },
+                    index
+                  ) => {
+                    const isCheapest = avgPricePerM2 === priceAnalysis.minPrice;
+
+                    return (
+                      <motion.div
+                        key={stage.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className={`relative rounded-lg border-2 p-6 shadow-md transition-all ${
+                          isCheapest
+                            ? 'border-success bg-success/10 ring-2 ring-success/30'
+                            : 'border-default-200 bg-content1 hover:border-primary hover:shadow-lg'
+                        }`}
+                      >
+                        {/* Badge de Mejor Opción */}
+                        {isCheapest && (
+                          <div className='absolute -top-3 right-4 inline-block rounded-full bg-success px-3 py-1 text-xs font-bold text-background'>
+                            🏆 MEJOR INVERSIÓN
+                          </div>
+                        )}
+
+                        {/* Badge de Posición */}
+                        <div className='mb-3 inline-block rounded-full bg-default-100 px-3 py-1 text-xs font-semibold text-default-700'>
+                          Etapa {index + 1} de{' '}
+                          {priceAnalysis.sortedStages.length}
+                        </div>
+
+                        <div className='space-y-4'>
+                          {/* Nombre de la etapa de venta */}
+                          <div>
+                            <p className='text-xs font-semibold uppercase tracking-widest text-default-500'>
+                              Etapa
+                            </p>
+                            <h3 className='text-2xl font-bold text-foreground'>
+                              {stage.stage_type}
+                            </h3>
+                          </div>
+
+                          {/* Precio de la etapa */}
+                          <div className='border-t border-default-200 pt-3'>
+                            <p className='text-xs text-default-400'>
+                              Precio Base
+                            </p>
+                            <p className='text-2xl font-black text-primary'>
+                              ${stagePrice.toLocaleString('es-MX')}
+                            </p>
+                          </div>
+
+                          {/* Ahorro comparado
+                          {savings > 0 && (
+                            <div className='border-t border-success/30 bg-success/10 p-3 rounded dark:bg-success/5'>
+                              <p className='text-xs mb-1 font-semibold text-success'>
+                                💡 Ahorro vs. Precio Máximo
+                              </p>
+                              <p className='text-lg font-black text-success'>
+                                ${savings.toFixed(2).replace('.', ',')} por m²
+                              </p>
+                              <p className='text-xs text-success/70 mt-1'>
+                                Ahorras un {savingsPercent}% comprando en esta etapa
+                              </p>
+                            </div>
+                          )} */}
+
+                          {/* Total Ganancia Potencial para todos los departamentos
+                          {selectedUnitsData.length > 0 && (() => {
+                            const totalGainPerStage = selectedUnitsData.reduce((sum, { unit }) => {
+                              const currentPrice = stagePrice * (unit.real_square_meters || 0);
+                              const finalSalePrice =
+                                priceAnalysis.maxPrice * (unit.real_square_meters || 0);
+                              const gain = finalSalePrice - currentPrice;
+                              return sum + gain;
+                            }, 0);
+
+                            const totalCurrentInvestment = selectedUnitsData.reduce((sum, { unit }) => {
+                              return sum + stagePrice * (unit.real_square_meters || 0);
+                            }, 0);
+
+                            const portfolioGainPercent = totalCurrentInvestment > 0
+                              ? ((totalGainPerStage / totalCurrentInvestment) * 100).toFixed(1)
+                              : 0;
+
+                            return (
+                              <div className='border-t border-default-200 pt-3'>
+                                <p className='text-xs font-semibold mb-2 text-default-500'>
+                                  💰 Ganancia Total por Portafolio
+                                </p>
+                                <div className={`rounded border p-2 ${
+                                  totalGainPerStage > 0
+                                    ? 'border-success/30 bg-success/10'
+                                    : 'border-default-200 bg-default-50'
+                                }`}>
+                                  <div className='flex items-center justify-between text-sm'>
+                                    <span className='font-semibold text-foreground'>
+                                      Ganancia Potencial:
+                                    </span>
+                                    <span className={`text-lg font-black ${
+                                      totalGainPerStage > 0
+                                        ? 'text-success'
+                                        : 'text-warning'
+                                    }`}>
+                                      {totalGainPerStage > 0 ? '+' : ''}${totalGainPerStage.toLocaleString('es-MX', {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2
+                                      })}
+                                    </span>
+                                  </div>
+                                  {totalGainPerStage > 0 && (
+                                    <p className='text-[10px] text-success/70 mt-1'>
+                                      {portfolioGainPercent}% de retorno total
+                                    </p>
+                                  )}
+                                  {totalGainPerStage === 0 && (
+                                    <p className='text-[10px] text-default-500 mt-1'>
+                                      Sin ganancia: esta es la etapa final de venta
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })()} */}
+
+                          {/* Detalles por unidad seleccionada */}
+                          {selectedUnitsData.length > 0 && (
+                            <div className='border-t border-default-200 pt-3'>
+                              <p className='mb-3 text-xs font-semibold text-default-500'>
+                                Por Unidad Seleccionada
+                              </p>
+                              <div className='space-y-3'>
+                                {selectedUnitsData.map(
+                                  ({ unit, pricePerM2, totalPrice }) => {
+                                    // Calcular ganancia potencial desde la etapa actual hasta la etapa final
+                                    const maxTotalPrice =
+                                      (unit.real_square_meters || 0) *
+                                      priceAnalysis.maxPrice;
+                                    const potentialGain =
+                                      maxTotalPrice - totalPrice;
+                                    const gainPercent =
+                                      totalPrice > 0
+                                        ? (
+                                            (potentialGain / totalPrice) *
+                                            100
+                                          ).toFixed(1)
+                                        : 0;
+
+                                    return (
+                                      <div
+                                        key={unit.id}
+                                        className='rounded border border-default-200 bg-default-100/50 p-3'
+                                      >
+                                        <div className='mb-2 flex items-center justify-between'>
+                                          <span className='font-semibold text-foreground'>
+                                            {unit.floor} - {unit.unit_number}
+                                          </span>
+                                          <span className='text-xs text-default-500'>
+                                            {unit.real_square_meters}m²
+                                          </span>
+                                        </div>
+                                        <div className='space-y-1.5 border-t border-default-200 pt-2'>
+                                          <div className='flex items-center justify-between text-xs'>
+                                            <span className='text-default-500'>
+                                              Precio/m²:
+                                            </span>
+                                            <span
+                                              className={`font-bold ${
+                                                isCheapest
+                                                  ? 'text-success'
+                                                  : 'text-primary'
+                                              }`}
+                                            >
+                                              $
+                                              {pricePerM2
+                                                .toFixed(2)
+                                                .replace('.', ',')}
+                                            </span>
+                                          </div>
+                                          <div className='flex items-center justify-between text-sm'>
+                                            <span className='font-semibold text-foreground'>
+                                              Total:
+                                            </span>
+                                            <span
+                                              className={`text-lg font-black ${
+                                                isCheapest
+                                                  ? 'text-success'
+                                                  : 'text-primary'
+                                              }`}
+                                            >
+                                              $
+                                              {totalPrice.toLocaleString(
+                                                'es-MX',
+                                                {
+                                                  minimumFractionDigits: 2,
+                                                  maximumFractionDigits: 2,
+                                                }
+                                              )}
+                                            </span>
+                                          </div>
+                                          {/* Ganancia Potencial */}
+                                          {potentialGain > 0 && (
+                                            <div className='mt-2 border-t border-default-200 pt-1.5'>
+                                              <div className='flex items-center justify-between text-xs'>
+                                                <span className='text-default-500'>
+                                                  Ganancia Potencial:
+                                                </span>
+                                                <span className='font-black text-success'>
+                                                  +$
+                                                  {potentialGain.toLocaleString(
+                                                    'es-MX',
+                                                    {
+                                                      minimumFractionDigits: 2,
+                                                      maximumFractionDigits: 2,
+                                                    }
+                                                  )}
+                                                </span>
+                                              </div>
+                                              <p className='mt-0.5 text-[10px] text-success/70'>
+                                                {gainPercent}% de retorno
+                                              </p>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Descripción de la etapa */}
+                          {stage.stage_description && (
+                            <div className='border-t border-default-200 pt-3'>
+                              <p className='text-xs italic text-default-400'>
+                                {stage.stage_description}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    );
+                  }
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Selector Flotante Minimalista */}
       <AnimatePresence>
         {selectedIds.length > 0 && (
           <motion.div
@@ -333,11 +671,16 @@ export default function Floors({ units }: Props) {
                 <p className='text-[9px] font-bold uppercase tracking-[0.2em] opacity-50'>
                   Unidades seleccionadas
                 </p>
-                <div className='flex gap-2'>
+                <div className='mt-1 flex flex-wrap gap-2'>
                   {selectedUnits.map((u) => (
-                    <span key={u.id} className='font-mono text-sm font-bold'>
+                    <Chip
+                      key={u.id}
+                      size='sm'
+                      variant='flat'
+                      className='border border-white/15 bg-white/10 font-mono text-xs font-bold text-white dark:border-white/15 dark:bg-white/10'
+                    >
                       #{u.unit_number}
-                    </span>
+                    </Chip>
                   ))}
                 </div>
               </div>

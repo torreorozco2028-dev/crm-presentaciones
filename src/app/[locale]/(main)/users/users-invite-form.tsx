@@ -94,7 +94,7 @@ export default function TeamInvite({
             <ModalHeader className='flex gap-3'>
               <Avatar src='/logo.png' className='bg-transparent' />
               <div className='flex flex-col'>
-                <p className='text-md font-bold'>StructSoft</p>
+                <p className='text-md font-bold'>Structec</p>
                 <p className='text-small text-default-500'>{t('form.title')}</p>
               </div>
             </ModalHeader>

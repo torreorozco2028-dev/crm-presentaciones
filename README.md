@@ -1,7 +1,6 @@
-# Structsoft
+# Structec
 
 owned by structecSA
-This is an ERP for construction companies
 
 ## Technologies Used
 
