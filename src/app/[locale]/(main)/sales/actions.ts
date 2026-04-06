@@ -11,6 +11,10 @@ const clientEntity = new ClientEntity();
 
 type UnitState = 1 | 2 | 3;
 
+function isAdminRole(role: unknown) {
+  return String(role ?? '').toLowerCase() === 'admin';
+}
+
 function parseState(value: unknown): UnitState | null {
   const parsed = Number(value);
   if (parsed === 1 || parsed === 2 || parsed === 3) {
@@ -19,20 +23,44 @@ function parseState(value: unknown): UnitState | null {
   return null;
 }
 
+function toOptionalText(value: unknown) {
+  const text = String(value ?? '').trim();
+  return text.length > 0 ? text : null;
+}
+
+function toOptionalInteger(value: unknown) {
+  const text = String(value ?? '').trim();
+  if (!text) return null;
+  const parsed = Number(text);
+  if (!Number.isFinite(parsed)) return null;
+  return Math.trunc(parsed);
+}
+
 export async function registerClientAction(formData: any) {
   try {
+    const names = String(formData?.names ?? '').trim();
+    const firstLastName = String(formData?.first_last_name ?? '').trim();
+
+    if (!names || !firstLastName) {
+      return {
+        success: false,
+        error: 'Nombre y apellido paterno son obligatorios',
+      };
+    }
+
     const newClient = await clientEntity.createClient({
-      names: formData.names,
-      first_last_name: formData.first_last_name,
-      second_last_name: formData.second_last_name,
-      type_document: formData.type_document,
-      n_document: Number(formData.n_document),
-      email: formData.email,
-      cellphone: Number(formData.cellphone),
-      location: formData.location,
-      genre: formData.genre,
-      marital_status: formData.marital_status,
-      occupation: formData.occupation,
+      names,
+      first_last_name: firstLastName,
+      second_last_name: toOptionalText(formData?.second_last_name),
+      // In schema this field is NOT NULL, so keep a safe default when omitted.
+      type_document: toOptionalText(formData?.type_document) ?? 'CI',
+      n_document: toOptionalInteger(formData?.n_document),
+      email: toOptionalText(formData?.email),
+      cellphone: toOptionalInteger(formData?.cellphone),
+      location: toOptionalText(formData?.location),
+      genre: toOptionalText(formData?.genre),
+      marital_status: toOptionalText(formData?.marital_status),
+      occupation: toOptionalText(formData?.occupation),
     });
 
     return { success: true, data: newClient };
@@ -183,6 +211,8 @@ export async function updateUnitStateAction(unitId: string, state: UnitState) {
       };
     }
 
+    const canManageAnySale = isAdminRole(session.user.role);
+
     const parsedState = parseState(state);
     if (!unitId || !parsedState) {
       return { success: false, error: 'No se pudo actualizar el estado' };
@@ -209,10 +239,10 @@ export async function updateUnitStateAction(unitId: string, state: UnitState) {
       };
     }
 
-    if (currentSale.userId !== session.user.id) {
+    if (!canManageAnySale && currentSale.userId !== session.user.id) {
       return {
         success: false,
-        error: 'Solo el propietario puede modificar esta reserva',
+        error: 'Solo el propietario o un admin puede modificar esta reserva',
       };
     }
 
@@ -268,6 +298,8 @@ export async function updateSaleAction(input: UpdateSaleInput) {
       };
     }
 
+    const canManageAnySale = isAdminRole(session.user.role);
+
     if (!input.saleId) {
       return { success: false, error: 'Reserva inválida' };
     }
@@ -284,10 +316,10 @@ export async function updateSaleAction(input: UpdateSaleInput) {
       return { success: false, error: 'No se encontró la reserva' };
     }
 
-    if (sale.userId !== session.user.id) {
+    if (!canManageAnySale && sale.userId !== session.user.id) {
       return {
         success: false,
-        error: 'Solo el propietario puede editar esta reserva',
+        error: 'Solo el propietario o un admin puede editar esta reserva',
       };
     }
 
@@ -320,6 +352,8 @@ export async function deleteSaleAction(saleId: string) {
       };
     }
 
+    const canManageAnySale = isAdminRole(session.user.role);
+
     if (!saleId) {
       return { success: false, error: 'Reserva inválida' };
     }
@@ -337,10 +371,10 @@ export async function deleteSaleAction(saleId: string) {
       return { success: false, error: 'No se encontró la reserva' };
     }
 
-    if (sale.userId !== session.user.id) {
+    if (!canManageAnySale && sale.userId !== session.user.id) {
       return {
         success: false,
-        error: 'Solo el propietario puede eliminar esta reserva',
+        error: 'Solo el propietario o un admin puede eliminar esta reserva',
       };
     }
 
@@ -408,6 +442,7 @@ export async function getSalesListAction(input: GetSalesListInput = {}) {
   try {
     const session = await auth();
     const currentUserId = session?.user?.id ?? null;
+    const canManageAnySale = isAdminRole(session?.user?.role);
 
     const page = normalizePage(input.page, 1);
     const pageSize = Math.min(50, normalizePage(input.pageSize, 10));
@@ -496,7 +531,7 @@ export async function getSalesListAction(input: GetSalesListInput = {}) {
             name: sale.seller.name,
             email: sale.seller.email,
           },
-          canUpdate: currentUserId === sale.userId,
+          canUpdate: canManageAnySale || currentUserId === sale.userId,
         })),
       },
     };
