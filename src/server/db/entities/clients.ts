@@ -59,12 +59,6 @@ export default class Client {
     return records.map((r) => r.id);
   }
 
-  async getClientByEmail(email: string) {
-    return await db.query.client.findFirst({
-      where: eq(client.email, email),
-    });
-  }
-
   async getClientById(id: string) {
     return await db.query.client.findFirst({
       where: eq(client.id, id),
