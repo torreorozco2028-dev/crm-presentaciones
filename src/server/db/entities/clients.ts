@@ -1,6 +1,6 @@
 import { db } from '../config';
 import { client } from '../schema';
-import { eq, sql, and, ilike, desc, or } from 'drizzle-orm';
+import { eq, sql, ilike, desc, or } from 'drizzle-orm';
 
 type NewClient = typeof client.$inferInsert;
 type ClientUpdate = Partial<typeof client.$inferSelect>;
@@ -67,9 +67,9 @@ export default class Client {
 
   async updateClient(id: string, data: ClientUpdate) {
     await db
-        .update(client)
-        .set({ ...data, updatedAt: new Date() })
-        .where(eq(client.id, id));
+      .update(client)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(client.id, id));
     return { message: 'Client updated successfully' };
   }
 

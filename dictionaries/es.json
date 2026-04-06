@@ -36,7 +36,8 @@
       "buildings": "Gestiona y supervisa todos tus presentaciones de proyectos con facilidad.",
       "settings": "Configuraciones",
       "generalfeatures": "Acabados generales",
-      "pointsofinterest": "Administra los puntos de interés cerca de tu edificio para proporcionar una experiencia más inmersiva para tus clientes."
+      "pointsofinterest": "Administra los puntos de interés cerca de tu edificio para proporcionar una experiencia más inmersiva para tus clientes.",
+      "sales": "Gestiona tu proceso de ventas y lleva un seguimiento de tus clientes y sus interacciones con tus presentaciones."
     }
   },
   "Auth": {

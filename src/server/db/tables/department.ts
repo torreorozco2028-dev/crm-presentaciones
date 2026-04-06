@@ -4,6 +4,7 @@ import {
   uuid,
   varchar,
   integer,
+  numeric,
   text,
   boolean,
   primaryKey,
@@ -36,7 +37,7 @@ export const unit_department = pgTable('unit_department', {
     .primaryKey(),
   unit_number: varchar({ length: 20 }),
   floor: integer().notNull(),
-  real_square_meters: integer(),
+  real_square_meters: numeric({ precision: 10, scale: 2 }).$type<number>(),
   buildingId: uuid('building_id')
     .references(() => building.id)
     .notNull(),

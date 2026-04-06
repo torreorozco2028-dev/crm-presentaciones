@@ -230,6 +230,7 @@ export default function LoanCalculator() {
     monthlyAdditionalPayment,
     officialExchangeRate,
     additionalPaymentsByRow,
+    getRequestedAdditionalByPayment,
   ]);
 
   const amortizationTotalInterest = useMemo(

@@ -71,7 +71,7 @@ export const menuOptions = {
       key: 'sales',
       label: 'menu.sales',
       path: '/sales',
-      icon: 'Sales',
+      icon: 'Store',
       displayDivider: true,
       roles: ['admin'],
     },
