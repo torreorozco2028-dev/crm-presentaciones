@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 import {
   UserPlus,
   CheckCircle2,
@@ -160,30 +161,36 @@ export default function ClientsPart() {
 
   async function handleClientSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const form = e.currentTarget;
     setIsClientLoading(true);
 
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
 
     const result = await registerClientAction(data);
 
     setIsClientLoading(false);
     if (result.success) {
-      setIsClientSuccess(true);
-      setTimeout(() => {
-        setIsClientSuccess(false);
-        setShowClientForm(false);
-      }, 1400);
+      form.reset();
+      setIsClientSuccess(false);
+      setShowClientForm(false);
       await loadSetupData();
+      await loadSalesList();
+      toast.success('Cliente creado correctamente');
+      return;
     }
+
+    toast.error(result.error ?? 'No se pudo registrar el cliente');
+    setSalesError(result.error ?? 'No se pudo registrar el cliente');
   }
 
   async function handleSaleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const form = e.currentTarget;
     setIsSaleSubmitting(true);
     setSalesError(null);
 
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData(form);
     const clientId = String(formData.get('clientId') ?? '');
     const unitId = String(formData.get('unitId') ?? '');
     const state = Number(formData.get('state') ?? 2) as UnitState;
@@ -203,17 +210,16 @@ export default function ClientsPart() {
     setIsSaleSubmitting(false);
 
     if (!result.success) {
+      toast.error(result.error ?? 'No se pudo registrar la venta');
       setSalesError(result.error ?? 'No se pudo registrar la venta');
       return;
     }
 
-    setIsSaleSuccess(true);
-    e.currentTarget.reset();
+    setIsSaleSuccess(false);
+    form.reset();
+    setShowSaleForm(false);
     await Promise.all([loadSetupData(), loadSalesList()]);
-    setTimeout(() => {
-      setIsSaleSuccess(false);
-      setShowSaleForm(false);
-    }, 1400);
+    toast.success('Venta creada correctamente');
   }
 
   async function handleUpdateUnitState(
@@ -223,10 +229,12 @@ export default function ClientsPart() {
   ) {
     const result = await updateUnitStateAction(unitId, state);
     if (!result.success) {
+      toast.error(result.error ?? 'No se pudo actualizar el estado');
       setSalesError(result.error ?? 'No se pudo actualizar el estado');
       return;
     }
     await Promise.all([loadSalesList(), loadSetupData()]);
+    toast.success('Estado actualizado');
   }
 
   async function handleDeleteSale(saleId: string) {
@@ -242,21 +250,24 @@ export default function ClientsPart() {
     setDeletingSaleId(null);
 
     if (!result.success) {
+      toast.error(result.error ?? 'No se pudo eliminar la reserva');
       setSalesError(result.error ?? 'No se pudo eliminar la reserva');
       return;
     }
 
     await Promise.all([loadSalesList(), loadSetupData()]);
+    toast.success('Reserva eliminada correctamente');
   }
 
   async function handleEditSaleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const form = e.currentTarget;
     if (!editingSale) return;
 
     setIsEditSubmitting(true);
     setSalesError(null);
 
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData(form);
     const finalPriceRaw = String(formData.get('finalPrice') ?? '').trim();
     const paymentMethod = String(formData.get('paymentMethod') ?? '').trim();
     const paymentNotes = String(formData.get('paymentNotes') ?? '').trim();
@@ -271,12 +282,14 @@ export default function ClientsPart() {
     setIsEditSubmitting(false);
 
     if (!result.success) {
+      toast.error(result.error ?? 'No se pudo editar la reserva');
       setSalesError(result.error ?? 'No se pudo editar la reserva');
       return;
     }
 
     setEditingSale(null);
-    await loadSalesList();
+    await Promise.all([loadSalesList(), loadSetupData()]);
+    toast.success('Reserva actualizada correctamente');
   }
 
   const paginatedSales = salesListData?.rows ?? [];
@@ -548,7 +561,7 @@ export default function ClientsPart() {
                             </select>
                             {!sale.canUpdate && (
                               <p className='mt-1 text-[11px] text-amber-700 dark:text-amber-400'>
-                                Solo el propietario puede modificar.
+                                Solo el propietario o un admin puede modificar.
                               </p>
                             )}
                           </td>
