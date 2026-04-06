@@ -26,7 +26,8 @@
       "settings": "Settings",
       "avatar": "Avatar",
       "generalfeatures": "General Features",
-      "pointsofinterest": "Points of Interest"
+      "pointsofinterest": "Points of Interest",
+      "sales": "Sales"
     },
     "intros": {
       "users": "Manage your team and control system access efficiently.",
@@ -35,7 +36,8 @@
       "buildings": "Manage and supervise all your project presentations with ease.",
       "settings": "Settings",
       "generalfeatures": "General Features",
-      "pointsofinterest": "Manage the points of Interest near your building to provide a more immersive experience for your clients."
+      "pointsofinterest": "Manage the points of Interest near your building to provide a more immersive experience for your clients.",
+      "sales": "Manage your sales process and keep track of your clients and their interactions with your presentations."
     }
   },
   "Auth": {

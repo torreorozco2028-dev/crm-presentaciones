@@ -3,6 +3,7 @@ import BuildingEntity from '@/server/db/entities/building';
 import BuildingHero from '@/app/[locale]/presentations/[buildingId]/building/first-part';
 import BuildingLocation from '@/app/[locale]/presentations/[buildingId]/building/second-part';
 import CommonAreasSection from '@/app/[locale]/presentations/[buildingId]/building/third-part';
+import DepartmentsPage from '../departamentos/page';
 import Floors from './floors';
 
 interface PageProps {
@@ -25,6 +26,7 @@ export default async function BuildingPage({ params }: PageProps) {
       <BuildingHero building={buildingData} />
       <BuildingLocation building={buildingData as any} />
       <CommonAreasSection commonAreas={buildingData.commonAreas as any} />
+      <DepartmentsPage data={buildingData} />
       {/* <DepartmentsPage data={buildingData} /> */}
       <Floors
         units={buildingData.units as any}

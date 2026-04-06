@@ -74,6 +74,36 @@ const roomOrder: Record<string, number> = {
   Sala: 5,
 };
 
+function getUnitStateMeta(state: number) {
+  if (state === 3) {
+    return {
+      label: 'Vendido',
+      chipColor: 'danger' as const,
+      buttonClass:
+        'cursor-not-allowed border-rose-200 bg-rose-50/70 text-rose-700 dark:border-rose-900/70 dark:bg-rose-950/30 dark:text-rose-300',
+      badgeClass: 'text-rose-700 dark:text-rose-300',
+    };
+  }
+
+  if (state === 2) {
+    return {
+      label: 'Reservado',
+      chipColor: 'warning' as const,
+      buttonClass:
+        'cursor-not-allowed border-amber-200 bg-amber-50/70 text-amber-700 dark:border-amber-900/70 dark:bg-amber-950/30 dark:text-amber-300',
+      badgeClass: 'text-amber-700 dark:text-amber-300',
+    };
+  }
+
+  return {
+    label: 'Disponible',
+    chipColor: 'success' as const,
+    buttonClass:
+      'border-emerald-200 bg-emerald-50/55 text-emerald-700 hover:border-emerald-400 dark:border-emerald-900/70 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:border-emerald-700',
+    badgeClass: 'text-emerald-700 dark:text-emerald-300',
+  };
+}
+
 export default function Floors({ units, building }: Props) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [windowWidth, setWindowWidth] = useState<number>(
@@ -231,6 +261,7 @@ export default function Floors({ units, building }: Props) {
               {depts.map((unit) => {
                 const isSelected = selectedIds.includes(unit.id);
                 const isAvailable = unit.state === 1;
+                const stateMeta = getUnitStateMeta(unit.state);
                 return (
                   <button
                     key={unit.id}
@@ -240,8 +271,8 @@ export default function Floors({ units, building }: Props) {
                       isSelected
                         ? 'z-10 scale-[1.05] border-foreground bg-foreground text-background shadow-2xl'
                         : isAvailable
-                          ? 'border-default-200 text-default-600 hover:border-foreground dark:border-default-800'
-                          : 'cursor-not-allowed border-default-100 bg-default-50/30 text-default-300 opacity-40'
+                          ? stateMeta.buttonClass
+                          : `${stateMeta.buttonClass} opacity-85`
                     }`}
                   >
                     <span className='text-[9px] font-bold uppercase tracking-[0.2em] opacity-70'>
@@ -257,6 +288,11 @@ export default function Floors({ units, building }: Props) {
                         {unit.real_square_meters} m²
                       </span>
                     )}
+                    <span
+                      className={`mt-1 text-[9px] font-semibold uppercase tracking-wider ${isSelected ? 'text-background/80' : stateMeta.badgeClass}`}
+                    >
+                      {stateMeta.label}
+                    </span>
                   </button>
                 );
               })}
@@ -311,10 +347,10 @@ export default function Floors({ units, building }: Props) {
 
                     <Chip
                       variant='flat'
-                      color={unit.state === 1 ? 'success' : 'default'}
+                      color={getUnitStateMeta(unit.state).chipColor}
                       className='px-4 py-1 text-[10px] font-bold uppercase tracking-widest'
                     >
-                      {unit.state === 1 ? 'Disponible' : 'Consultar'}
+                      {getUnitStateMeta(unit.state).label}
                     </Chip>
                     <div className='w-full space-y-12'>
                       {groupedFeatures.map((masterGroup) => {
