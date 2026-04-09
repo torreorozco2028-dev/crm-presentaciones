@@ -94,8 +94,14 @@ export default function Carousel({
     const el = containerRef.current;
     if (!el) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') handlePrevImage();
-      if (e.key === 'ArrowRight') handleNextImage();
+      if (e.key === 'ArrowLeft')
+        setCurrentImageIndex((prev) =>
+          prev === 0 ? filteredImages.length - 1 : prev - 1
+        );
+      if (e.key === 'ArrowRight')
+        setCurrentImageIndex((prev) =>
+          prev === filteredImages.length - 1 ? 0 : prev + 1
+        );
     };
     el.addEventListener('keydown', onKey);
     return () => el.removeEventListener('keydown', onKey);
@@ -162,6 +168,7 @@ export default function Carousel({
           <div className='absolute inset-0 flex items-center justify-center bg-black/80 lg:bg-black/90'>
             {filteredImages.map((src, idx) => {
               const isActive = idx === currentImageIndex;
+              const isVisible = isActive && loaded[idx];
               return (
                 <img
                   key={idx}
@@ -169,7 +176,7 @@ export default function Carousel({
                   alt={`Imagen ${idx + 1} de ${filteredImages.length}`}
                   onLoad={() => handleImageLoad(idx)}
                   loading={idx === currentImageIndex ? 'eager' : 'lazy'}
-                  className={`absolute inset-0 m-auto transition-opacity duration-300 ease-in-out ${isActive ? 'z-20 opacity-100' : 'z-10 opacity-0'} ${loaded[idx] ? 'opacity-100' : 'opacity-0'} max-h-full max-w-full object-contain lg:h-full lg:w-full lg:object-cover`}
+                  className={`absolute inset-0 m-auto transition-opacity duration-300 ease-in-out ${isVisible ? 'z-20 opacity-100' : 'pointer-events-none z-0 opacity-0'} max-h-full max-w-full object-contain`}
                   style={{ maxHeight: '100%', maxWidth: '100%' }}
                   draggable={false}
                 />
