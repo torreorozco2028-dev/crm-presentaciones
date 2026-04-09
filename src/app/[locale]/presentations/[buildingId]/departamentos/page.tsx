@@ -11,7 +11,7 @@ import {
   Button,
   useDisclosure,
 } from '@heroui/react';
-import { Layers, X } from 'lucide-react';
+import { X, Map } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
 const Carousel = dynamic(() => import('@/components/carousel'), { ssr: false });
@@ -23,6 +23,34 @@ interface DepartmentModel {
   id_plan: string;
   prymary_image?: string;
   batch_images?: any;
+}
+
+function toImageUrl(value: unknown): string {
+  if (typeof value === 'string') return value.trim();
+  if (value && typeof value === 'object') {
+    const possibleUrl = (value as { url?: unknown }).url;
+    return typeof possibleUrl === 'string' ? possibleUrl.trim() : '';
+  }
+  return '';
+}
+
+function parseImageBatch(raw: unknown): string[] {
+  if (!raw) return [];
+
+  const parsed = (() => {
+    if (Array.isArray(raw)) return raw;
+    if (typeof raw === 'string') {
+      try {
+        const value = JSON.parse(raw);
+        return Array.isArray(value) ? value : [value];
+      } catch {
+        return [raw];
+      }
+    }
+    return [raw];
+  })();
+
+  return parsed.map(toImageUrl).filter(Boolean);
 }
 
 function InteractiveSVG({
@@ -44,6 +72,31 @@ function InteractiveSVG({
       .then((res) => res.text())
       .then((text) => {
         const cleanSvg = text
+          .replace(/<svg\b([^>]*)>/i, (_match, attrs) => {
+            // If viewBox exists we can safely force responsive sizing.
+            // Without viewBox, keep intrinsic viewport attrs to avoid clipping.
+            const hasViewBox = /\sviewBox\s*=/.test(attrs);
+
+            const withoutPreserve = attrs.replace(
+              /\spreserveAspectRatio\s*=\s*(['"]).*?\1/gi,
+              ''
+            );
+
+            if (!hasViewBox) {
+              return `<svg${withoutPreserve} preserveAspectRatio="xMidYMid meet">`;
+            }
+
+            const withoutWidth = withoutPreserve.replace(
+              /\swidth\s*=\s*(['"]).*?\1/gi,
+              ''
+            );
+            const withoutHeight = withoutWidth.replace(
+              /\sheight\s*=\s*(['"]).*?\1/gi,
+              ''
+            );
+
+            return `<svg${withoutHeight} width="100%" height="100%" preserveAspectRatio="xMidYMid meet">`;
+          })
           .replace(/<style([\s\S]*?)<\/style>/gi, '')
           .replace(
             /<text/g,
@@ -78,7 +131,7 @@ function InteractiveSVG({
   return (
     <div
       ref={containerRef}
-      className='interactive-svg-container flex h-full w-full items-center justify-center p-4 lg:p-10'
+      className='interactive-svg-container flex h-full w-full items-center justify-center p-0 lg:p-4'
       dangerouslySetInnerHTML={{ __html: svgContent || '' }}
     />
   );
@@ -89,7 +142,22 @@ export default function DepartmentsPage({ data }: { data: any }) {
     null
   );
   const [mobileTab, setMobileTab] = useState<'map' | 'model'>('map');
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 1023px)');
+    const handleMediaChange = (event: MediaQueryListEvent) => {
+      setIsMobileViewport(event.matches);
+    };
+
+    setIsMobileViewport(mediaQuery.matches);
+    mediaQuery.addEventListener('change', handleMediaChange);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleMediaChange);
+    };
+  }, []);
 
   if (!data)
     return (
@@ -97,23 +165,24 @@ export default function DepartmentsPage({ data }: { data: any }) {
         Cargando...
       </div>
     );
+  const currentImage = (
+    selectedModel?.prymary_image ||
+    data.distribution_image ||
+    ''
+  ).trim();
+  const galleryImages = (() => {
+    if (!selectedModel) return [];
 
-  const currentImage = selectedModel?.prymary_image || data.distribution_image;
+    const primary = (selectedModel?.prymary_image || '').trim();
+    const normalizedBatch = parseImageBatch(selectedModel?.batch_images);
 
-  const getGallery = () => {
-    const raw = selectedModel?.batch_images;
-    if (!raw) return [];
-    try {
-      return typeof raw === 'string' ? JSON.parse(raw) : raw;
-    } catch {
-      return [raw];
-    }
-  };
-  const galleryImages = getGallery();
+    // Gallery starts with primary image, then batch images without duplicates.
+    return [...new Set([primary, ...normalizedBatch].filter(Boolean))];
+  })();
 
   const handleSelectModel = (model: DepartmentModel | null) => {
     setSelectedModel(model);
-    if (model && typeof window !== 'undefined' && window.innerWidth < 1024) {
+    if (model && isMobileViewport) {
       setMobileTab('model');
     }
   };
@@ -145,7 +214,7 @@ export default function DepartmentsPage({ data }: { data: any }) {
       </div>
 
       <div className='flex h-auto w-full max-w-[1700px] flex-col gap-8 lg:h-[calc(100vh-250px)] lg:flex-row'>
-        <section className='relative w-full overflow-hidden rounded-[30px] border-[2px] border-zinc-100 bg-[#fcfcfc] shadow-xl dark:border-[#949494] dark:bg-transparent lg:w-[70%]'>
+        <section className='relative w-full overflow-visible rounded-[30px] border-[2px] border-zinc-100 bg-[#fcfcfc] shadow-xl dark:border-[#949494] dark:bg-transparent lg:w-[70%] lg:overflow-hidden'>
           <AnimatePresence mode='wait'>
             {mobileTab === 'map' && (
               <motion.div
@@ -153,73 +222,58 @@ export default function DepartmentsPage({ data }: { data: any }) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className='flex min-h-[50vh] items-center justify-center lg:hidden'
+                className='flex w-full flex-col items-center justify-center gap-4 p-2 lg:hidden'
               >
-                <InteractiveSVG
-                  svgUrl={data.plan_image}
-                  departments={data.models}
-                  onSelect={handleSelectModel}
-                  selectedId={selectedModel?.id_plan}
-                />
+                <div className='h-[45vh] max-h-[45vh] w-full'>
+                  <InteractiveSVG
+                    svgUrl={data.plan_image}
+                    departments={data.models}
+                    onSelect={handleSelectModel}
+                    selectedId={selectedModel?.id_plan}
+                  />
+                </div>
               </motion.div>
             )}
 
-            {(mobileTab === 'model' ||
-              (typeof window !== 'undefined' && window.innerWidth >= 1024)) && (
+            {(mobileTab === 'model' || !isMobileViewport) && (
               <motion.div
                 key={selectedModel?.id || 'base-view'}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                drag={
-                  typeof window !== 'undefined' && window.innerWidth < 1024
-                    ? 'x'
-                    : false
-                }
+                drag={isMobileViewport ? 'x' : false}
                 dragConstraints={{ left: 0, right: 0 }}
                 onDragEnd={onDragEnd}
-                className={`flex h-full w-full flex-col lg:relative ${mobileTab === 'model' ? 'p-4' : ''}`}
+                className={`flex h-full w-full flex-col lg:relative ${mobileTab === 'model' ? 'p-2 lg:p-4' : ''}`}
               >
-                <div className='mb-6 flex w-full items-center justify-center lg:absolute lg:inset-0 lg:mb-0 lg:p-10'>
+                <div className='mb-4 flex min-h-[74vh] w-full items-center justify-center lg:absolute lg:inset-0 lg:mb-0 lg:min-h-0 lg:p-10'>
                   <img
+                    key={currentImage || 'fallback-distribution-image'}
                     src={currentImage}
-                    className='max-h-[50vh] w-auto object-contain transition-all duration-500 lg:max-h-full lg:w-full'
+                    onClick={galleryImages.length > 0 ? onOpen : undefined}
+                    className={`h-[70vh] w-full object-contain transition-all duration-500 lg:h-auto lg:max-h-full lg:w-full${galleryImages.length > 0 ? 'cursor-pointer' : ''}`}
                     alt='Vista Departamento'
                   />
                 </div>
 
                 {selectedModel && (
-                  <div className='z-10 flex w-full flex-col items-center gap-6 px-4 lg:absolute lg:bottom-10 lg:left-0 lg:right-0 lg:flex-row lg:items-end lg:justify-between lg:px-10'>
-                    <div className='w-full rounded-3xl border border-zinc-200 bg-white/80 p-6 shadow-lg backdrop-blur-xl dark:border-white/10 dark:bg-black/40 lg:w-auto'>
-                      <p className='mb-1 text-[10px] font-bold uppercase tracking-[0.3em] text-blue-600 dark:text-blue-400'>
-                        Modelo Seleccionado
-                      </p>
-                      <h2 className='mb-1 font-serif text-3xl dark:text-white'>
-                        {selectedModel.name_model_department}
-                      </h2>
-                      <p className='text-lg text-zinc-500 dark:text-zinc-400'>
-                        {selectedModel.base_square_meters} m² totales
-                      </p>
+                  <div className='z-10 flex w-full flex-col items-center gap-4 px-2 lg:absolute lg:bottom-10 lg:left-0 lg:right-0 lg:items-start lg:gap-6 lg:px-10'>
+                    <div className='w-full lg:hidden'>
+                      <Button
+                        onPress={() => setMobileTab('map')}
+                        className='h-12 w-full gap-3 rounded-2xl bg-white/90 px-6 font-bold text-zinc-900 shadow-xl dark:bg-zinc-800 dark:text-white'
+                      >
+                        <Map size={18} /> VER PLANO
+                      </Button>
                     </div>
-                    {galleryImages.length > 0 && (
-                      <div className='w-full lg:w-auto'>
-                        <Button
-                          onPress={onOpen}
-                          className='h-16 w-full gap-3 rounded-2xl bg-zinc-900 px-8 font-bold text-white shadow-2xl transition-transform hover:scale-105 active:scale-95 dark:bg-white dark:text-black lg:h-20 lg:w-auto'
-                        >
-                          <Layers size={18} /> VER GALERIA (
-                          {galleryImages.length})
-                        </Button>
-                      </div>
-                    )}
                   </div>
                 )}
               </motion.div>
             )}
           </AnimatePresence>
         </section>
-        <aside className='hidden h-full flex-col gap-6 lg:flex lg:w-[30%]'>
-          <div className='relative h-full overflow-hidden rounded-[40px] border-[2px] border-[#0a192f] bg-white shadow-xl dark:border-[#949494] dark:border-white/5 dark:bg-transparent'>
+        <aside className='hidden items-center lg:flex lg:w-[30%]'>
+          <div className='relative aspect-square w-full max-w-[520px] overflow-hidden rounded-[40px] border-[2px] border-[#0a192f] bg-white shadow-xl dark:border-[#949494] dark:border-white/5 dark:bg-transparent'>
             <InteractiveSVG
               svgUrl={data.plan_image}
               departments={data.models}
@@ -232,9 +286,13 @@ export default function DepartmentsPage({ data }: { data: any }) {
       <Modal
         isOpen={isOpen}
         onOpenChange={onOpenChange}
-        size='5xl'
         backdrop='blur'
-        className='bg-black/95'
+        classNames={{
+          wrapper: 'p-0',
+          base: 'bg-black m-0 h-[100dvh] max-h-[100dvh] w-full max-w-full rounded-none sm:m-4 sm:h-[90vh] sm:max-h-[90vh] sm:max-w-5xl sm:rounded-2xl',
+          body: 'p-0 flex-1 overflow-hidden',
+          header: 'p-0 border-none',
+        }}
       >
         <ModalContent>
           {(onClose) => (
@@ -249,11 +307,12 @@ export default function DepartmentsPage({ data }: { data: any }) {
                   <X size={24} />
                 </Button>
               </ModalHeader>
-              <ModalBody className='p-0'>
-                <div className='h-[85vh] w-full'>
+              <ModalBody>
+                <div className='h-full w-full'>
                   <Carousel
                     images={galleryImages}
-                    height='h-full w-full object-contain'
+                    height='h-full'
+                    className='rounded-none'
                   />
                 </div>
               </ModalBody>
@@ -263,9 +322,17 @@ export default function DepartmentsPage({ data }: { data: any }) {
       </Modal>
 
       <style jsx global>{`
+        .interactive-svg-container {
+          overflow: visible;
+        }
         .interactive-svg-container svg {
-          width: 100%;
-          height: 100%;
+          display: block;
+          width: auto;
+          height: auto;
+          max-width: 100%;
+          max-height: 100%;
+          object-fit: contain;
+          overflow: visible;
         }
         .interactive-svg-container [id] {
           cursor: pointer;
@@ -288,7 +355,7 @@ export default function DepartmentsPage({ data }: { data: any }) {
 
         ${selectedModel
           ? `
-          .interactive-svg-container #[id="${selectedModel.id_plan}"] {
+          .interactive-svg-container [id="${selectedModel.id_plan}"] {
             fill: #3b82f6 !important;
             stroke: #2563eb !important;
             stroke-width: 3px !important;

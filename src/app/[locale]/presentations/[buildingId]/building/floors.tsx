@@ -47,24 +47,6 @@ interface Props {
   building?: Building;
 }
 
-const categoryIcons: Record<string, string> = {
-  General: '/clogo1.png',
-  Cocina: '/clogo2.png',
-  Baño: '/clogo3.png',
-  Dormitorio: '/clogo4.png',
-  Lavanderia: '/clogo5.png',
-  Sala: '/clogo6.png',
-};
-
-const darkIcons: Record<string, string> = {
-  General: '/dlogo1.png',
-  Cocina: '/dlogo2.png',
-  Baño: '/dlogo3.png',
-  Dormitorio: '/dlogo4.png',
-  Lavanderia: '/dlogo5.png',
-  Sala: '/dlogo6.png',
-};
-
 const roomOrder: Record<string, number> = {
   General: 0,
   Cocina: 1,
@@ -72,6 +54,15 @@ const roomOrder: Record<string, number> = {
   Dormitorio: 3,
   Lavanderia: 4,
   Sala: 5,
+};
+
+const categoryIcons: Record<string, string> = {
+  General: '/clogo1.png',
+  Cocina: '/clogo2.png',
+  Baño: '/clogo3.png',
+  Dormitorio: '/clogo4.png',
+  Lavanderia: '/clogo5.png',
+  Sala: '/clogo6.png',
 };
 
 function getUnitStateMeta(state: number) {
@@ -104,7 +95,7 @@ function getUnitStateMeta(state: number) {
   };
 }
 
-export default function Floors({ units, building }: Props) {
+export default function Floors({ units }: Props) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [windowWidth, setWindowWidth] = useState<number>(
     typeof window !== 'undefined' ? window.innerWidth : 1024
@@ -117,38 +108,6 @@ export default function Floors({ units, building }: Props) {
   }, []);
 
   const maxSelections = windowWidth < 768 ? 2 : 4;
-
-  const groupedFeatures = useMemo(() => {
-    const allFeatures = new Map<string, Map<string, DepartmentFeature>>();
-
-    units.forEach((unit) => {
-      if (unit.model?.features) {
-        unit.model.features.forEach((feature) => {
-          const roomName = feature.room || 'General';
-          if (!allFeatures.has(roomName)) {
-            allFeatures.set(roomName, new Map());
-          }
-          const roomMap = allFeatures.get(roomName)!;
-          if (!roomMap.has(feature.id)) {
-            roomMap.set(feature.id, feature);
-          }
-        });
-      }
-    });
-
-    return Array.from(allFeatures.entries())
-      .map(([room, featuresMap]) => ({
-        room,
-        features: Array.from(featuresMap.values()).sort(
-          (a, b) => (a.order || 0) - (b.order || 0)
-        ),
-      }))
-      .sort((a, b) => {
-        const orderA = roomOrder[a.room] ?? 999;
-        const orderB = roomOrder[b.room] ?? 999;
-        return orderA - orderB;
-      });
-  }, [units]);
 
   const buildingMap = useMemo(() => {
     const floors: Record<number, UnitDepartment[]> = {};
@@ -181,50 +140,67 @@ export default function Floors({ units, building }: Props) {
     (u) => (u.model?.features?.length ?? 0) > 0
   );
 
-  // Calcular precios y ahorros por etapa
-  const priceAnalysis = useMemo(() => {
-    if (!building?.salesStages || building.salesStages.length === 0) {
-      return null;
-    }
+  const comparisonRooms = useMemo(() => {
+    const rooms = new Set<string>();
 
-    const stagesWithPrices = building.salesStages.map((stage) => {
-      const stagePrice = stage.price || 0;
-      const selectedUnitsData = selectedUnits.map((unit) => {
-        const squareMeters = unit.real_square_meters || 0;
-        // stagePrice es el precio por m², multiplicamos por m² para obtener el total
-        const totalPrice = stagePrice * squareMeters;
-        const pricePerM2 = stagePrice;
-        return {
-          unit,
-          pricePerM2,
-          totalPrice,
-        };
+    selectedUnits.forEach((unit) => {
+      unit.model?.features?.forEach((feature) => {
+        if (!feature.dfeatures_name?.trim()) return;
+        rooms.add(feature.room?.trim() || 'General');
       });
-
-      // Calcular el promedio de precio por m² (que es el mismo stagePrice)
-      const avgPricePerM2 = stagePrice;
-
-      return {
-        stage,
-        avgPricePerM2,
-        selectedUnitsData,
-        stagePrice,
-      };
     });
 
-    const minPrice = Math.min(...stagesWithPrices.map((s) => s.avgPricePerM2));
-    const maxPrice = Math.max(...stagesWithPrices.map((s) => s.avgPricePerM2));
+    return Array.from(rooms).sort((a, b) => {
+      const orderA = roomOrder[a] ?? 999;
+      const orderB = roomOrder[b] ?? 999;
+      return orderA - orderB || a.localeCompare(b, 'es');
+    });
+  }, [selectedUnits]);
 
-    const sortedStages = [...stagesWithPrices].sort(
-      (a, b) => a.avgPricePerM2 - b.avgPricePerM2
-    );
+  // // Calcular precios y ahorros por etapa
+  // const priceAnalysis = useMemo(() => {
+  //   if (!building?.salesStages || building.salesStages.length === 0) {
+  //     return null;
+  //   }
 
-    return {
-      sortedStages,
-      minPrice,
-      maxPrice,
-    };
-  }, [building?.salesStages, selectedUnits]);
+  //   const stagesWithPrices = building.salesStages.map((stage) => {
+  //     const stagePrice = stage.price || 0;
+  //     const selectedUnitsData = selectedUnits.map((unit) => {
+  //       const squareMeters = unit.real_square_meters || 0;
+  //       // stagePrice es el precio por m², multiplicamos por m² para obtener el total
+  //       const totalPrice = stagePrice * squareMeters;
+  //       const pricePerM2 = stagePrice;
+  //       return {
+  //         unit,
+  //         pricePerM2,
+  //         totalPrice,
+  //       };
+  //     });
+
+  //     // Calcular el promedio de precio por m² (que es el mismo stagePrice)
+  //     const avgPricePerM2 = stagePrice;
+
+  //     return {
+  //       stage,
+  //       avgPricePerM2,
+  //       selectedUnitsData,
+  //       stagePrice,
+  //     };
+  //   });
+
+  //   const minPrice = Math.min(...stagesWithPrices.map((s) => s.avgPricePerM2));
+  //   const maxPrice = Math.max(...stagesWithPrices.map((s) => s.avgPricePerM2));
+
+  //   const sortedStages = [...stagesWithPrices].sort(
+  //     (a, b) => a.avgPricePerM2 - b.avgPricePerM2
+  //   );
+
+  //   return {
+  //     sortedStages,
+  //     minPrice,
+  //     maxPrice,
+  //   };
+  // }, [building?.salesStages, selectedUnits]);
 
   return (
     <div
@@ -312,387 +288,145 @@ export default function Floors({ units, building }: Props) {
               <h2 className='font-serif text-4xl italic text-foreground'>
                 Detalles de Selección
               </h2>
-              <div className='mx-auto mt-4 h-px w-20 bg-primary/40' />
             </div>
             <div className='mx-auto max-w-[1400px] px-4'>
-              <div className='flex flex-wrap justify-center gap-2 sm:gap-6 lg:flex-nowrap lg:gap-4'>
-                {selectedUnits.map((unit) => (
-                  <motion.div
-                    key={unit.id}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className='flex w-[calc(50%-0.5rem)] flex-col items-center space-y-4 rounded-xl border border-default-100 bg-content1/50 p-4 shadow-sm backdrop-blur-sm sm:w-[calc(50%-1.5rem)] sm:space-y-8 sm:p-8 lg:w-1/4'
-                  >
-                    <div className='space-y-3 text-center'>
-                      <p className='text-[10px] font-bold uppercase tracking-[0.3em] text-default-400'>
-                        Departamento
-                      </p>
-                      <h3 className='text-5xl font-black tracking-tighter text-foreground'>
-                        {unit.unit_number}
-                      </h3>
-
-                      <div className='flex flex-col items-center gap-1 text-sm text-default-600'>
-                        <span className='font-medium'>Nivel {unit.floor}</span>
-                        <span className='rounded bg-default-100 px-2 py-0.5 font-mono text-xs'>
-                          {unit.real_square_meters} m² totales
-                        </span>
-                      </div>
-
-                      {unit.model?.name_model_department && (
-                        <p className='pt-2 text-xs font-bold uppercase tracking-widest text-primary'>
-                          {unit.model.name_model_department}
-                        </p>
-                      )}
-                    </div>
-
-                    <Chip
-                      variant='flat'
-                      color={getUnitStateMeta(unit.state).chipColor}
-                      className='px-4 py-1 text-[10px] font-bold uppercase tracking-widest'
-                    >
-                      {getUnitStateMeta(unit.state).label}
-                    </Chip>
-                    <div className='w-full space-y-12'>
-                      {groupedFeatures.map((masterGroup) => {
-                        const unitFeaturesInGroup = masterGroup.features.filter(
-                          (feature) =>
-                            unit.model?.features?.some(
-                              (f) => f.id === feature.id
-                            )
-                        );
-
-                        return (
-                          <div
-                            key={masterGroup.room}
-                            className='flex flex-col items-center text-center'
-                          >
-                            <div className='mb-4 flex h-[70px] flex-col items-center justify-center gap-2'>
-                              <div className='relative flex h-10 w-10 items-center justify-center'>
-                                <img
-                                  src={
-                                    categoryIcons[masterGroup.room] ??
-                                    '/clogo5.png'
-                                  }
-                                  alt={`${masterGroup.room} — logo claro`}
-                                  loading='lazy'
-                                  decoding='async'
-                                />
-                                <img
-                                  src={
-                                    darkIcons?.[masterGroup.room] ??
-                                    '/dlogo5.png'
-                                  }
-                                  alt={`${masterGroup.room} — logo oscuro`}
-                                  className='absolute inset-0 h-full w-full object-contain opacity-0 grayscale transition-opacity duration-300 dark:opacity-100'
-                                  loading='lazy'
-                                  aria-hidden='false'
-                                />
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                className='overflow-x-auto rounded-[2rem] border border-default-200/80 bg-background/90 shadow-[0_20px_70px_-40px_rgba(15,23,42,0.45)] dark:border-transparent dark:bg-transparent dark:shadow-none'
+              >
+                <table className='w-full min-w-[720px]'>
+                  <thead>
+                    <tr>
+                      {selectedUnits.map((unit) => (
+                        <th
+                          key={unit.id}
+                          className='min-w-[280px] border-default-200/80 px-8 py-8 text-center align-top backdrop-blur-sm dark:border-default-100/10'
+                        >
+                          <div className='space-y-5'>
+                            <div className='space-y-2'>
+                              <p className='text-[10px] font-bold uppercase tracking-[0.3em] text-default-400'>
+                                Departamento
+                              </p>
+                              <p className='text-xl font-bold tracking-tight text-foreground sm:text-2xl'>
+                                {unit.unit_number}
+                              </p>
+                              {/* {unit.model?.name_model_department && (
+                                <p className='text-sm text-default-500'>
+                                  {unit.model.name_model_department}
+                                </p>
+                              )} */}
+                            </div>
+                            <div className='border-t border-default-200/70 pt-5 dark:border-default-100/10'>
+                              <div className='flex items-end justify-center gap-2'>
+                                <span className='text-5xl font-black tracking-tighter text-foreground sm:text-6xl'>
+                                  {unit.real_square_meters?.toLocaleString(
+                                    'es-MX'
+                                  ) ?? '--'}
+                                </span>
                               </div>
-                              <p className='text-[10px] font-black uppercase tracking-[0.2em] text-default-500'>
-                                {masterGroup.room}
+                              <p className='mt-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-default-400'>
+                                m² Construidos
+                              </p>
+                              <p className='mt-1 text-sm text-default-500'>
+                                Nivel {unit.floor}
                               </p>
                             </div>
-                            <div className='flex min-h-[60px] flex-col items-center justify-start space-y-2'>
-                              {unitFeaturesInGroup.length > 0 ? (
-                                unitFeaturesInGroup.map((feature) => (
-                                  <p
-                                    key={feature.id}
-                                    className='text-sm font-medium leading-tight text-foreground/80'
-                                  >
-                                    {feature.dfeatures_name}
-                                  </p>
-                                ))
-                              ) : (
-                                <div className='h-4 w-8 border-b border-default-100 opacity-20' />
-                              )}
+                            <div>
+                              <Chip
+                                variant='flat'
+                                color={getUnitStateMeta(unit.state).chipColor}
+                                className='mx-auto w-fit px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider'
+                              >
+                                {getUnitStateMeta(unit.state).label}
+                              </Chip>
                             </div>
                           </div>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {comparisonRooms.map((room, rowIndex) => (
+                      <tr key={room}>
+                        {selectedUnits.map((unit) => {
+                          const roomFeatures =
+                            unit.model?.features?.filter(
+                              (feature) =>
+                                !!feature.dfeatures_name?.trim() &&
+                                (feature.room?.trim() || 'General') === room
+                            ) ?? [];
+
+                          return (
+                            <td
+                              key={`${unit.id}-${room}`}
+                              className={`px-8 align-top text-base ${
+                                rowIndex % 2 === 0
+                                  ? 'bg-content1/10 dark:bg-transparent'
+                                  : 'bg-default-50/10 dark:bg-transparent'
+                              }`}
+                            >
+                              <div className='min-h-[180px] border-t border-default-200/70 py-8 dark:border-default-100/10'>
+                                <div className='mb-6 flex flex-col items-center justify-center gap-2'>
+                                  <div className='relative h-9 w-9 shrink-0'>
+                                    <img
+                                      src={categoryIcons[room] ?? '/clogo5.png'}
+                                      alt={`${room} icono`}
+                                      className='h-full w-full object-contain brightness-0 dark:invert'
+                                      loading='lazy'
+                                      decoding='async'
+                                    />
+                                  </div>
+                                  <div className='text-center'>
+                                    <p className='text-xs font-bold uppercase tracking-[0.24em] text-default-400'>
+                                      {room}
+                                    </p>
+                                    <p className='text-xs text-default-500'>
+                                      Caracteristicas del ambiente
+                                    </p>
+                                  </div>
+                                </div>
+                                {roomFeatures.length > 0 ? (
+                                  <div className='space-y-5 text-center'>
+                                    {roomFeatures.map((feature) => (
+                                      <div
+                                        key={feature.id}
+                                        className='mx-auto flex max-w-[30ch] items-start justify-center gap-3'
+                                      >
+                                        <span className='mt-3 h-1.5 w-1.5 rounded-full bg-foreground/35' />
+                                        <p className='text-pretty text-lg font-semibold leading-7 tracking-tight text-foreground/85'>
+                                          {feature.dfeatures_name}
+                                        </p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className='flex min-h-16 items-center justify-center'>
+                                    <span className='text-sm text-default-300'>
+                                      —
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </motion.div>
             </div>
+            {comparisonRooms.length === 0 && (
+              <p className='mt-8 text-center text-sm text-default-500'>
+                No hay definiciones disponibles para comparar.
+              </p>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Calculadora de Precio por Metro Cuadrado */}
-      <AnimatePresence>
-        {selectedIds.length > 0 && priceAnalysis && (
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            className='mt-20'
-          >
-            <div className='mb-12 px-4 text-center'>
-              <h2 className='text-3xl font-bold text-foreground'>
-                Análisis de Precio por Metro Cuadrado
-              </h2>
-              <p className='mt-3 text-sm text-default-500'>
-                Invierta ahora, obtenga ganancias mañana - Vea el potencial de
-                ahorro en cada etapa
-              </p>
-            </div>
-
-            {/* Resumen de Ahorro Total */}
-            <div className='mx-auto max-w-7xl px-4'>
-              {/* Grilla de Precios por Sales Stage - Ordenada */}
-              <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3'>
-                {priceAnalysis.sortedStages.map(
-                  (
-                    { stage, avgPricePerM2, selectedUnitsData, stagePrice },
-                    index
-                  ) => {
-                    const isCheapest = avgPricePerM2 === priceAnalysis.minPrice;
-
-                    return (
-                      <motion.div
-                        key={stage.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className={`relative rounded-lg border-2 p-6 shadow-md transition-all ${
-                          isCheapest
-                            ? 'border-success bg-success/10 ring-2 ring-success/30'
-                            : 'border-default-200 bg-content1 hover:border-primary hover:shadow-lg'
-                        }`}
-                      >
-                        {/* Badge de Mejor Opción */}
-                        {isCheapest && (
-                          <div className='absolute -top-3 right-4 inline-block rounded-full bg-success px-3 py-1 text-xs font-bold text-background'>
-                            🏆 MEJOR INVERSIÓN
-                          </div>
-                        )}
-
-                        {/* Badge de Posición */}
-                        <div className='mb-3 inline-block rounded-full bg-default-100 px-3 py-1 text-xs font-semibold text-default-700'>
-                          Etapa {index + 1} de{' '}
-                          {priceAnalysis.sortedStages.length}
-                        </div>
-
-                        <div className='space-y-4'>
-                          {/* Nombre de la etapa de venta */}
-                          <div>
-                            <p className='text-xs font-semibold uppercase tracking-widest text-default-500'>
-                              Etapa
-                            </p>
-                            <h3 className='text-2xl font-bold text-foreground'>
-                              {stage.stage_type}
-                            </h3>
-                          </div>
-
-                          {/* Precio de la etapa */}
-                          <div className='border-t border-default-200 pt-3'>
-                            <p className='text-xs text-default-400'>
-                              Precio Base
-                            </p>
-                            <p className='text-2xl font-black text-primary'>
-                              ${stagePrice.toLocaleString('es-MX')}
-                            </p>
-                          </div>
-
-                          {/* Ahorro comparado
-                          {savings > 0 && (
-                            <div className='border-t border-success/30 bg-success/10 p-3 rounded dark:bg-success/5'>
-                              <p className='text-xs mb-1 font-semibold text-success'>
-                                💡 Ahorro vs. Precio Máximo
-                              </p>
-                              <p className='text-lg font-black text-success'>
-                                ${savings.toFixed(2).replace('.', ',')} por m²
-                              </p>
-                              <p className='text-xs text-success/70 mt-1'>
-                                Ahorras un {savingsPercent}% comprando en esta etapa
-                              </p>
-                            </div>
-                          )} */}
-
-                          {/* Total Ganancia Potencial para todos los departamentos
-                          {selectedUnitsData.length > 0 && (() => {
-                            const totalGainPerStage = selectedUnitsData.reduce((sum, { unit }) => {
-                              const currentPrice = stagePrice * (unit.real_square_meters || 0);
-                              const finalSalePrice =
-                                priceAnalysis.maxPrice * (unit.real_square_meters || 0);
-                              const gain = finalSalePrice - currentPrice;
-                              return sum + gain;
-                            }, 0);
-
-                            const totalCurrentInvestment = selectedUnitsData.reduce((sum, { unit }) => {
-                              return sum + stagePrice * (unit.real_square_meters || 0);
-                            }, 0);
-
-                            const portfolioGainPercent = totalCurrentInvestment > 0
-                              ? ((totalGainPerStage / totalCurrentInvestment) * 100).toFixed(1)
-                              : 0;
-
-                            return (
-                              <div className='border-t border-default-200 pt-3'>
-                                <p className='text-xs font-semibold mb-2 text-default-500'>
-                                  💰 Ganancia Total por Portafolio
-                                </p>
-                                <div className={`rounded border p-2 ${
-                                  totalGainPerStage > 0
-                                    ? 'border-success/30 bg-success/10'
-                                    : 'border-default-200 bg-default-50'
-                                }`}>
-                                  <div className='flex items-center justify-between text-sm'>
-                                    <span className='font-semibold text-foreground'>
-                                      Ganancia Potencial:
-                                    </span>
-                                    <span className={`text-lg font-black ${
-                                      totalGainPerStage > 0
-                                        ? 'text-success'
-                                        : 'text-warning'
-                                    }`}>
-                                      {totalGainPerStage > 0 ? '+' : ''}${totalGainPerStage.toLocaleString('es-MX', {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2
-                                      })}
-                                    </span>
-                                  </div>
-                                  {totalGainPerStage > 0 && (
-                                    <p className='text-[10px] text-success/70 mt-1'>
-                                      {portfolioGainPercent}% de retorno total
-                                    </p>
-                                  )}
-                                  {totalGainPerStage === 0 && (
-                                    <p className='text-[10px] text-default-500 mt-1'>
-                                      Sin ganancia: esta es la etapa final de venta
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })()} */}
-
-                          {/* Detalles por unidad seleccionada */}
-                          {selectedUnitsData.length > 0 && (
-                            <div className='border-t border-default-200 pt-3'>
-                              <p className='mb-3 text-xs font-semibold text-default-500'>
-                                Por Unidad Seleccionada
-                              </p>
-                              <div className='space-y-3'>
-                                {selectedUnitsData.map(
-                                  ({ unit, pricePerM2, totalPrice }) => {
-                                    // Calcular ganancia potencial desde la etapa actual hasta la etapa final
-                                    const maxTotalPrice =
-                                      (unit.real_square_meters || 0) *
-                                      priceAnalysis.maxPrice;
-                                    const potentialGain =
-                                      maxTotalPrice - totalPrice;
-                                    const gainPercent =
-                                      totalPrice > 0
-                                        ? (
-                                            (potentialGain / totalPrice) *
-                                            100
-                                          ).toFixed(1)
-                                        : 0;
-
-                                    return (
-                                      <div
-                                        key={unit.id}
-                                        className='rounded border border-default-200 bg-default-100/50 p-3'
-                                      >
-                                        <div className='mb-2 flex items-center justify-between'>
-                                          <span className='font-semibold text-foreground'>
-                                            {unit.floor} - {unit.unit_number}
-                                          </span>
-                                          <span className='text-xs text-default-500'>
-                                            {unit.real_square_meters}m²
-                                          </span>
-                                        </div>
-                                        <div className='space-y-1.5 border-t border-default-200 pt-2'>
-                                          <div className='flex items-center justify-between text-xs'>
-                                            <span className='text-default-500'>
-                                              Precio/m²:
-                                            </span>
-                                            <span
-                                              className={`font-bold ${
-                                                isCheapest
-                                                  ? 'text-success'
-                                                  : 'text-primary'
-                                              }`}
-                                            >
-                                              $
-                                              {pricePerM2
-                                                .toFixed(2)
-                                                .replace('.', ',')}
-                                            </span>
-                                          </div>
-                                          <div className='flex items-center justify-between text-sm'>
-                                            <span className='font-semibold text-foreground'>
-                                              Total:
-                                            </span>
-                                            <span
-                                              className={`text-lg font-black ${
-                                                isCheapest
-                                                  ? 'text-success'
-                                                  : 'text-primary'
-                                              }`}
-                                            >
-                                              $
-                                              {totalPrice.toLocaleString(
-                                                'es-MX',
-                                                {
-                                                  minimumFractionDigits: 2,
-                                                  maximumFractionDigits: 2,
-                                                }
-                                              )}
-                                            </span>
-                                          </div>
-                                          {/* Ganancia Potencial */}
-                                          {potentialGain > 0 && (
-                                            <div className='mt-2 border-t border-default-200 pt-1.5'>
-                                              <div className='flex items-center justify-between text-xs'>
-                                                <span className='text-default-500'>
-                                                  Ganancia Potencial:
-                                                </span>
-                                                <span className='font-black text-success'>
-                                                  +$
-                                                  {potentialGain.toLocaleString(
-                                                    'es-MX',
-                                                    {
-                                                      minimumFractionDigits: 2,
-                                                      maximumFractionDigits: 2,
-                                                    }
-                                                  )}
-                                                </span>
-                                              </div>
-                                              <p className='mt-0.5 text-[10px] text-success/70'>
-                                                {gainPercent}% de retorno
-                                              </p>
-                                            </div>
-                                          )}
-                                        </div>
-                                      </div>
-                                    );
-                                  }
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Descripción de la etapa */}
-                          {stage.stage_description && (
-                            <div className='border-t border-default-200 pt-3'>
-                              <p className='text-xs italic text-default-400'>
-                                {stage.stage_description}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      </motion.div>
-                    );
-                  }
-                )}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Selector Flotante Minimalista */}
       <AnimatePresence>
         {selectedIds.length > 0 && (
