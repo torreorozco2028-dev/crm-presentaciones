@@ -218,7 +218,7 @@ export default function Floors({ units }: Props) {
 
   return (
     <div
-      id='equipo'
+      id='unidades'
       className='min-h-screen bg-background p-4 pt-10 font-sans text-foreground transition-colors dark:bg-slate-950 sm:p-10'
     >
       <div className='mb-10 text-center'>
