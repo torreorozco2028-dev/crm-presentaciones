@@ -26,7 +26,7 @@ const BASE_NAV_LINKS = [
     ],
   },
   { title: 'AREAS COMUNES', href: '#areas-comunes' },
-  { title: 'EQUIPO', href: '#equipo' },
+  { title: 'UNIDADES', href: '#unidades' },
 ];
 
 export default function CreativeNavbar() {
