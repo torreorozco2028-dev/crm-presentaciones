@@ -68,6 +68,14 @@ export const menuOptions = {
       roles: ['admin'],
     },
     {
+      key: 'clients',
+      label: 'menu.clients',
+      path: '/clients',
+      icon: 'ContactRound',
+      displayDivider: false,
+      roles: ['user', 'admin'],
+    },
+    {
       key: 'sales',
       label: 'menu.sales',
       path: '/sales',

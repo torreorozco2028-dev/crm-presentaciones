@@ -38,6 +38,14 @@ function toOptionalInteger(value: unknown) {
 
 export async function registerClientAction(formData: any) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        error: 'Debes iniciar sesión para registrar un cliente',
+      };
+    }
+
     const names = String(formData?.names ?? '').trim();
     const firstLastName = String(formData?.first_last_name ?? '').trim();
 
@@ -61,6 +69,8 @@ export async function registerClientAction(formData: any) {
       genre: toOptionalText(formData?.genre),
       marital_status: toOptionalText(formData?.marital_status),
       occupation: toOptionalText(formData?.occupation),
+      userId: session.user.id,
+      updatedByUserId: session.user.id,
     });
 
     return { success: true, data: newClient };
@@ -182,6 +192,7 @@ export async function createSaleAction(input: CreateSaleInput) {
         clientId: input.clientId,
         unitId: input.unitId,
         userId: session.user.id,
+        updatedByUserId: session.user.id,
         final_price: input.finalPrice ?? null,
         payment_method: input.paymentMethod || null,
         payment_notes: input.paymentNotes || null,
@@ -256,7 +267,7 @@ export async function updateUnitStateAction(unitId: string, state: UnitState) {
       await tx
         .update(sales)
         .set({
-          userId: session.user.id,
+          updatedByUserId: session.user.id,
           updatedAt: now,
         })
         .where(eq(sales.id, currentSale.id));
@@ -330,6 +341,7 @@ export async function updateSaleAction(input: UpdateSaleInput) {
         final_price: input.finalPrice ?? null,
         payment_method: input.paymentMethod?.trim() || null,
         payment_notes: input.paymentNotes?.trim() || null,
+        updatedByUserId: session.user.id,
         updatedAt: now,
       })
       .where(eq(sales.id, input.saleId));
@@ -467,6 +479,13 @@ export async function getSalesListAction(input: GetSalesListInput = {}) {
               email: true,
             },
           },
+          lastUpdatedBy: {
+            columns: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
           unit: {
             columns: {
               id: true,
@@ -507,6 +526,11 @@ export async function getSalesListAction(input: GetSalesListInput = {}) {
         rows: rows.map((sale) => ({
           id: sale.id,
           userId: sale.userId,
+          createdBy: {
+            id: sale.seller.id,
+            name: sale.seller.name,
+            email: sale.seller.email,
+          },
           unitId: sale.unit.id,
           clientId: sale.client.id,
           clientName: [
@@ -526,11 +550,17 @@ export async function getSalesListAction(input: GetSalesListInput = {}) {
           finalPrice: sale.final_price,
           salesDate: sale.sales_date?.toISOString() ?? null,
           updatedAt: sale.updatedAt?.toISOString() ?? null,
-          lastUpdatedBy: {
-            id: sale.seller.id,
-            name: sale.seller.name,
-            email: sale.seller.email,
-          },
+          lastUpdatedBy: sale.lastUpdatedBy
+            ? {
+                id: sale.lastUpdatedBy.id,
+                name: sale.lastUpdatedBy.name,
+                email: sale.lastUpdatedBy.email,
+              }
+            : {
+                id: sale.seller.id,
+                name: sale.seller.name,
+                email: sale.seller.email,
+              },
           canUpdate: canManageAnySale || currentUserId === sale.userId,
         })),
       },

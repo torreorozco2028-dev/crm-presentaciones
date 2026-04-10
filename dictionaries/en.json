@@ -25,6 +25,7 @@
       "building": "Building",
       "settings": "Settings",
       "avatar": "Avatar",
+      "clients": "Clients",
       "generalfeatures": "General Features",
       "pointsofinterest": "Points of Interest",
       "sales": "Sales"
@@ -35,6 +36,7 @@
       "calculator": "Simulate installments, interest, and full amortization schedule for clients.",
       "buildings": "Manage and supervise all your project presentations with ease.",
       "settings": "Settings",
+      "clients": "Manage your client portfolio, their main information, and who can edit each record.",
       "generalfeatures": "General Features",
       "pointsofinterest": "Manage the points of Interest near your building to provide a more immersive experience for your clients.",
       "sales": "Manage your sales process and keep track of your clients and their interactions with your presentations."

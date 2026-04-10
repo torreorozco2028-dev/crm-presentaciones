@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Card, Chip } from '@heroui/react';
+import { Button, Card, Chip } from '@heroui/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fonts } from '@/config/fonts';
+import { useParams, useRouter } from 'next/navigation';
 
 interface DepartmentFeature {
   id: string;
@@ -97,9 +98,18 @@ function getUnitStateMeta(state: number) {
 
 export default function Floors({ units }: Props) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const router = useRouter();
+  const params = useParams<{ locale?: string }>();
   const [windowWidth, setWindowWidth] = useState<number>(
     typeof window !== 'undefined' ? window.innerWidth : 1024
   );
+
+  const locale =
+    typeof params?.locale === 'string'
+      ? params.locale
+      : Array.isArray(params?.locale)
+        ? params.locale[0]
+        : 'es';
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -133,6 +143,10 @@ export default function Floors({ units }: Props) {
           ? [...prev, unit.id]
           : prev
     );
+  };
+
+  const handleReserve = (unitId: string) => {
+    router.push(`/${locale}/sales?reserveUnitId=${encodeURIComponent(unitId)}`);
   };
 
   const selectedUnits = units.filter((u) => selectedIds.includes(u.id));
@@ -332,7 +346,7 @@ export default function Floors({ units }: Props) {
                                 Nivel {unit.floor}
                               </p>
                             </div>
-                            <div>
+                            <div className='flex flex-col items-center'>
                               <Chip
                                 variant='flat'
                                 color={getUnitStateMeta(unit.state).chipColor}
@@ -340,6 +354,17 @@ export default function Floors({ units }: Props) {
                               >
                                 {getUnitStateMeta(unit.state).label}
                               </Chip>
+                              {unit.state === 1 && (
+                                <Button
+                                  size='sm'
+                                  color='warning'
+                                  variant='solid'
+                                  onClick={() => handleReserve(unit.id)}
+                                  className='mt-3 px-4 text-[11px] font-bold uppercase tracking-wider'
+                                >
+                                  Reservar
+                                </Button>
+                              )}
                             </div>
                           </div>
                         </th>

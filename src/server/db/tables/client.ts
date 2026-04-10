@@ -8,6 +8,7 @@ import {
   timestamp,
 } from 'drizzle-orm/pg-core';
 import { sales } from './sales';
+import { users } from './user-table';
 
 export const client = pgTable('client', {
   id: uuid('id')
@@ -24,10 +25,17 @@ export const client = pgTable('client', {
   genre: varchar({ length: 30 }),
   marital_status: varchar({ length: 50 }),
   occupation: varchar({ length: 50 }),
+  userId: uuid('user_id').references(() => users.id),
+  updatedByUserId: uuid('updated_by_user_id').references(() => users.id),
   createdAt: timestamp('created_at').default(sql`now()`),
   updatedAt: timestamp('updated_at').default(sql`now()`),
 });
 
-export const clientRelations = relations(client, ({ many }) => ({
+export const clientRelations = relations(client, ({ many, one }) => ({
   sales: many(sales),
+  owner: one(users, { fields: [client.userId], references: [users.id] }),
+  lastUpdatedBy: one(users, {
+    fields: [client.updatedByUserId],
+    references: [users.id],
+  }),
 }));

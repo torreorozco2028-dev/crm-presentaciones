@@ -28,6 +28,7 @@ export const sales = pgTable('sales', {
   userId: uuid('user_id')
     .references(() => users.id)
     .notNull(),
+  updatedByUserId: uuid('updated_by_user_id').references(() => users.id),
   createdAt: timestamp('created_at').default(sql`now()`),
   updatedAt: timestamp('updated_at').default(sql`now()`),
 });
@@ -38,5 +39,14 @@ export const salesRelations = relations(sales, ({ one }) => ({
     fields: [sales.unitId],
     references: [unit_department.id],
   }),
-  seller: one(users, { fields: [sales.userId], references: [users.id] }),
+  seller: one(users, {
+    fields: [sales.userId],
+    references: [users.id],
+    relationName: 'salesCreator',
+  }),
+  lastUpdatedBy: one(users, {
+    fields: [sales.updatedByUserId],
+    references: [users.id],
+    relationName: 'salesLastUpdatedBy',
+  }),
 }));

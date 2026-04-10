@@ -25,6 +25,7 @@
       "building": "Edificios",
       "settings": "Configuración",
       "avatar": "Avatar",
+      "clients": "Clientes",
       "generalfeatures": "Acabados generales",
       "pointsofinterest": "Puntos de interés",
       "sales": "Ventas"
@@ -35,6 +36,7 @@
       "calculator": "Simula cuotas, interes y cronograma de amortizacion para tus clientes.",
       "buildings": "Gestiona y supervisa todos tus presentaciones de proyectos con facilidad.",
       "settings": "Configuraciones",
+      "clients": "Gestiona tu cartera de clientes, su información principal y quién puede editar cada registro.",
       "generalfeatures": "Acabados generales",
       "pointsofinterest": "Administra los puntos de interés cerca de tu edificio para proporcionar una experiencia más inmersiva para tus clientes.",
       "sales": "Gestiona tu proceso de ventas y lleva un seguimiento de tus clientes y sus interacciones con tus presentaciones."
