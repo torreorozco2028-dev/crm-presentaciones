@@ -186,10 +186,6 @@ export default function CommonAreasSection({
             >
               Areas Comunes
             </h2>
-            <p className='mt-3 max-w-2xl text-sm text-white/70 sm:text-base'>
-              Carrusel estilo catalogo: abre cada espacio para ver su imagen en
-              grande y los detalles.
-            </p>
           </div>
 
           <div className='flex items-center gap-2'>
