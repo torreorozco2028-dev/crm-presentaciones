@@ -251,7 +251,7 @@ export default function DepartmentsPage({ data }: { data: any }) {
                     key={currentImage || 'fallback-distribution-image'}
                     src={currentImage}
                     onClick={galleryImages.length > 0 ? onOpen : undefined}
-                    className={`h-[70vh] w-full object-contain transition-all duration-500 lg:h-auto lg:max-h-full lg:w-full${galleryImages.length > 0 ? 'cursor-pointer' : ''}`}
+                    className={`h-[70vh] w-full object-contain transition-all duration-500 lg:h-auto lg:max-h-full lg:w-full ${galleryImages.length > 0 ? 'cursor-pointer' : ''}`}
                     alt='Vista Departamento'
                   />
                 </div>

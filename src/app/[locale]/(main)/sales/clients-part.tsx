@@ -33,6 +33,7 @@ import {
   updateSaleAction,
   updateUnitStateAction,
 } from './actions';
+import { useSearchParams } from 'next/navigation';
 
 type UnitState = 1 | 2 | 3;
 
@@ -59,6 +60,7 @@ interface SalesSetupData {
 interface SaleRow {
   id: string;
   userId: string;
+  createdBy: { id: string; name: string | null; email: string | null };
   unitId: string;
   clientId: string;
   clientName: string;
@@ -70,7 +72,11 @@ interface SaleRow {
   finalPrice: number | null;
   salesDate: string | null;
   updatedAt: string | null;
-  lastUpdatedBy: { id: string; name: string | null; email: string | null };
+  lastUpdatedBy: {
+    id: string;
+    name: string | null;
+    email: string | null;
+  } | null;
   canUpdate: boolean;
 }
 
@@ -83,14 +89,20 @@ interface SalesListData {
 }
 
 export default function ClientsPart() {
+  const searchParams = useSearchParams();
   const [showClientForm, setShowClientForm] = useState(false);
   const [showSaleForm, setShowSaleForm] = useState(false);
   const [editingSale, setEditingSale] = useState<SaleRow | null>(null);
   const saleClientSelectRef = useRef<HTMLDivElement | null>(null);
+  const reserveQueryAppliedRef = useRef(false);
 
   const [detailQuery, setDetailQuery] = useState('');
   const [saleClientQuery, setSaleClientQuery] = useState('');
+  const [saleClientMode, setSaleClientMode] = useState<'existing' | 'new'>(
+    'existing'
+  );
   const [selectedSaleClientId, setSelectedSaleClientId] = useState('');
+  const [selectedSaleUnitId, setSelectedSaleUnitId] = useState('');
   const [isSaleClientSelectOpen, setIsSaleClientSelectOpen] = useState(false);
   const [clientFilter, setClientFilter] = useState('all');
   const [unitFilter, setUnitFilter] = useState('all');
@@ -128,9 +140,36 @@ export default function ClientsPart() {
     if (!showSaleForm) {
       setSaleClientQuery('');
       setSelectedSaleClientId('');
+      setSelectedSaleUnitId('');
+      setSaleClientMode('existing');
       setIsSaleClientSelectOpen(false);
     }
   }, [showSaleForm]);
+
+  useEffect(() => {
+    if (reserveQueryAppliedRef.current || !setupData) return;
+
+    const reserveUnitId = searchParams.get('reserveUnitId');
+    if (!reserveUnitId) return;
+
+    reserveQueryAppliedRef.current = true;
+    const unitToReserve = setupData.units.find(
+      (unit) => unit.id === reserveUnitId && unit.state === 1
+    );
+
+    if (!unitToReserve) {
+      setSalesError(
+        'La unidad seleccionada ya no está disponible para reserva'
+      );
+      return;
+    }
+
+    setShowSaleForm(true);
+    setSelectedSaleUnitId(unitToReserve.id);
+    setSaleClientMode('new');
+    setSalesError(null);
+    toast.success('Unidad preseleccionada para crear la reserva');
+  }, [searchParams, setupData]);
 
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
@@ -231,12 +270,68 @@ export default function ClientsPart() {
     setSalesError(null);
 
     const formData = new FormData(form);
-    const clientId = String(formData.get('clientId') ?? '');
-    const unitId = String(formData.get('unitId') ?? '');
+    let clientId = String(formData.get('clientId') ?? '').trim();
+    const unitId = String(formData.get('unitId') ?? '').trim();
     const state = Number(formData.get('state') ?? 2) as UnitState;
     const finalPriceRaw = String(formData.get('finalPrice') ?? '').trim();
     const paymentMethod = String(formData.get('paymentMethod') ?? '').trim();
     const paymentNotes = String(formData.get('paymentNotes') ?? '').trim();
+
+    if (saleClientMode === 'new') {
+      const names = String(formData.get('new_names') ?? '').trim();
+      const firstLastName = String(
+        formData.get('new_first_last_name') ?? ''
+      ).trim();
+      const secondLastName = String(
+        formData.get('new_second_last_name') ?? ''
+      ).trim();
+      const email = String(formData.get('new_email') ?? '').trim();
+      const cellphone = String(formData.get('new_cellphone') ?? '').trim();
+
+      if (!names || !firstLastName) {
+        setIsSaleSubmitting(false);
+        const error =
+          'Para registrar cliente nuevo debes completar nombres y apellido paterno';
+        toast.error(error);
+        setSalesError(error);
+        return;
+      }
+
+      const newClientResult = await registerClientAction({
+        names,
+        first_last_name: firstLastName,
+        second_last_name: secondLastName,
+        type_document: 'CI',
+        email,
+        cellphone,
+      });
+
+      if (!newClientResult.success) {
+        setIsSaleSubmitting(false);
+        toast.error(newClientResult.error ?? 'No se pudo registrar el cliente');
+        setSalesError(
+          newClientResult.error ?? 'No se pudo registrar el cliente'
+        );
+        return;
+      }
+
+      clientId = String(
+        (
+          newClientResult as {
+            data?: {
+              id?: string;
+            };
+          }
+        ).data?.id ?? ''
+      );
+
+      if (!clientId) {
+        setIsSaleSubmitting(false);
+        toast.error('No se pudo obtener el cliente recién creado');
+        setSalesError('No se pudo obtener el cliente recién creado');
+        return;
+      }
+    }
 
     const result = await createSaleAction({
       clientId,
@@ -259,7 +354,11 @@ export default function ClientsPart() {
     form.reset();
     setShowSaleForm(false);
     await Promise.all([loadSetupData(), loadSalesList()]);
-    toast.success('Venta creada correctamente');
+    toast.success(
+      saleClientMode === 'new'
+        ? 'Cliente y reserva creados correctamente'
+        : 'Venta creada correctamente'
+    );
   }
 
   async function handleUpdateUnitState(
@@ -538,10 +637,10 @@ export default function ClientsPart() {
                         <th className='px-4 py-3 font-semibold'>Precio</th>
                         <th className='px-4 py-3 font-semibold'>Fecha Venta</th>
                         <th className='px-4 py-3 font-semibold'>Estado</th>
+                        <th className='px-4 py-3 font-semibold'>Creador</th>
                         <th className='px-4 py-3 font-semibold'>
-                          Ultima Actualizacion
+                          Última actualización
                         </th>
-                        <th className='px-4 py-3 font-semibold'>Usuario</th>
                         <th className='px-4 py-3 font-semibold'>Acciones</th>
                       </tr>
                     </thead>
@@ -622,14 +721,17 @@ export default function ClientsPart() {
                             )}
                           </td>
                           <td className='px-4 py-3 text-slate-700 dark:text-zinc-300'>
+                            {sale.createdBy.name ?? 'Sin nombre'}
+                          </td>
+                          <td className='px-4 py-3 text-slate-700 dark:text-zinc-300'>
                             {sale.updatedAt
                               ? new Date(sale.updatedAt).toLocaleString('es-BO')
                               : '-'}
-                          </td>
-                          <td className='px-4 py-3 text-slate-700 dark:text-zinc-300'>
-                            <div className='font-medium'>
-                              {sale.lastUpdatedBy.name ?? 'Sin nombre'}
-                            </div>
+                            {sale.lastUpdatedBy?.name && (
+                              <div className='mt-0.5 text-xs text-slate-500 dark:text-zinc-400'>
+                                {sale.lastUpdatedBy.name}
+                              </div>
+                            )}
                           </td>
                           <td className='px-4 py-3'>
                             {sale.canUpdate ? (
@@ -703,6 +805,12 @@ export default function ClientsPart() {
                         <p className='text-right text-slate-700 dark:text-zinc-300'>
                           {sale.paymentNotes || '-'}
                         </p>
+                        <p className='text-slate-500 dark:text-zinc-400'>
+                          Creador
+                        </p>
+                        <p className='text-right text-slate-700 dark:text-zinc-300'>
+                          {sale.createdBy.name ?? 'Sin nombre'}
+                        </p>
                       </div>
 
                       <div className='mb-3'>
@@ -733,9 +841,18 @@ export default function ClientsPart() {
                       </div>
 
                       <div className='flex items-center justify-between'>
-                        <p className='text-xs text-slate-500 dark:text-zinc-400'>
-                          {sale.lastUpdatedBy.name ?? 'Sin nombre'}
-                        </p>
+                        <div className='text-xs text-slate-500 dark:text-zinc-400'>
+                          {sale.updatedAt
+                            ? new Date(sale.updatedAt).toLocaleDateString(
+                                'es-BO'
+                              )
+                            : '-'}
+                          {sale.lastUpdatedBy?.name && (
+                            <span className='ml-1'>
+                              · {sale.lastUpdatedBy.name}
+                            </span>
+                          )}
+                        </div>
                         {sale.canUpdate ? (
                           <div className='flex items-center gap-2'>
                             <button
@@ -1009,104 +1126,162 @@ export default function ClientsPart() {
                     color='text-emerald-600'
                   />
 
-                  <div className='flex flex-col gap-1.5'>
-                    <label className='ml-1 text-[13px] font-semibold text-slate-700 dark:text-zinc-300'>
-                      Cliente
-                    </label>
-                    <div className='relative' ref={saleClientSelectRef}>
+                  <div className='md:col-span-3'>
+                    <p className='ml-1 text-[13px] font-semibold text-slate-700 dark:text-zinc-300'>
+                      Tipo de cliente
+                    </p>
+                    <div className='mt-2 grid grid-cols-2 gap-2'>
                       <button
                         type='button'
-                        onClick={() =>
-                          setIsSaleClientSelectOpen((prevOpen) => !prevOpen)
-                        }
-                        className='flex h-11 w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 text-left text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100'
-                        aria-haspopup='listbox'
-                        aria-expanded={isSaleClientSelectOpen}
+                        onClick={() => setSaleClientMode('existing')}
+                        className={`rounded-xl border px-4 py-2 text-sm font-semibold transition ${
+                          saleClientMode === 'existing'
+                            ? 'border-slate-900 bg-slate-900 text-white dark:border-zinc-200 dark:bg-zinc-200 dark:text-black'
+                            : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900'
+                        }`}
                       >
-                        <span className='truncate'>
-                          {selectedSaleClient
-                            ? `${selectedSaleClient.fullName}${
-                                selectedSaleClient.email
-                                  ? ` (${selectedSaleClient.email})`
-                                  : ''
-                              }`
-                            : 'Selecciona cliente'}
-                        </span>
-                        <ChevronDown size={16} className='text-slate-500' />
+                        Cliente existente
                       </button>
-
-                      {isSaleClientSelectOpen && (
-                        <div className='absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-zinc-800 dark:bg-zinc-950'>
-                          <div className='relative border-b border-slate-100 dark:border-zinc-800'>
-                            <Search
-                              size={16}
-                              className='pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500'
-                            />
-                            <input
-                              autoFocus
-                              type='text'
-                              value={saleClientQuery}
-                              onChange={(event) =>
-                                setSaleClientQuery(event.target.value)
-                              }
-                              placeholder='Buscar por nombre, apellido o email'
-                              className='h-10 w-full bg-transparent pl-9 pr-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-zinc-100 dark:placeholder:text-zinc-500'
-                            />
-                          </div>
-
-                          <div className='max-h-56 overflow-y-auto py-1'>
-                            {filteredSaleClientOptions.length === 0 ? (
-                              <p className='px-3 py-2 text-sm text-slate-500 dark:text-zinc-400'>
-                                No hay clientes para {saleClientQuery.trim()}
-                              </p>
-                            ) : (
-                              filteredSaleClientOptions.map((client) => (
-                                <button
-                                  key={client.id}
-                                  type='button'
-                                  onClick={() => {
-                                    setSelectedSaleClientId(client.id);
-                                    setSaleClientQuery('');
-                                    setIsSaleClientSelectOpen(false);
-                                  }}
-                                  className='block w-full px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100 dark:text-zinc-200 dark:hover:bg-zinc-900'
-                                >
-                                  <span className='block truncate font-medium'>
-                                    {client.fullName}
-                                  </span>
-                                  {client.email && (
-                                    <span className='block truncate text-xs text-slate-500 dark:text-zinc-400'>
-                                      {client.email}
-                                    </span>
-                                  )}
-                                </button>
-                              ))
-                            )}
-                          </div>
-                        </div>
-                      )}
+                      <button
+                        type='button'
+                        onClick={() => {
+                          setSaleClientMode('new');
+                          setSelectedSaleClientId('');
+                        }}
+                        className={`rounded-xl border px-4 py-2 text-sm font-semibold transition ${
+                          saleClientMode === 'new'
+                            ? 'border-slate-900 bg-slate-900 text-white dark:border-zinc-200 dark:bg-zinc-200 dark:text-black'
+                            : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900'
+                        }`}
+                      >
+                        Crear cliente y reservar
+                      </button>
                     </div>
-                    <select
-                      name='clientId'
-                      required
-                      value={selectedSaleClientId}
-                      onChange={(event) => {
-                        setSelectedSaleClientId(event.target.value);
-                      }}
-                      tabIndex={-1}
-                      aria-hidden='true'
-                      className='h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100'
-                      style={{ display: 'none' }}
-                    >
-                      <option value=''>Selecciona cliente</option>
-                      {clientOptions.map((client) => (
-                        <option key={client.id} value={client.id}>
-                          {client.fullName}
-                          {client.email ? ` (${client.email})` : ''}
-                        </option>
-                      ))}
-                    </select>
                   </div>
+
+                  {saleClientMode === 'existing' ? (
+                    <div className='flex flex-col gap-1.5'>
+                      <label className='ml-1 text-[13px] font-semibold text-slate-700 dark:text-zinc-300'>
+                        Cliente
+                      </label>
+                      <div className='relative' ref={saleClientSelectRef}>
+                        <button
+                          type='button'
+                          onClick={() =>
+                            setIsSaleClientSelectOpen((prevOpen) => !prevOpen)
+                          }
+                          className='flex h-11 w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 text-left text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100'
+                          aria-haspopup='listbox'
+                          aria-expanded={isSaleClientSelectOpen}
+                        >
+                          <span className='truncate'>
+                            {selectedSaleClient
+                              ? `${selectedSaleClient.fullName}${
+                                  selectedSaleClient.email
+                                    ? ` (${selectedSaleClient.email})`
+                                    : ''
+                                }`
+                              : 'Selecciona cliente'}
+                          </span>
+                          <ChevronDown size={16} className='text-slate-500' />
+                        </button>
+
+                        {isSaleClientSelectOpen && (
+                          <div className='absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-zinc-800 dark:bg-zinc-950'>
+                            <div className='relative border-b border-slate-100 dark:border-zinc-800'>
+                              <Search
+                                size={16}
+                                className='pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500'
+                              />
+                              <input
+                                autoFocus
+                                type='text'
+                                value={saleClientQuery}
+                                onChange={(event) =>
+                                  setSaleClientQuery(event.target.value)
+                                }
+                                placeholder='Buscar por nombre, apellido o email'
+                                className='h-10 w-full bg-transparent pl-9 pr-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-zinc-100 dark:placeholder:text-zinc-500'
+                              />
+                            </div>
+
+                            <div className='max-h-56 overflow-y-auto py-1'>
+                              {filteredSaleClientOptions.length === 0 ? (
+                                <p className='px-3 py-2 text-sm text-slate-500 dark:text-zinc-400'>
+                                  No hay clientes para {saleClientQuery.trim()}
+                                </p>
+                              ) : (
+                                filteredSaleClientOptions.map((client) => (
+                                  <button
+                                    key={client.id}
+                                    type='button'
+                                    onClick={() => {
+                                      setSelectedSaleClientId(client.id);
+                                      setSaleClientQuery('');
+                                      setIsSaleClientSelectOpen(false);
+                                    }}
+                                    className='block w-full px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100 dark:text-zinc-200 dark:hover:bg-zinc-900'
+                                  >
+                                    <span className='block truncate font-medium'>
+                                      {client.fullName}
+                                    </span>
+                                    {client.email && (
+                                      <span className='block truncate text-xs text-slate-500 dark:text-zinc-400'>
+                                        {client.email}
+                                      </span>
+                                    )}
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <select
+                        name='clientId'
+                        required={saleClientMode === 'existing'}
+                        value={selectedSaleClientId}
+                        onChange={(event) => {
+                          setSelectedSaleClientId(event.target.value);
+                        }}
+                        tabIndex={-1}
+                        aria-hidden='true'
+                        className='h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100'
+                        style={{ display: 'none' }}
+                      >
+                        <option value=''>Selecciona cliente</option>
+                        {clientOptions.map((client) => (
+                          <option key={client.id} value={client.id}>
+                            {client.fullName}
+                            {client.email ? ` (${client.email})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <div className='grid grid-cols-1 gap-4 md:col-span-3 md:grid-cols-2'>
+                      <InputField
+                        name='new_names'
+                        label='Nombres del cliente'
+                        required={saleClientMode === 'new'}
+                      />
+                      <InputField
+                        name='new_first_last_name'
+                        label='Apellido paterno'
+                        required={saleClientMode === 'new'}
+                      />
+                      <InputField
+                        name='new_second_last_name'
+                        label='Apellido materno'
+                      />
+                      <InputField name='new_email' label='Email' type='email' />
+                      <InputField
+                        name='new_cellphone'
+                        label='Telefono'
+                        type='number'
+                      />
+                    </div>
+                  )}
 
                   <div className='flex flex-col gap-1.5'>
                     <label className='ml-1 text-[13px] font-semibold text-slate-700 dark:text-zinc-300'>
@@ -1115,6 +1290,10 @@ export default function ClientsPart() {
                     <select
                       name='unitId'
                       required
+                      value={selectedSaleUnitId}
+                      onChange={(event) =>
+                        setSelectedSaleUnitId(event.target.value)
+                      }
                       className='h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100'
                     >
                       <option value=''>Selecciona unidad</option>
