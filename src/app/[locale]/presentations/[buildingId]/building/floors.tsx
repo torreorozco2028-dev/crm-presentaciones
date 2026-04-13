@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Button, Card, Chip } from '@heroui/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fonts } from '@/config/fonts';
@@ -173,6 +173,27 @@ export default function Floors({ units }: Props) {
     });
   }, [selectedUnits]);
 
+  const getRoomFeatures = useCallback((unit: UnitDepartment, room: string) => {
+    return (
+      unit.model?.features
+        ?.filter(
+          (feature) =>
+            !!feature.dfeatures_name?.trim() &&
+            (feature.room?.trim() || 'General') === room
+        )
+        .sort((a, b) => {
+          const aOrder = a.order ?? Number.POSITIVE_INFINITY;
+          const bOrder = b.order ?? Number.POSITIVE_INFINITY;
+
+          if (aOrder !== bOrder) {
+            return aOrder - bOrder;
+          }
+
+          return a.dfeatures_name.localeCompare(b.dfeatures_name, 'es');
+        }) ?? []
+    );
+  }, []);
+
   // // Calcular precios y ahorros por etapa
   // const priceAnalysis = useMemo(() => {
   //   if (!building?.salesStages || building.salesStages.length === 0) {
@@ -309,7 +330,106 @@ export default function Floors({ units }: Props) {
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                className='overflow-x-auto rounded-[2rem] border border-default-200/80 bg-background/90 shadow-[0_20px_70px_-40px_rgba(15,23,42,0.45)] dark:border-transparent dark:bg-transparent dark:shadow-none'
+                className='space-y-4 md:hidden'
+              >
+                {comparisonRooms.map((room, rowIndex) => (
+                  <div
+                    key={room}
+                    className={`rounded-2xl border border-default-200/80 p-4 ${
+                      rowIndex % 2 === 0
+                        ? 'bg-content1/10 dark:bg-transparent'
+                        : 'bg-default-50/10 dark:bg-transparent'
+                    }`}
+                  >
+                    <div className='mb-4 flex items-center justify-center gap-2'>
+                      <img
+                        src={categoryIcons[room] ?? '/clogo5.png'}
+                        alt={`${room} icono`}
+                        className='h-8 w-8 object-contain brightness-0 dark:invert'
+                        loading='lazy'
+                        decoding='async'
+                      />
+                      <div className='text-center'>
+                        <p className='text-xs font-bold uppercase tracking-[0.2em] text-default-400'>
+                          {room}
+                        </p>
+                        <p className='text-[11px] text-default-500'>
+                          Comparacion por departamento
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className='space-y-3'>
+                      {selectedUnits.map((unit) => {
+                        const roomFeatures = getRoomFeatures(unit, room);
+                        const stateMeta = getUnitStateMeta(unit.state);
+
+                        return (
+                          <div
+                            key={`${unit.id}-${room}`}
+                            className='rounded-xl border border-default-200/70 bg-background/80 p-3 dark:border-default-100/10 dark:bg-transparent'
+                          >
+                            <div className='mb-2 flex items-center justify-between'>
+                              <p className='font-mono text-sm font-black tracking-wide text-foreground'>
+                                Depto {unit.unit_number}
+                              </p>
+                              <p className='text-[11px] text-default-500'>
+                                Nivel {unit.floor}
+                              </p>
+                            </div>
+
+                            <div className='mb-3 flex items-center justify-between gap-2'>
+                              <Chip
+                                variant='flat'
+                                color={stateMeta.chipColor}
+                                className='w-fit px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider'
+                              >
+                                {stateMeta.label}
+                              </Chip>
+                              {unit.state === 1 && (
+                                <Button
+                                  size='sm'
+                                  color='warning'
+                                  variant='solid'
+                                  onClick={() => handleReserve(unit.id)}
+                                  className='px-3 text-[10px] font-bold uppercase tracking-wider'
+                                >
+                                  Reservar
+                                </Button>
+                              )}
+                            </div>
+
+                            {roomFeatures.length > 0 ? (
+                              <div className='space-y-2'>
+                                {roomFeatures.map((feature) => (
+                                  <div
+                                    key={feature.id}
+                                    className='flex items-start gap-2'
+                                  >
+                                    <span className='mt-2 h-1.5 w-1.5 rounded-full bg-foreground/35' />
+                                    <p className='text-sm leading-6 text-foreground/85'>
+                                      {feature.dfeatures_name}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className='text-sm text-default-400'>
+                                Sin caracteristicas en este ambiente.
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                className='hidden overflow-x-auto rounded-[2rem] border border-default-200/80 bg-background/90 shadow-[0_20px_70px_-40px_rgba(15,23,42,0.45)] dark:border-transparent dark:bg-transparent dark:shadow-none md:block'
               >
                 <table className='w-full min-w-[720px]'>
                   <thead>
@@ -377,28 +497,7 @@ export default function Floors({ units }: Props) {
                     {comparisonRooms.map((room, rowIndex) => (
                       <tr key={room}>
                         {selectedUnits.map((unit) => {
-                          const roomFeatures =
-                            unit.model?.features
-                              ?.filter(
-                                (feature) =>
-                                  !!feature.dfeatures_name?.trim() &&
-                                  (feature.room?.trim() || 'General') === room
-                              )
-                              .sort((a, b) => {
-                                const aOrder =
-                                  a.order ?? Number.POSITIVE_INFINITY;
-                                const bOrder =
-                                  b.order ?? Number.POSITIVE_INFINITY;
-
-                                if (aOrder !== bOrder) {
-                                  return aOrder - bOrder;
-                                }
-
-                                return a.dfeatures_name.localeCompare(
-                                  b.dfeatures_name,
-                                  'es'
-                                );
-                              }) ?? [];
+                          const roomFeatures = getRoomFeatures(unit, room);
 
                           return (
                             <td
