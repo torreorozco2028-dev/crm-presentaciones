@@ -50,11 +50,13 @@ interface Props {
 
 const roomOrder: Record<string, number> = {
   General: 0,
-  Cocina: 1,
-  Baño: 2,
-  Dormitorio: 3,
-  Lavanderia: 4,
-  Sala: 5,
+  Dormitorio: 1,
+  Cocina: 2,
+  Baño: 3,
+
+  Sala: 4,
+  Lavanderia: 5,
+  Acabados: 6,
 };
 
 const categoryIcons: Record<string, string> = {
@@ -64,6 +66,7 @@ const categoryIcons: Record<string, string> = {
   Dormitorio: '/clogo4.png',
   Lavanderia: '/clogo5.png',
   Sala: '/clogo6.png',
+  Acabados: '/clogo7.png',
 };
 
 function getUnitStateMeta(state: number) {
