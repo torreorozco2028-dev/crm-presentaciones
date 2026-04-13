@@ -379,11 +379,27 @@ export default function Floors({ units }: Props) {
                       <tr key={room}>
                         {selectedUnits.map((unit) => {
                           const roomFeatures =
-                            unit.model?.features?.filter(
-                              (feature) =>
-                                !!feature.dfeatures_name?.trim() &&
-                                (feature.room?.trim() || 'General') === room
-                            ) ?? [];
+                            unit.model?.features
+                              ?.filter(
+                                (feature) =>
+                                  !!feature.dfeatures_name?.trim() &&
+                                  (feature.room?.trim() || 'General') === room
+                              )
+                              .sort((a, b) => {
+                                const aOrder =
+                                  a.order ?? Number.POSITIVE_INFINITY;
+                                const bOrder =
+                                  b.order ?? Number.POSITIVE_INFINITY;
+
+                                if (aOrder !== bOrder) {
+                                  return aOrder - bOrder;
+                                }
+
+                                return a.dfeatures_name.localeCompare(
+                                  b.dfeatures_name,
+                                  'es'
+                                );
+                              }) ?? [];
 
                           return (
                             <td
