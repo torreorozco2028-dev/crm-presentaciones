@@ -10,8 +10,10 @@ import React, {
 } from 'react';
 import {
   AnimatePresence,
+  type PanInfo,
   animate,
   motion,
+  useAnimationFrame,
   useMotionValue,
 } from 'framer-motion';
 import Image from 'next/image';
@@ -77,9 +79,12 @@ export default function CommonAreasSection({
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [isDraggingRail, setIsDraggingRail] = useState(false);
   const dragX = useMotionValue(0);
   const [dragLeft, setDragLeft] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const autoDirectionRef = useRef<-1 | 1>(-1);
+  const mainImageRef = useRef<HTMLDivElement>(null);
 
   const normalizedCommonAreas = useMemo<CommonAreaWithImages[]>(
     () =>
@@ -143,6 +148,27 @@ export default function CommonAreasSection({
     [dragX, dragLeft]
   );
 
+  useAnimationFrame((_, delta) => {
+    if (normalizedCommonAreas.length <= 1 || dragLeft >= -5 || isDraggingRail) {
+      return;
+    }
+
+    const pxPerSecond = 22;
+    const step = (pxPerSecond * delta) / 1000;
+    const current = dragX.get();
+    let next = current + autoDirectionRef.current * step;
+
+    if (next <= dragLeft) {
+      next = dragLeft;
+      autoDirectionRef.current = 1;
+    } else if (next >= 0) {
+      next = 0;
+      autoDirectionRef.current = -1;
+    }
+
+    dragX.set(next);
+  });
+
   const selectedImages = selectedArea?.batch_images ?? [];
   const selectedImage = selectedImages[activeImageIndex] ?? selectedImages[0];
 
@@ -157,6 +183,17 @@ export default function CommonAreasSection({
       (prev) => (prev - 1 + selectedImages.length) % selectedImages.length
     );
   }, [selectedImages.length]);
+
+  const handleSelectModalImage = useCallback((index: number) => {
+    setActiveImageIndex(index);
+
+    if (window.innerWidth < 1024) {
+      mainImageRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
+  }, []);
 
   if (normalizedCommonAreas.length === 0) {
     return (
@@ -173,16 +210,16 @@ export default function CommonAreasSection({
   return (
     <section
       id='areas-comunes'
-      className='relative overflow-hidden bg-[#0B1220] py-16 text-white sm:py-20'
+      className='relative overflow-hidden py-16 dark:bg-[#0B1220] dark:text-white sm:py-20'
     >
       <div className='mx-auto w-full max-w-[1700px] px-4 sm:px-8'>
         <div className='mb-8 flex flex-wrap items-end justify-between gap-5'>
           <div>
-            <span className='mb-3 block text-[10px] font-bold uppercase tracking-[0.55em] text-white/50'>
+            <span className='mb-3 block text-[10px] font-bold uppercase tracking-[0.55em] text-zinc-500 dark:text-white/50'>
               Espacios Compartidos
             </span>
             <h2
-              className={`${fonts.inter.className} text-3xl font-black uppercase tracking-tight text-white sm:text-4xl lg:text-5xl`}
+              className={`${fonts.inter.className} text-3xl font-black uppercase tracking-tight text-zinc-500 dark:text-white sm:text-4xl lg:text-5xl`}
             >
               Areas Comunes
             </h2>
@@ -216,6 +253,12 @@ export default function CommonAreasSection({
             dragConstraints={{ left: dragLeft, right: 0 }}
             dragElastic={0.05}
             dragMomentum
+            onDragStart={() => setIsDraggingRail(true)}
+            onDragEnd={(_, info: PanInfo) => {
+              if (info.velocity.x > 60) autoDirectionRef.current = 1;
+              if (info.velocity.x < -60) autoDirectionRef.current = -1;
+              setIsDraggingRail(false);
+            }}
             style={{ x: dragX }}
             className='flex cursor-grab gap-4 pb-3 active:cursor-grabbing sm:gap-5'
           >
@@ -301,7 +344,7 @@ export default function CommonAreasSection({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 12, scale: 0.98 }}
               transition={{ type: 'spring', stiffness: 220, damping: 24 }}
-              className='relative z-[130] mx-auto my-auto h-[96dvh] w-full max-w-6xl overflow-hidden rounded-2xl border border-white/15 bg-[#0B1220] shadow-[0_40px_120px_-30px_rgba(0,0,0,0.65)] sm:h-[92dvh] sm:rounded-3xl lg:h-[88dvh]'
+              className='relative z-[130] mx-auto my-auto h-[96dvh] w-full max-w-6xl overflow-y-auto overflow-x-hidden rounded-2xl border border-white/15 bg-[#0B1220] shadow-[0_40px_120px_-30px_rgba(0,0,0,0.65)] sm:h-[92dvh] sm:rounded-3xl lg:h-[88dvh] lg:overflow-hidden'
             >
               <button
                 type='button'
@@ -313,7 +356,10 @@ export default function CommonAreasSection({
               </button>
 
               <div className='grid h-full min-h-0 grid-cols-1 lg:grid-cols-[1.5fr_1fr]'>
-                <div className='relative h-[44dvh] min-h-[260px] bg-black sm:h-[50dvh] lg:h-full'>
+                <div
+                  ref={mainImageRef}
+                  className='relative h-[44dvh] min-h-[260px] bg-black sm:h-[50dvh] lg:h-full'
+                >
                   <AnimatePresence mode='wait'>
                     <motion.div
                       key={selectedImage}
@@ -362,7 +408,7 @@ export default function CommonAreasSection({
                   )}
                 </div>
 
-                <div className='flex h-full min-h-0 flex-col overflow-y-auto p-5 sm:p-6 lg:p-7'>
+                <div className='flex h-full min-h-0 flex-col p-5 sm:p-6 lg:overflow-y-auto lg:p-7'>
                   <p className='text-[10px] font-bold uppercase tracking-[0.32em] text-white/55'>
                     Caracteristicas
                   </p>
@@ -384,7 +430,7 @@ export default function CommonAreasSection({
                         <button
                           type='button'
                           key={`${selectedArea.id}-${idx}`}
-                          onClick={() => setActiveImageIndex(idx)}
+                          onClick={() => handleSelectModalImage(idx)}
                           className={`relative aspect-square overflow-hidden rounded-lg border-2 transition ${
                             idx === activeImageIndex
                               ? 'border-white'

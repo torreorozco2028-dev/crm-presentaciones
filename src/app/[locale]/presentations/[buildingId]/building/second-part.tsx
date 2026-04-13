@@ -82,10 +82,6 @@ export default function BuildingLocation({ building }: BuildingLocationProps) {
               <div className='h-full w-full bg-slate-200 dark:bg-slate-900' />
             )}
           </motion.div>
-
-          <div className='absolute left-6 top-6 z-10 bg-[#0a192f] px-4 py-2 text-[9px] font-bold uppercase tracking-[0.3em] text-white dark:bg-white dark:text-black lg:left-10 lg:top-10 lg:text-[10px]'>
-            Map View / {building.building_location || 'Location'}
-          </div>
         </div>
 
         <div className='relative order-1 flex w-full flex-col justify-center px-6 py-12 md:px-12 lg:order-2 lg:w-[40%] lg:px-16'>
