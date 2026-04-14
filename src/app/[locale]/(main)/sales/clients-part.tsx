@@ -52,6 +52,7 @@ const normalizeSearch = (value: string) =>
 
 interface SalesSetupData {
   currentUserId: string | null;
+  currentUserRole: string;
   clients: Array<{ id: string; fullName: string; email: string | null }>;
   units: Array<{ id: string; label: string; state: UnitState }>;
   users: Array<{ id: string; name: string; email: string | null }>;
@@ -225,7 +226,10 @@ export default function ClientsPart() {
       detailQuery: debouncedDetailQuery,
       clientId: clientFilter,
       unitId: unitFilter,
-      userId: userFilter,
+      userId:
+        setupData?.currentUserRole?.toLowerCase() === 'admin'
+          ? userFilter
+          : (setupData?.currentUserId ?? undefined),
     });
 
     if (!result.success || !('data' in result) || !result.data) {
@@ -445,9 +449,13 @@ export default function ClientsPart() {
     setDetailQuery('');
     setClientFilter('all');
     setUnitFilter('all');
-    setUserFilter('all');
+    setUserFilter(
+      setupData?.currentUserRole?.toLowerCase() === 'admin'
+        ? 'all'
+        : (setupData?.currentUserId ?? 'all')
+    );
     setCurrentPage(1);
-  }, []);
+  }, [setupData]);
 
   const clientOptions = useMemo(() => {
     return setupData?.clients ?? [];
@@ -476,6 +484,16 @@ export default function ClientsPart() {
   const userOptions = useMemo(() => {
     return setupData?.users ?? [];
   }, [setupData]);
+
+  const isAdmin = useMemo(
+    () => setupData?.currentUserRole?.toLowerCase() === 'admin',
+    [setupData]
+  );
+
+  useEffect(() => {
+    if (!setupData?.currentUserId || isAdmin) return;
+    setUserFilter(setupData.currentUserId);
+  }, [isAdmin, setupData]);
 
   const getPaginationRange = () => {
     const delta = 2;
@@ -593,19 +611,31 @@ export default function ClientsPart() {
 
               <div className='lg:col-span-2'>
                 <select
-                  value={userFilter}
+                  value={
+                    isAdmin
+                      ? userFilter
+                      : (setupData?.currentUserId ?? userFilter)
+                  }
                   onChange={(event) => {
                     setUserFilter(event.target.value);
                     setCurrentPage(1);
                   }}
-                  className='h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100'
+                  disabled={!isAdmin}
+                  className='h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:disabled:bg-zinc-900 dark:disabled:text-zinc-500'
                 >
-                  <option value='all'>Todos los usuarios</option>
-                  {userOptions.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
+                  {isAdmin ? (
+                    <option value='all'>Todos los usuarios</option>
+                  ) : (
+                    <option value={setupData?.currentUserId ?? 'mine'}>
+                      Mis ventas
                     </option>
-                  ))}
+                  )}
+                  {isAdmin &&
+                    userOptions.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name}
+                      </option>
+                    ))}
                 </select>
               </div>
 

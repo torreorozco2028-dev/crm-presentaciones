@@ -4,11 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
 import { db } from '@/server/db/config';
 import { client } from '@/server/db/schema';
+import { isAdminRole, resolveClientVisibility } from '@/lib/ownership';
 import { and, desc, eq, ilike, or, sql } from 'drizzle-orm';
-
-function isAdminRole(role: unknown) {
-  return String(role ?? '').toLowerCase() === 'admin';
-}
 
 function toOptionalText(value: unknown) {
   const text = String(value ?? '').trim();
@@ -30,21 +27,38 @@ function normalizePage(value: unknown, fallback: number) {
   return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : fallback;
 }
 
-function buildClientWhere(search?: string) {
-  const query = search?.trim();
-  if (!query) return undefined;
-
-  const likeQuery = `%${query}%`;
-  return and(
-    or(
-      ilike(client.names, likeQuery),
-      ilike(client.first_last_name, likeQuery),
-      ilike(client.second_last_name, likeQuery),
-      ilike(client.email, likeQuery),
-      ilike(client.location, likeQuery),
-      ilike(client.occupation, likeQuery)
-    )
+function buildClientWhere(
+  search: string | undefined,
+  currentUserId: string | null,
+  canManageAnyClient: boolean
+) {
+  const conditions = [];
+  const { ownerUserId } = resolveClientVisibility(
+    currentUserId,
+    canManageAnyClient
   );
+
+  if (ownerUserId) {
+    conditions.push(eq(client.userId, ownerUserId));
+  }
+
+  const query = search?.trim();
+  if (query) {
+    const likeQuery = `%${query}%`;
+    conditions.push(
+      or(
+        ilike(client.names, likeQuery),
+        ilike(client.first_last_name, likeQuery),
+        ilike(client.second_last_name, likeQuery),
+        ilike(client.email, likeQuery),
+        ilike(client.location, likeQuery),
+        ilike(client.occupation, likeQuery)
+      )
+    );
+  }
+
+  if (conditions.length === 0) return undefined;
+  return and(...conditions);
 }
 
 export async function getClientsSetupAction() {
@@ -92,7 +106,11 @@ export async function getClientsListAction(input: GetClientsListInput = {}) {
     const page = normalizePage(input.page, 1);
     const pageSize = Math.min(50, normalizePage(input.pageSize, 10));
     const offset = (page - 1) * pageSize;
-    const whereClause = buildClientWhere(input.search);
+    const whereClause = buildClientWhere(
+      input.search,
+      currentUserId,
+      canManageAnyClient
+    );
 
     const [rows, totalResult] = await Promise.all([
       db.query.client.findMany({

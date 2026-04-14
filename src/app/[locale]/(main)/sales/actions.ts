@@ -4,16 +4,17 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
 import ClientEntity from '@/server/db/entities/clients';
 import { db } from '@/server/db/config';
-import { unit_department, sales, users } from '@/server/db/schema';
+import { client, unit_department, sales, users } from '@/server/db/schema';
+import {
+  isAdminRole,
+  resolveClientVisibility,
+  resolveVisibleSalesUserId,
+} from '@/lib/ownership';
 import { and, desc, eq, ilike, or, sql } from 'drizzle-orm';
 
 const clientEntity = new ClientEntity();
 
 type UnitState = 1 | 2 | 3;
-
-function isAdminRole(role: unknown) {
-  return String(role ?? '').toLowerCase() === 'admin';
-}
 
 function parseState(value: unknown): UnitState | null {
   const parsed = Number(value);
@@ -85,6 +86,20 @@ export async function getSalesSetupDataAction() {
     const session = await auth();
     const currentUserId = session?.user?.id ?? null;
 
+    if (!currentUserId) {
+      return {
+        success: false,
+        error: 'Debes iniciar sesión para ver las ventas',
+      };
+    }
+
+    const currentUserRole = String(session?.user?.role ?? '');
+    const canManageAnySale = isAdminRole(currentUserRole);
+    const { ownerUserId } = resolveClientVisibility(
+      currentUserId,
+      canManageAnySale
+    );
+
     const [clients, units, userOptions] = await Promise.all([
       db.query.client.findMany({
         columns: {
@@ -94,6 +109,7 @@ export async function getSalesSetupDataAction() {
           second_last_name: true,
           email: true,
         },
+        where: ownerUserId ? eq(client.userId, ownerUserId) : undefined,
         orderBy: (client, { desc }) => [desc(client.updatedAt)],
         limit: 200,
       }),
@@ -113,15 +129,23 @@ export async function getSalesSetupDataAction() {
         },
         orderBy: [unit_department.floor, unit_department.unit_number],
       }),
-      db.query.users.findMany({
-        columns: {
-          id: true,
-          name: true,
-          email: true,
-        },
-        orderBy: [users.name],
-        limit: 500,
-      }),
+      canManageAnySale
+        ? db.query.users.findMany({
+            columns: {
+              id: true,
+              name: true,
+              email: true,
+            },
+            orderBy: [users.name],
+            limit: 500,
+          })
+        : Promise.resolve([
+            {
+              id: currentUserId,
+              name: session?.user?.name ?? 'Mis ventas',
+              email: session?.user?.email ?? null,
+            },
+          ]),
     ]);
 
     return {
@@ -149,6 +173,7 @@ export async function getSalesSetupDataAction() {
           email: item.email,
         })),
         currentUserId,
+        currentUserRole,
       },
     };
   } catch (error) {
@@ -184,6 +209,29 @@ export async function createSaleAction(input: CreateSaleInput) {
       return {
         success: false,
         error: 'Datos incompletos para registrar la venta',
+      };
+    }
+
+    const canManageAnySale = isAdminRole(session.user.role);
+    const selectedClient = await db.query.client.findFirst({
+      where: eq(client.id, input.clientId),
+      columns: {
+        id: true,
+        userId: true,
+      },
+    });
+
+    if (!selectedClient) {
+      return {
+        success: false,
+        error: 'No se encontró el cliente seleccionado',
+      };
+    }
+
+    if (!canManageAnySale && selectedClient.userId !== session.user.id) {
+      return {
+        success: false,
+        error: 'Solo puedes registrar ventas para tus clientes',
       };
     }
 
@@ -420,7 +468,11 @@ function normalizePage(value: unknown, fallback: number) {
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback;
 }
 
-function buildSalesWhere(input: GetSalesListInput) {
+function buildSalesWhere(
+  input: GetSalesListInput,
+  currentUserId: string | null,
+  canManageAnySale: boolean
+) {
   const conditions = [];
 
   if (input.clientId && input.clientId !== 'all') {
@@ -431,8 +483,14 @@ function buildSalesWhere(input: GetSalesListInput) {
     conditions.push(eq(sales.unitId, input.unitId));
   }
 
-  if (input.userId && input.userId !== 'all') {
-    conditions.push(eq(sales.userId, input.userId));
+  const visibleUserId = resolveVisibleSalesUserId(
+    input.userId,
+    currentUserId,
+    canManageAnySale
+  );
+
+  if (visibleUserId) {
+    conditions.push(eq(sales.userId, visibleUserId));
   }
 
   const query = input.detailQuery?.trim();
@@ -456,10 +514,17 @@ export async function getSalesListAction(input: GetSalesListInput = {}) {
     const currentUserId = session?.user?.id ?? null;
     const canManageAnySale = isAdminRole(session?.user?.role);
 
+    if (!currentUserId) {
+      return {
+        success: false,
+        error: 'Debes iniciar sesión para ver las ventas',
+      };
+    }
+
     const page = normalizePage(input.page, 1);
     const pageSize = Math.min(50, normalizePage(input.pageSize, 10));
     const offset = (page - 1) * pageSize;
-    const whereClause = buildSalesWhere(input);
+    const whereClause = buildSalesWhere(input, currentUserId, canManageAnySale);
 
     const [rows, totalResult] = await Promise.all([
       db.query.sales.findMany({

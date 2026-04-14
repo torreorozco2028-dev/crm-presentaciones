@@ -13,6 +13,7 @@ import {
 } from '@heroui/react';
 import { X, Map } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { getPresentationGalleryImages } from '@/lib/presentation-gallery';
 
 const Carousel = dynamic(() => import('@/components/carousel'), { ssr: false });
 
@@ -23,34 +24,6 @@ interface DepartmentModel {
   id_plan: string;
   prymary_image?: string;
   batch_images?: any;
-}
-
-function toImageUrl(value: unknown): string {
-  if (typeof value === 'string') return value.trim();
-  if (value && typeof value === 'object') {
-    const possibleUrl = (value as { url?: unknown }).url;
-    return typeof possibleUrl === 'string' ? possibleUrl.trim() : '';
-  }
-  return '';
-}
-
-function parseImageBatch(raw: unknown): string[] {
-  if (!raw) return [];
-
-  const parsed = (() => {
-    if (Array.isArray(raw)) return raw;
-    if (typeof raw === 'string') {
-      try {
-        const value = JSON.parse(raw);
-        return Array.isArray(value) ? value : [value];
-      } catch {
-        return [raw];
-      }
-    }
-    return [raw];
-  })();
-
-  return parsed.map(toImageUrl).filter(Boolean);
 }
 
 function InteractiveSVG({
@@ -161,24 +134,15 @@ export default function DepartmentsPage({ data }: { data: any }) {
 
   if (!data)
     return (
-      <div className='flex h-screen items-center justify-center bg-[#0a192f] text-white'>
+      <div className='flex h-screen items-center justify-center bg-black text-white'>
         Cargando...
       </div>
     );
-  const currentImage = (
-    selectedModel?.prymary_image ||
-    data.distribution_image ||
-    ''
-  ).trim();
-  const galleryImages = (() => {
-    if (!selectedModel) return [];
-
-    const primary = (selectedModel?.prymary_image || '').trim();
-    const normalizedBatch = parseImageBatch(selectedModel?.batch_images);
-
-    // Gallery starts with primary image, then batch images without duplicates.
-    return [...new Set([primary, ...normalizedBatch].filter(Boolean))];
-  })();
+  const galleryImages = getPresentationGalleryImages(
+    selectedModel,
+    data.distribution_image
+  );
+  const currentImage = galleryImages[0] ?? '';
 
   const handleSelectModel = (model: DepartmentModel | null) => {
     setSelectedModel(model);
@@ -196,7 +160,7 @@ export default function DepartmentsPage({ data }: { data: any }) {
   return (
     <div
       id='distribucion'
-      className='flex min-h-screen flex-col items-center bg-[#ffffff] p-4 dark:bg-[#0a192f] lg:p-10'
+      className='flex min-h-screen flex-col items-center bg-[#ffffff] p-4 dark:bg-black lg:p-10'
     >
       <div className='mb-10 flex flex-col items-center'>
         <motion.span
@@ -224,6 +188,43 @@ export default function DepartmentsPage({ data }: { data: any }) {
                 exit={{ opacity: 0 }}
                 className='flex w-full flex-col items-center justify-center gap-4 p-2 lg:hidden'
               >
+                <div className='w-full overflow-hidden rounded-[24px] border border-zinc-200 bg-white/80 shadow-md dark:border-zinc-700 dark:bg-zinc-900/40'>
+                  {currentImage ? (
+                    <button
+                      type='button'
+                      onClick={onOpen}
+                      className='block w-full'
+                      aria-label='Ampliar distribución'
+                    >
+                      <img
+                        src={currentImage}
+                        alt='Distribución del piso'
+                        className='h-[32vh] w-full bg-white object-contain p-2 dark:bg-black'
+                      />
+                    </button>
+                  ) : (
+                    <div className='flex h-[32vh] items-center justify-center text-sm text-zinc-500 dark:text-zinc-400'>
+                      Sin imagen de distribución disponible
+                    </div>
+                  )}
+                </div>
+
+                <div className='flex w-full items-center justify-between px-1'>
+                  <p className='text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400'>
+                    Distribución del piso
+                  </p>
+                  {currentImage && (
+                    <Button
+                      size='sm'
+                      variant='flat'
+                      onPress={onOpen}
+                      className='bg-white/80 text-zinc-900 dark:bg-zinc-800 dark:text-white'
+                    >
+                      Ampliar
+                    </Button>
+                  )}
+                </div>
+
                 <div className='h-[45vh] max-h-[45vh] w-full'>
                   <InteractiveSVG
                     svgUrl={data.plan_image}
@@ -250,8 +251,8 @@ export default function DepartmentsPage({ data }: { data: any }) {
                   <img
                     key={currentImage || 'fallback-distribution-image'}
                     src={currentImage}
-                    onClick={galleryImages.length > 0 ? onOpen : undefined}
-                    className={`h-[70vh] w-full object-contain transition-all duration-500 lg:h-auto lg:max-h-full lg:w-full ${galleryImages.length > 0 ? 'cursor-pointer' : ''}`}
+                    onClick={currentImage ? onOpen : undefined}
+                    className={`h-[70vh] w-full object-contain transition-all duration-500 lg:h-auto lg:max-h-full lg:w-full ${currentImage ? 'cursor-zoom-in' : ''}`}
                     alt='Vista Departamento'
                   />
                 </div>
@@ -273,7 +274,7 @@ export default function DepartmentsPage({ data }: { data: any }) {
           </AnimatePresence>
         </section>
         <aside className='hidden items-center lg:flex lg:w-[30%]'>
-          <div className='relative aspect-square w-full max-w-[520px] overflow-hidden rounded-[40px] border-[2px] border-[#0a192f] bg-white shadow-xl dark:border-[#949494] dark:border-white/5 dark:bg-transparent'>
+          <div className='relative aspect-square w-full max-w-[520px] overflow-hidden rounded-[40px] border-[2px] border-zinc-900 bg-white shadow-xl dark:border-[#949494] dark:border-white/5 dark:bg-transparent'>
             <InteractiveSVG
               svgUrl={data.plan_image}
               departments={data.models}
@@ -349,15 +350,15 @@ export default function DepartmentsPage({ data }: { data: any }) {
 
         .interactive-svg-container [id]:hover {
           fill: #ffffff;
-          stroke: #0a192f;
+          stroke: #111111;
           stroke-width: 2px;
         }
 
         ${selectedModel
           ? `
           .interactive-svg-container [id="${selectedModel.id_plan}"] {
-            fill: #3b82f6 !important;
-            stroke: #2563eb !important;
+            fill: #d4d4d4 !important;
+            stroke: #8a8a8a !important;
             stroke-width: 3px !important;
           }
         `
