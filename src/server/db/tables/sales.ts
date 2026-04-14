@@ -16,6 +16,7 @@ export const sales = pgTable('sales', {
     .default(sql`gen_random_uuid()`)
     .primaryKey(),
   final_price: integer(),
+  advance_percentage: integer(),
   sales_date: timestamp().default(sql`now()`),
   payment_method: varchar({ length: 50 }),
   payment_notes: text(),

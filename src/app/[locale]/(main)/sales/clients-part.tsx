@@ -71,6 +71,9 @@ interface SaleRow {
   paymentNotes: string;
   state: UnitState;
   finalPrice: number | null;
+  advancePercentage: number | null;
+  advanceAmount: number | null;
+  remainingAmount: number | null;
   salesDate: string | null;
   updatedAt: string | null;
   lastUpdatedBy: {
@@ -278,6 +281,9 @@ export default function ClientsPart() {
     const unitId = String(formData.get('unitId') ?? '').trim();
     const state = Number(formData.get('state') ?? 2) as UnitState;
     const finalPriceRaw = String(formData.get('finalPrice') ?? '').trim();
+    const advancePercentageRaw = String(
+      formData.get('advancePercentage') ?? ''
+    ).trim();
     const paymentMethod = String(formData.get('paymentMethod') ?? '').trim();
     const paymentNotes = String(formData.get('paymentNotes') ?? '').trim();
 
@@ -342,6 +348,9 @@ export default function ClientsPart() {
       unitId,
       state,
       finalPrice: finalPriceRaw ? Number(finalPriceRaw) : null,
+      advancePercentage: advancePercentageRaw
+        ? Number(advancePercentageRaw)
+        : null,
       paymentMethod,
       paymentNotes,
     });
@@ -412,12 +421,18 @@ export default function ClientsPart() {
 
     const formData = new FormData(form);
     const finalPriceRaw = String(formData.get('finalPrice') ?? '').trim();
+    const advancePercentageRaw = String(
+      formData.get('advancePercentage') ?? ''
+    ).trim();
     const paymentMethod = String(formData.get('paymentMethod') ?? '').trim();
     const paymentNotes = String(formData.get('paymentNotes') ?? '').trim();
 
     const result = await updateSaleAction({
       saleId: editingSale.id,
       finalPrice: finalPriceRaw ? Number(finalPriceRaw) : null,
+      advancePercentage: advancePercentageRaw
+        ? Number(advancePercentageRaw)
+        : null,
       paymentMethod,
       paymentNotes,
     });
@@ -665,6 +680,7 @@ export default function ClientsPart() {
                         <th className='px-4 py-3 font-semibold'>Metodo Pago</th>
                         <th className='px-4 py-3 font-semibold'>Notas Pago</th>
                         <th className='px-4 py-3 font-semibold'>Precio</th>
+                        <th className='px-4 py-3 font-semibold'>Adelanto</th>
                         <th className='px-4 py-3 font-semibold'>Fecha Venta</th>
                         <th className='px-4 py-3 font-semibold'>Estado</th>
                         <th className='px-4 py-3 font-semibold'>Creador</th>
@@ -678,7 +694,7 @@ export default function ClientsPart() {
                       {paginatedSales.length === 0 && (
                         <tr>
                           <td
-                            colSpan={10}
+                            colSpan={11}
                             className='px-4 py-6 text-center text-slate-500 dark:text-zinc-400'
                           >
                             Aun no hay ventas registradas.
@@ -711,6 +727,27 @@ export default function ClientsPart() {
                             {sale.finalPrice
                               ? sale.finalPrice.toLocaleString('es-BO')
                               : '-'}
+                          </td>
+                          <td className='px-4 py-3 text-slate-700 dark:text-zinc-300'>
+                            {sale.advancePercentage != null ? (
+                              <div>
+                                <div className='font-medium'>
+                                  {sale.advancePercentage}%
+                                </div>
+                                <div className='text-xs text-slate-500 dark:text-zinc-400'>
+                                  {sale.advanceAmount != null
+                                    ? `Adelanto: ${sale.advanceAmount.toLocaleString('es-BO')} Bs`
+                                    : 'Sin cálculo'}
+                                </div>
+                                <div className='text-xs text-slate-500 dark:text-zinc-400'>
+                                  {sale.remainingAmount != null
+                                    ? `Saldo: ${sale.remainingAmount.toLocaleString('es-BO')} Bs`
+                                    : ''}
+                                </div>
+                              </div>
+                            ) : (
+                              '-'
+                            )}
                           </td>
                           <td className='px-4 py-3 text-slate-700 dark:text-zinc-300'>
                             {sale.salesDate
@@ -834,6 +871,22 @@ export default function ClientsPart() {
                         </p>
                         <p className='text-right text-slate-700 dark:text-zinc-300'>
                           {sale.paymentNotes || '-'}
+                        </p>
+                        <p className='text-slate-500 dark:text-zinc-400'>
+                          Precio
+                        </p>
+                        <p className='text-right text-slate-700 dark:text-zinc-300'>
+                          {sale.finalPrice
+                            ? `${sale.finalPrice.toLocaleString('es-BO')} Bs`
+                            : '-'}
+                        </p>
+                        <p className='text-slate-500 dark:text-zinc-400'>
+                          Adelanto
+                        </p>
+                        <p className='text-right text-slate-700 dark:text-zinc-300'>
+                          {sale.advancePercentage != null
+                            ? `${sale.advancePercentage}% · ${sale.advanceAmount?.toLocaleString('es-BO') ?? '-'} Bs · saldo ${sale.remainingAmount?.toLocaleString('es-BO') ?? '-'} Bs`
+                            : '-'}
                         </p>
                         <p className='text-slate-500 dark:text-zinc-400'>
                           Creador
@@ -1357,6 +1410,23 @@ export default function ClientsPart() {
                     label='Precio Final'
                     type='number'
                   />
+                  <div className='flex flex-col gap-1.5'>
+                    <label className='ml-1 text-[13px] font-semibold text-slate-700 dark:text-zinc-300'>
+                      Adelanto (%)
+                    </label>
+                    <input
+                      name='advancePercentage'
+                      type='number'
+                      min='0'
+                      max='100'
+                      step='1'
+                      placeholder='Ej: 13'
+                      className='h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500'
+                    />
+                    <p className='ml-1 text-[11px] text-slate-500 dark:text-zinc-400'>
+                      Se calcula sobre el precio final total.
+                    </p>
+                  </div>
                   <InputField name='paymentMethod' label='Metodo de Pago' />
 
                   <div className='flex flex-col gap-1.5 md:col-span-3'>
@@ -1462,7 +1532,7 @@ export default function ClientsPart() {
                     </p>
                   </div>
 
-                  <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+                  <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
                     <div className='flex flex-col gap-1.5'>
                       <label className='ml-1 text-[13px] font-semibold text-slate-700 dark:text-zinc-300'>
                         Precio Final
@@ -1471,6 +1541,21 @@ export default function ClientsPart() {
                         name='finalPrice'
                         type='number'
                         defaultValue={editingSale.finalPrice ?? ''}
+                        className='h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition-all focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100'
+                      />
+                    </div>
+
+                    <div className='flex flex-col gap-1.5'>
+                      <label className='ml-1 text-[13px] font-semibold text-slate-700 dark:text-zinc-300'>
+                        Adelanto (%)
+                      </label>
+                      <input
+                        name='advancePercentage'
+                        type='number'
+                        min='0'
+                        max='100'
+                        step='1'
+                        defaultValue={editingSale.advancePercentage ?? ''}
                         className='h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition-all focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100'
                       />
                     </div>

@@ -10,6 +10,11 @@ import {
   resolveClientVisibility,
   resolveVisibleSalesUserId,
 } from '@/lib/ownership';
+import {
+  calculateAdvanceAmount,
+  calculateRemainingAmount,
+  normalizeAdvancePercentage,
+} from '@/lib/sales-payment';
 import { and, desc, eq, ilike, or, sql } from 'drizzle-orm';
 
 const clientEntity = new ClientEntity();
@@ -190,6 +195,7 @@ interface CreateSaleInput {
   unitId: string;
   state: UnitState;
   finalPrice?: number | null;
+  advancePercentage?: number | null;
   paymentMethod?: string;
   paymentNotes?: string;
 }
@@ -235,6 +241,28 @@ export async function createSaleAction(input: CreateSaleInput) {
       };
     }
 
+    const advancePercentage =
+      input.advancePercentage == null
+        ? null
+        : normalizeAdvancePercentage(input.advancePercentage);
+
+    if (input.advancePercentage != null && advancePercentage == null) {
+      return {
+        success: false,
+        error: 'El adelanto debe estar entre 0% y 100%',
+      };
+    }
+
+    if (
+      advancePercentage !== null &&
+      (input.finalPrice == null || input.finalPrice <= 0)
+    ) {
+      return {
+        success: false,
+        error: 'Debes ingresar el precio final para calcular el adelanto',
+      };
+    }
+
     await db.transaction(async (tx) => {
       await tx.insert(sales).values({
         clientId: input.clientId,
@@ -242,6 +270,7 @@ export async function createSaleAction(input: CreateSaleInput) {
         userId: session.user.id,
         updatedByUserId: session.user.id,
         final_price: input.finalPrice ?? null,
+        advance_percentage: advancePercentage,
         payment_method: input.paymentMethod || null,
         payment_notes: input.paymentNotes || null,
       });
@@ -343,6 +372,7 @@ export async function updateUnitStateAction(unitId: string, state: UnitState) {
 interface UpdateSaleInput {
   saleId: string;
   finalPrice?: number | null;
+  advancePercentage?: number | null;
   paymentMethod?: string;
   paymentNotes?: string;
 }
@@ -382,11 +412,34 @@ export async function updateSaleAction(input: UpdateSaleInput) {
       };
     }
 
+    const advancePercentage =
+      input.advancePercentage == null
+        ? null
+        : normalizeAdvancePercentage(input.advancePercentage);
+
+    if (input.advancePercentage != null && advancePercentage == null) {
+      return {
+        success: false,
+        error: 'El adelanto debe estar entre 0% y 100%',
+      };
+    }
+
+    if (
+      advancePercentage !== null &&
+      (input.finalPrice == null || input.finalPrice <= 0)
+    ) {
+      return {
+        success: false,
+        error: 'Debes ingresar el precio final para calcular el adelanto',
+      };
+    }
+
     const now = new Date();
     await db
       .update(sales)
       .set({
         final_price: input.finalPrice ?? null,
+        advance_percentage: advancePercentage,
         payment_method: input.paymentMethod?.trim() || null,
         payment_notes: input.paymentNotes?.trim() || null,
         updatedByUserId: session.user.id,
@@ -613,6 +666,15 @@ export async function getSalesListAction(input: GetSalesListInput = {}) {
           paymentMethod: sale.payment_method ?? '',
           paymentNotes: sale.payment_notes ?? '',
           finalPrice: sale.final_price,
+          advancePercentage: sale.advance_percentage ?? null,
+          advanceAmount: calculateAdvanceAmount(
+            sale.final_price,
+            sale.advance_percentage
+          ),
+          remainingAmount: calculateRemainingAmount(
+            sale.final_price,
+            sale.advance_percentage
+          ),
           salesDate: sale.sales_date?.toISOString() ?? null,
           updatedAt: sale.updatedAt?.toISOString() ?? null,
           lastUpdatedBy: sale.lastUpdatedBy
