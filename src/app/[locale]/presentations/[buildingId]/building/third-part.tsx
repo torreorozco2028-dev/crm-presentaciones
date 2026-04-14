@@ -15,6 +15,7 @@ import {
   motion,
   useAnimationFrame,
   useMotionValue,
+  useReducedMotion,
 } from 'framer-motion';
 import Image from 'next/image';
 import {
@@ -85,6 +86,7 @@ export default function CommonAreasSection({
   const containerRef = useRef<HTMLDivElement>(null);
   const autoDirectionRef = useRef<-1 | 1>(-1);
   const mainImageRef = useRef<HTMLDivElement>(null);
+  const prefersReducedMotion = useReducedMotion();
 
   const normalizedCommonAreas = useMemo<CommonAreaWithImages[]>(
     () =>
@@ -210,19 +212,68 @@ export default function CommonAreasSection({
   return (
     <section
       id='areas-comunes'
-      className='relative overflow-hidden py-16 dark:bg-[#0B1220] dark:text-white sm:py-20'
+      className='relative overflow-hidden py-16 dark:bg-foreground-50 dark:text-white sm:py-20'
     >
+      <div className='pointer-events-none absolute inset-0 overflow-hidden'>
+        <motion.div
+          animate={
+            prefersReducedMotion
+              ? undefined
+              : {
+                  x: ['-8%', '6%', '-8%'],
+                  y: ['0%', '8%', '0%'],
+                  scale: [1, 1.08, 1],
+                }
+          }
+          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+          className='absolute -left-32 top-8 h-72 w-72 rounded-full bg-zinc-400/10 blur-3xl'
+        />
+        <motion.div
+          animate={
+            prefersReducedMotion
+              ? undefined
+              : {
+                  x: ['10%', '-6%', '10%'],
+                  y: ['-6%', '4%', '-6%'],
+                  scale: [1.02, 0.95, 1.02],
+                }
+          }
+          transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
+          className='absolute -right-24 top-20 h-80 w-80 rounded-full bg-zinc-300/10 blur-3xl'
+        />
+      </div>
+
       <div className='mx-auto w-full max-w-[1700px] px-4 sm:px-8'>
-        <div className='mb-8 flex flex-wrap items-end justify-between gap-5'>
+        <motion.div
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
+          whileInView={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.4 }}
+          transition={{ duration: 0.55, ease: 'easeOut' }}
+          className='mb-8 flex flex-wrap items-end justify-between gap-5'
+        >
           <div>
-            <span className='mb-3 block text-[10px] font-bold uppercase tracking-[0.55em] text-zinc-500 dark:text-white/50'>
+            <motion.span
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+              whileInView={
+                prefersReducedMotion ? undefined : { opacity: 1, y: 0 }
+              }
+              viewport={{ once: true, amount: 0.6 }}
+              transition={{ delay: 0.05, duration: 0.4 }}
+              className='mb-3 block text-[10px] font-bold uppercase tracking-[0.55em] text-zinc-500 dark:text-white/75'
+            >
               Espacios Compartidos
-            </span>
-            <h2
+            </motion.span>
+            <motion.h2
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+              whileInView={
+                prefersReducedMotion ? undefined : { opacity: 1, y: 0 }
+              }
+              viewport={{ once: true, amount: 0.6 }}
+              transition={{ delay: 0.12, duration: 0.5 }}
               className={`${fonts.inter.className} text-3xl font-black uppercase tracking-tight text-zinc-500 dark:text-white sm:text-4xl lg:text-5xl`}
             >
               Areas Comunes
-            </h2>
+            </motion.h2>
           </div>
 
           <div className='flex items-center gap-2'>
@@ -245,7 +296,7 @@ export default function CommonAreasSection({
               <ArrowRight size={18} />
             </button>
           </div>
-        </div>
+        </motion.div>
 
         <div ref={containerRef} className='overflow-hidden'>
           <motion.div
@@ -310,7 +361,7 @@ export default function CommonAreasSection({
                     <button
                       type='button'
                       onClick={() => setSelectedArea(area)}
-                      className='mt-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-[#0B1220] transition hover:scale-[1.03]'
+                      className='mt-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-black transition hover:scale-[1.03]'
                     >
                       <Play size={14} /> Ver detalles
                     </button>
@@ -344,7 +395,7 @@ export default function CommonAreasSection({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 12, scale: 0.98 }}
               transition={{ type: 'spring', stiffness: 220, damping: 24 }}
-              className='relative z-[130] mx-auto my-auto h-[96dvh] w-full max-w-6xl overflow-y-auto overflow-x-hidden rounded-2xl border border-white/15 bg-[#0B1220] shadow-[0_40px_120px_-30px_rgba(0,0,0,0.65)] sm:h-[92dvh] sm:rounded-3xl lg:h-[88dvh] lg:overflow-hidden'
+              className='relative z-[130] mx-auto my-auto h-[96dvh] w-full max-w-6xl overflow-y-auto overflow-x-hidden rounded-2xl border border-white/15 bg-black shadow-[0_40px_120px_-30px_rgba(0,0,0,0.65)] sm:h-[92dvh] sm:rounded-3xl lg:h-[88dvh] lg:overflow-hidden'
             >
               <button
                 type='button'

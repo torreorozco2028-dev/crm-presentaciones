@@ -60,7 +60,7 @@ export default function BuildingLocation({ building }: BuildingLocationProps) {
   return (
     <section
       id='ubicacion'
-      className='relative w-full overflow-hidden bg-white py-12 text-[#0a192f] transition-colors duration-500 dark:bg-[#0a192f] dark:text-white lg:py-20'
+      className='relative w-full overflow-hidden bg-white py-12 text-zinc-900 transition-colors duration-500 dark:bg-black dark:text-white lg:py-20'
     >
       <div className='flex min-h-[600px] flex-col lg:min-h-[800px] lg:flex-row'>
         <div className='relative order-2 h-[400px] w-full lg:order-1 lg:h-auto lg:w-[60%]'>
@@ -89,7 +89,7 @@ export default function BuildingLocation({ building }: BuildingLocationProps) {
             <motion.span
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
-              className='mb-4 block text-[10px] font-bold uppercase tracking-[0.6em] text-[#0a192f] dark:text-blue-400'
+              className='mb-4 block text-[10px] font-bold uppercase tracking-[0.6em] text-zinc-900 dark:text-zinc-400'
             >
               Conectividad
             </motion.span>
@@ -98,14 +98,14 @@ export default function BuildingLocation({ building }: BuildingLocationProps) {
             >
               Entorno <br />{' '}
               <span
-                className={`${fonts.inter.className} text-[#0a192f] dark:text-white`}
+                className={`${fonts.inter.className} text-zinc-900 dark:text-white`}
               >
                 Privilegiado
               </span>
             </h2>
 
             <div className='flex items-start gap-4 lg:gap-6'>
-              <div className='h-32 w-[1px] shrink-0 bg-[#0a192f]/20 dark:bg-white/20 lg:h-40' />
+              <div className='h-32 w-[1px] shrink-0 bg-black/20 dark:bg-white/20 lg:h-40' />
               <p className='max-w-xs text-[20px] font-light leading-relaxed opacity-70'>
                 Descubre los puntos clave que rodean tu próximo hogar. Diseñado
                 para quienes valoran el tiempo y la cercanía.
@@ -124,7 +124,7 @@ export default function BuildingLocation({ building }: BuildingLocationProps) {
               points.map((poi) => (
                 <motion.div
                   key={poi.id}
-                  className='group relative min-w-[260px] overflow-hidden border border-[#0a192f] bg-white p-6 shadow-xl dark:border-white dark:bg-[#0a192f] lg:min-w-[320px]'
+                  className='group relative min-w-[260px] overflow-hidden border border-zinc-900 bg-white p-6 shadow-xl dark:border-white dark:bg-zinc-950 lg:min-w-[320px]'
                   whileHover={{ y: -10 }}
                   transition={{ type: 'spring', stiffness: 300 }}
                 >
@@ -135,13 +135,13 @@ export default function BuildingLocation({ building }: BuildingLocationProps) {
                   <div className='flex h-full flex-col justify-between'>
                     <div>
                       <div className='mb-4 flex items-center gap-2'>
-                        <span className='h-[1px] w-6 bg-blue-600 dark:bg-blue-500'></span>
-                        <span className='text-[10px] font-bold uppercase tracking-widest text-[4f7cac] dark:text-blue-400'>
+                        <span className='h-[1px] w-6 bg-zinc-700 dark:bg-zinc-500'></span>
+                        <span className='text-[10px] font-bold uppercase tracking-widest text-zinc-600 dark:text-zinc-400'>
                           CERCA
                         </span>
                       </div>
 
-                      <h3 className='mb-2 font-serif text-base uppercase tracking-tight transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-600 lg:text-lg'>
+                      <h3 className='mb-2 font-serif text-base uppercase tracking-tight transition-colors group-hover:text-zinc-700 dark:group-hover:text-zinc-200 lg:text-lg'>
                         {poi.point_name}
                       </h3>
                       <p className='line-clamp-2 text-xs font-light leading-relaxed opacity-60 lg:line-clamp-3'>
@@ -149,7 +149,7 @@ export default function BuildingLocation({ building }: BuildingLocationProps) {
                       </p>
                     </div>
 
-                    <div className='mt-6 flex items-center justify-between border-t border-[#0a192f]/10 pt-4 dark:border-white/10 lg:mt-8'>
+                    <div className='mt-6 flex items-center justify-between border-t border-black/10 pt-4 dark:border-white/10 lg:mt-8'>
                       <div className='flex items-center gap-2'>
                         <Clock size={12} className='opacity-40' />
                         <span className='text-[10px] font-bold opacity-50'>

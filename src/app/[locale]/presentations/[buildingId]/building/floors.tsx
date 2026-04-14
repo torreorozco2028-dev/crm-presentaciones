@@ -4,6 +4,10 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Button, Card, Chip } from '@heroui/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fonts } from '@/config/fonts';
+import {
+  DEFAULT_FLOOR_VIEWPORT_WIDTH,
+  getMaxFloorSelections,
+} from '@/lib/floor-selection';
 import { useParams, useRouter } from 'next/navigation';
 
 interface DepartmentFeature {
@@ -103,7 +107,7 @@ export default function Floors({ units }: Props) {
   const router = useRouter();
   const params = useParams<{ locale?: string }>();
   const [windowWidth, setWindowWidth] = useState<number>(
-    typeof window !== 'undefined' ? window.innerWidth : 1024
+    DEFAULT_FLOOR_VIEWPORT_WIDTH
   );
 
   const locale =
@@ -115,11 +119,16 @@ export default function Floors({ units }: Props) {
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
+    handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const maxSelections = windowWidth < 768 ? 2 : 4;
+  const maxSelections = getMaxFloorSelections(windowWidth);
+
+  useEffect(() => {
+    setSelectedIds((prev) => prev.slice(0, maxSelections));
+  }, [maxSelections]);
 
   const buildingMap = useMemo(() => {
     const floors: Record<number, UnitDepartment[]> = {};
@@ -242,7 +251,7 @@ export default function Floors({ units }: Props) {
   return (
     <div
       id='unidades'
-      className='min-h-screen bg-background p-4 pt-10 font-sans text-foreground transition-colors dark:bg-slate-950 sm:p-10'
+      className='min-h-screen bg-background p-4 pt-10 font-sans text-foreground transition-colors dark:bg-black sm:p-10'
     >
       <div className='mb-10 text-center'>
         <h1

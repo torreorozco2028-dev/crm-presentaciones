@@ -32,7 +32,7 @@ export default async function BuildingPage({ params }: PageProps) {
         units={buildingData.units as any}
         building={buildingData as any}
       />
-      <section className='flex h-[50vh] items-center justify-center border-t border-white/5 bg-[#0a192f]'>
+      <section className='flex h-[50vh] items-center justify-center border-t border-white/5 bg-black'>
         <p className='text-[10px] font-bold uppercase tracking-[1em] text-zinc-600'>
           Structec • 2026
         </p>
