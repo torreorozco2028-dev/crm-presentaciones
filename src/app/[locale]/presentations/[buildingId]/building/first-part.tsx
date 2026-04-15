@@ -57,18 +57,18 @@ export default function BuildingHero({ building }: BuildingHeroProps) {
             </motion.div>
           </div>
         </div>
-        <div className='relative flex min-h-[70vh] items-center justify-center lg:block lg:min-h-[100vh] lg:w-1/2'>
+        <div className='relative flex min-h-[70vh] items-center justify-center lg:min-h-[100vh] lg:w-1/2'>
           <motion.div
             initial={{ opacity: 0, scale: 1.05, y: 50 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 1.2, ease: 'easeOut' }}
-            className='relative z-0 mx-auto h-[450px] w-[88%] overflow-hidden rounded-3xl border-[12px] border-white shadow-2xl dark:border-zinc-800 md:h-[550px] lg:absolute lg:right-0 lg:top-[85px] lg:ml-0 lg:h-[800px] lg:w-[750px] lg:rounded-none lg:border-0 lg:shadow-none'
+            className='relative z-0 mx-auto aspect-[4/5] w-[88%] rounded-3xl border-[12px] border-white shadow-2xl dark:border-zinc-800 md:aspect-[5/6] md:max-w-[540px] lg:mx-0 lg:aspect-[5/7] lg:w-[min(88%,520px)] lg:rounded-none lg:border-0 lg:shadow-none'
           >
             <Image
               src={primaryImage}
               alt='Vista Principal'
               fill
-              className='object-cover'
+              className='object-cover object-center'
               priority
             />
             <div className='absolute inset-0 bg-gradient-to-t from-black/20 to-transparent lg:hidden' />
