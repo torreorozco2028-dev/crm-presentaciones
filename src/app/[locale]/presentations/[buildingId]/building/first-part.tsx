@@ -68,7 +68,7 @@ export default function BuildingHero({ building }: BuildingHeroProps) {
               src={primaryImage}
               alt='Vista Principal'
               fill
-              className='object-cover object-center'
+              className='object-contain object-center'
               priority
             />
             <div className='absolute inset-0 bg-gradient-to-t from-black/20 to-transparent lg:hidden' />
