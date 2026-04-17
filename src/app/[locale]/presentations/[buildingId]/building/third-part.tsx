@@ -1,6 +1,5 @@
 'use client';
 
-import { fonts } from '@/config/fonts';
 import React, {
   useCallback,
   useEffect,
@@ -270,7 +269,7 @@ export default function CommonAreasSection({
               }
               viewport={{ once: true, amount: 0.6 }}
               transition={{ delay: 0.12, duration: 0.5 }}
-              className={`${fonts.inter.className} text-3xl font-black uppercase tracking-tight text-zinc-500 dark:text-white sm:text-4xl lg:text-5xl`}
+              className='mi-fuente-2 bg-gradient-to-b from-zinc-800 to-zinc-500 bg-clip-text text-2xl font-black uppercase tracking-tighter text-transparent dark:from-white dark:to-zinc-500 sm:text-3xl lg:text-4xl'
             >
               Areas Comunes
             </motion.h2>

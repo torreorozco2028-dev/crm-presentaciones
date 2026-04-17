@@ -23,6 +23,7 @@ import {
 } from '@heroui/react';
 import LucideIcon from '@/components/lucide-icon';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import useUserRole from '@/lib/getUserRole';
 import {
   getAllFeaturesAction,
   createFeatureAction,
@@ -42,6 +43,8 @@ const AMBIENTES = [
 
 export default function GeneralFeaturesPage() {
   const queryClient = useQueryClient();
+  const role = useUserRole();
+  const isAdmin = role === 'admin';
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const [featureName, setFeatureName] = useState('');
@@ -88,13 +91,15 @@ export default function GeneralFeaturesPage() {
             Gestiona las opciones disponibles para los edificios
           </p>
         </div>
-        <Button
-          color='primary'
-          onPress={onOpen}
-          startContent={<LucideIcon name='Plus' />}
-        >
-          Nueva Caracteristica
-        </Button>
+        {isAdmin && (
+          <Button
+            color='primary'
+            onPress={onOpen}
+            startContent={<LucideIcon name='Plus' />}
+          >
+            Nueva Caracteristica
+          </Button>
+        )}
       </div>
 
       <Table aria-label='Catalogo de caracteristicas generales'>
@@ -118,15 +123,17 @@ export default function GeneralFeaturesPage() {
               </TableCell>
               <TableCell>
                 <div className='flex justify-center'>
-                  <Button
-                    isIconOnly
-                    color='danger'
-                    variant='light'
-                    onPress={() => deleteMutation.mutate(f.id)}
-                    isLoading={deleteMutation.isPending}
-                  >
-                    <LucideIcon name='Trash2' />
-                  </Button>
+                  {isAdmin && (
+                    <Button
+                      isIconOnly
+                      color='danger'
+                      variant='light'
+                      onPress={() => deleteMutation.mutate(f.id)}
+                      isLoading={deleteMutation.isPending}
+                    >
+                      <LucideIcon name='Trash2' />
+                    </Button>
+                  )}
                 </div>
               </TableCell>
             </TableRow>

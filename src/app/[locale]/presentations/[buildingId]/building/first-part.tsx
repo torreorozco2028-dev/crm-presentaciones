@@ -3,7 +3,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { fonts } from '@/config/fonts';
 
 interface BuildingHeroProps {
   building: any;
@@ -15,54 +14,85 @@ export default function BuildingHero({ building }: BuildingHeroProps) {
   return (
     <section
       id='inicio'
-      className='relative w-full overflow-x-hidden bg-white font-sans text-zinc-900 transition-colors duration-500 dark:bg-black dark:text-white'
+      className='relative w-full bg-white font-sans text-zinc-900 transition-colors duration-500 dark:bg-black dark:text-white'
     >
       <div className='relative flex min-h-screen flex-col lg:min-h-[110vh] lg:flex-row'>
         <div
           id='introduccion'
-          className='relative z-10 flex flex-col pb-10 pt-24 md:pt-32 lg:w-1/2 lg:pb-20'
+          className='relative z-10 flex flex-col justify-center pb-10 pt-24 md:pt-32 lg:w-[60%] lg:pb-20 lg:pl-16 lg:pt-16'
         >
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
-            className='mb-12 pl-6 lg:mb-24 lg:pl-12'
+            className='mb-8 pl-3 lg:mb-10 lg:max-w-[46rem] lg:-translate-y-8 lg:pl-16 lg:pl-6 lg:pr-8 xl:max-w-[52rem] xl:pl-24'
           >
-            <h1
-              className={`mb-4 ${fonts.inter.className} text-5xl leading-tight md:text-7xl lg:text-8xl`}
-            >
-              {building.building_title}
-            </h1>
-            <p className='ml-2 text-xl font-bold uppercase tracking-[0.5em] text-[#474545] dark:text-white'>
-              {building.building_location}
-            </p>
-          </motion.div>
-
-          <div className='flex flex-row gap-6 px-6 md:gap-10 lg:ml-[25%] lg:px-0'>
-            <div className='h-40 w-[1px] shrink-0 bg-black/20 dark:bg-white/20 md:h-72 lg:h-96' />
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 1 }}
-              className='max-w-xl pt-2 md:pt-4'
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className='mb-3'
             >
-              <p className='mb-8 text-lg font-light leading-relaxed text-zinc-900 opacity-80 dark:text-slate-300 md:text-[20px]'>
-                {building.building_description}
+              <p
+                className='mi-fuente-2 text-lg font-bold uppercase tracking-[0.25em] md:text-4xl'
+                style={{
+                  background:
+                    'linear-gradient(90deg, #0a6406 0%, #0a6406  25%, #0a6406  50%, #0a6406  75%, #0a6406  100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  backgroundSize: '200% auto',
+                }}
+              >
+                {building.building_title}
               </p>
-              <div className='inline-block border-b border-black/30 pb-2 text-[#000000] dark:border-white/30'>
-                <span className='text-[10px] uppercase tracking-[0.4em]'>
-                  STRUCTEC
-                </span>
-              </div>
             </motion.div>
-          </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className='mb-6 max-w-4xl lg:max-w-[46rem]'
+            >
+              <p
+                className='mi-fuente-2 text-5xl font-bold uppercase leading-[0.9] text-foreground-900 md:text-7xl lg:text-[4rem] xl:text-[5rem]'
+                style={{
+                  // background: 'linear-gradient(90deg, var(--foreground-100) 0%, var(--foreground-100) 25%, var(--foreground-100) 50%, var(--foreground-100) 75%, var(--foreground-100) 100%)',
+                  WebkitBackgroundClip: 'text',
+                  // WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  backgroundSize: '200% auto',
+                }}
+              >
+                Aprovecha los precios de feria
+              </p>
+            </motion.div>
+
+            {/* Location */}
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className='mi-fuente border-l-4 border-[#64320e] pl-5 pt-5 text-5xl font-bold leading-[0.9] md:text-7xl lg:text-[3rem] xl:text-[4rem]'
+              style={{
+                background:
+                  'linear-gradient(90deg, #64320e 0%, #64320e 25%, #64320e 50%, #64320e 75%, #64320e 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                backgroundSize: '200% auto',
+              }}
+            >
+              1100 $us/m²
+            </motion.p>
+          </motion.div>
         </div>
-        <div className='relative flex min-h-[70vh] items-center justify-center lg:min-h-[100vh] lg:w-1/2'>
+        <div className='relative flex min-h-[70vh] items-center justify-center lg:min-h-[100vh] lg:w-[40%]'>
           <motion.div
             initial={{ opacity: 0, scale: 1.05, y: 50 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 1.2, ease: 'easeOut' }}
-            className='relative z-0 mx-auto aspect-[4/5] w-[88%] rounded-3xl border-[12px] border-white shadow-2xl dark:border-zinc-800 md:aspect-[5/6] md:max-w-[540px] lg:mx-0 lg:aspect-[5/7] lg:w-[min(88%,520px)] lg:rounded-none lg:border-0 lg:shadow-none'
+            className='relative z-0 mx-auto aspect-[4/5] w-[88%] rounded-3xl border-[12px] border-white shadow-2xl dark:border-zinc-800 md:aspect-[5/6] md:max-w-[540px] lg:mx-0 lg:aspect-[5/7] lg:w-[90%] lg:max-w-[600px] lg:-translate-x-12 lg:rounded-none lg:border-0 lg:shadow-none'
           >
             <Image
               src={primaryImage}

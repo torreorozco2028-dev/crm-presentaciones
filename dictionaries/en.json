@@ -27,7 +27,10 @@
       "avatar": "Avatar",
       "clients": "Clients",
       "generalfeatures": "General Features",
+      "departments": "Departments",
+      "departmentfeatures": "Department Features",
       "pointsofinterest": "Points of Interest",
+      "commonareas": "Common Areas",
       "sales": "Sales"
     },
     "intros": {
@@ -38,7 +41,11 @@
       "settings": "Settings",
       "clients": "Manage your client portfolio, their main information, and who can edit each record.",
       "generalfeatures": "General Features",
+      "departments": "Manage department models and their individual units.",
+      "departmentfeatures": "Manage the features and finishes available for departments.",
       "pointsofinterest": "Manage the points of Interest near your building to provide a more immersive experience for your clients.",
+      "commonareas": "Manage the shared spaces of the building, such as pools, gyms, and lounges.",
+      "commonAreas": "Manage the shared spaces of the building, such as pools, gyms, and lounges.",
       "sales": "Manage your sales process and keep track of your clients and their interactions with your presentations."
     }
   },

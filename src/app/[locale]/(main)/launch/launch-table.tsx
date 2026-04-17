@@ -43,13 +43,13 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
   };
 
   return (
-    <div className='items-between mx-auto flex min-h-screen max-w-7xl flex-col justify-between'>
+    <div className='items-between mx-auto flex min-h-screen max-w-7xl flex-col'>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className='mb-8 text-center'
+        className='mb-20 text-center'
       >
         <h1
           className='mb-2 text-2xl font-black tracking-tight sm:text-3xl md:mb-3 md:text-xl lg:text-3xl'
@@ -64,7 +64,7 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
           Proyectos Exclusivos
         </h1>
       </motion.div>
-      <div className='mb-10 grid grid-cols-1 gap-4 sm:mb-12 sm:grid-cols-2 sm:gap-6 md:mb-16 md:gap-8 lg:grid-cols-3'>
+      <div className='mb-6 grid grid-cols-1 gap-4 sm:mb-8 sm:grid-cols-2 sm:gap-6 md:-mt-4 md:mb-4 md:gap-8 lg:grid-cols-3'>
         <AnimatePresence mode='wait'>
           {items.map((building) => (
             <motion.div
