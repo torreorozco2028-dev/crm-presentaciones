@@ -10,6 +10,25 @@ import {
 } from '@/services/storage';
 
 const entity = new BuildingEntity();
+
+function parseBatchImages(batchImages: unknown): string[] {
+  if (!batchImages) return [];
+  if (Array.isArray(batchImages)) {
+    return batchImages.filter((img): img is string => typeof img === 'string');
+  }
+  if (typeof batchImages === 'string') {
+    try {
+      const parsed = JSON.parse(batchImages);
+      return Array.isArray(parsed)
+        ? parsed.filter((img): img is string => typeof img === 'string')
+        : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
 export async function getBuildingsAction(
   limit: number,
   page: number,
@@ -43,7 +62,7 @@ export async function createBuildingAction(formData: FormData) {
       building_title: formData.get('building_title') as string,
       building_description: formData.get('building_description') as string,
       building_location: formData.get('building_location') as string,
-      buildin_locationURL: formData.get('building_locationURL') as string,
+      building_locationURL: formData.get('building_locationURL') as string,
       prymary_image: primaryUrl,
       plan_image: planUrl,
       total_floors: parseInt(formData.get('total_floors') as string) || 0,
@@ -82,10 +101,40 @@ export async function updateBuildingAction(id: string, formData: FormData) {
       updateData.plan_image = await uploadBuildingPlan(planFile);
     }
 
+    const existingBatchImages = parseBatchImages(existingBuilding.batch_images);
+    const orderedExistingBatchImagesRaw = formData.get(
+      'ordered_existing_batch_images'
+    ) as string;
+    const orderedExistingBatchImages = orderedExistingBatchImagesRaw
+      ? parseBatchImages(orderedExistingBatchImagesRaw)
+      : existingBatchImages;
+
+    const removedBatchImagesRaw = formData.get(
+      'removed_batch_images'
+    ) as string;
+    const removedBatchImages = removedBatchImagesRaw
+      ? parseBatchImages(removedBatchImagesRaw)
+      : [];
+
+    const keptBatchImages = orderedExistingBatchImages.filter(
+      (img) => !removedBatchImages.includes(img)
+    );
+    filesToDelete.push(...removedBatchImages);
+
     const newBatchFiles = formData.getAll('batch_images') as File[];
-    if (newBatchFiles.length > 0 && newBatchFiles[0].size > 0) {
-      const newUrls = await uploadMultipleImages(newBatchFiles);
-      updateData.batch_images = newUrls;
+    const hasNewBatchFiles =
+      newBatchFiles.length > 0 && newBatchFiles[0].size > 0;
+    const hasRemovedBatchImages = removedBatchImages.length > 0;
+
+    if (hasNewBatchFiles || hasRemovedBatchImages) {
+      let nextBatchImages = keptBatchImages;
+
+      if (hasNewBatchFiles) {
+        const newUrls = await uploadMultipleImages(newBatchFiles);
+        nextBatchImages = [...keptBatchImages, ...newUrls];
+      }
+
+      updateData.batch_images = nextBatchImages;
     }
 
     updateData.building_title = formData.get('building_title') as string;
@@ -93,6 +142,9 @@ export async function updateBuildingAction(id: string, formData: FormData) {
       'building_description'
     ) as string;
     updateData.building_location = formData.get('building_location') as string;
+    updateData.building_locationURL = formData.get(
+      'building_locationURL'
+    ) as string;
     updateData.total_floors = parseInt(formData.get('total_floors') as string);
     updateData.number_garages = parseInt(
       formData.get('number_garages') as string

@@ -1,6 +1,5 @@
 'use client';
 
-import { fonts } from '@/config/fonts';
 import React from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -93,15 +92,8 @@ export default function BuildingLocation({ building }: BuildingLocationProps) {
             >
               Conectividad
             </motion.span>
-            <h2
-              className={`${fonts.inter.className} mb-6 text-4xl leading-tight lg:mb-8 lg:text-6xl`}
-            >
-              Entorno <br />{' '}
-              <span
-                className={`${fonts.inter.className} text-zinc-900 dark:text-white`}
-              >
-                Privilegiado
-              </span>
+            <h2 className='mi-fuente-2 mb-6 bg-gradient-to-b from-zinc-800 to-zinc-500 bg-clip-text text-2xl font-black uppercase leading-tight text-transparent dark:from-white dark:to-zinc-500 lg:mb-8 lg:text-3xl'>
+              Entorno Privilegiado
             </h2>
 
             <div className='flex items-start gap-4 lg:gap-6'>

@@ -3,7 +3,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Button, Card, Chip } from '@heroui/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fonts } from '@/config/fonts';
 import {
   DEFAULT_FLOOR_VIEWPORT_WIDTH,
   getMaxFloorSelections,
@@ -254,10 +253,8 @@ export default function Floors({ units }: Props) {
       className='min-h-screen bg-background p-4 pt-10 font-sans text-foreground transition-colors dark:bg-black sm:p-10'
     >
       <div className='mb-10 text-center'>
-        <h1
-          className={`mb-4 ${fonts.inter.className} text-5xl tracking-tight text-foreground sm:text-5xl md:text-6xl`}
-        >
-          Nuestras Unidades
+        <h1 className='mi-fuente-2 mb-4 bg-gradient-to-b from-zinc-800 to-zinc-500 bg-clip-text text-3xl font-black tracking-tight text-transparent dark:from-white dark:to-zinc-500 sm:text-4xl md:text-5xl'>
+          NUESTRAS UNIDADES
         </h1>
         <p className='text-xs uppercase tracking-widest text-default-500'>
           Selecciona hasta {maxSelections} unidades para comparar detalles
@@ -331,7 +328,7 @@ export default function Floors({ units }: Props) {
             className='mt-32 pb-40'
           >
             <div className='mb-16 px-4 text-center'>
-              <h2 className='font-serif text-4xl italic text-foreground'>
+              <h2 className='mi-fuente-2 mb-4 bg-gradient-to-b from-zinc-800 to-zinc-500 bg-clip-text text-3xl font-black tracking-tight text-transparent dark:from-white dark:to-zinc-500 sm:text-4xl md:text-5xl'>
                 Detalles de Selección
               </h2>
             </div>

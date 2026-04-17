@@ -27,7 +27,10 @@
       "avatar": "Avatar",
       "clients": "Clientes",
       "generalfeatures": "Acabados generales",
+      "departments": "Departamentos",
+      "departmentfeatures": "Acabados de Departamentos",
       "pointsofinterest": "Puntos de interés",
+      "commonareas": "Áreas Comunes",
       "sales": "Ventas"
     },
     "intros": {
@@ -38,7 +41,11 @@
       "settings": "Configuraciones",
       "clients": "Gestiona tu cartera de clientes, su información principal y quién puede editar cada registro.",
       "generalfeatures": "Acabados generales",
+      "departments": "Gestiona los modelos de departamentos y sus unidades individuales.",
+      "departmentfeatures": "Administra las características y acabados disponibles para los departamentos.",
       "pointsofinterest": "Administra los puntos de interés cerca de tu edificio para proporcionar una experiencia más inmersiva para tus clientes.",
+      "commonareas": "Administra los espacios compartidos del edificio, como piscinas, gimnasios y salones.",
+      "áreasComunes": "Administra los espacios compartidos del edificio, como piscinas, gimnasios y salones.",
       "sales": "Gestiona tu proceso de ventas y lleva un seguimiento de tus clientes y sus interacciones con tus presentaciones."
     }
   },

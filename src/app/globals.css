@@ -1,3 +1,21 @@
+@font-face {
+  font-family: 'MiFuente';
+  src:
+    local('MiFuente'),
+    url('/MiFuente.otf') format('opentype');
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: block;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.mi-fuente {
+  font-family:
+    MiFuente,
+    system-ui,
+    -apple-system,
+    sans-serif;
+}

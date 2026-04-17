@@ -16,6 +16,8 @@ import {
   Cinzel_Decorative,
   Cormorant_Unicase,
   Metamorphous,
+  Righteous,
+  Alfa_Slab_One,
 } from 'next/font/google';
 
 export const poppins = Lora({
@@ -43,5 +45,23 @@ export const inter3 = Metamorphous({
   weight: ['400'],
 });
 
-export const fonts = { poppins, dancing, inter, inter2, inter3 };
+export const MiFuente = Righteous({
+  subsets: ['latin'],
+  weight: ['400'],
+});
+
+export const boldPublicity = Alfa_Slab_One({
+  subsets: ['latin'],
+  weight: ['400'],
+});
+
+export const fonts = {
+  poppins,
+  dancing,
+  inter,
+  inter2,
+  inter3,
+  MiFuente,
+  boldPublicity,
+};
 export default fonts;

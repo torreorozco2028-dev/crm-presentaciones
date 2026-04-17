@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fonts } from '@/config/fonts';
 import {
   Modal,
   ModalBody,
@@ -170,9 +169,7 @@ export default function DepartmentsPage({ data }: { data: any }) {
         >
           Explora tu próximo hogar
         </motion.span>
-        <h1
-          className={`${fonts.inter.className} bg-gradient-to-b from-zinc-800 to-zinc-400 bg-clip-text text-5xl font-black uppercase tracking-tighter text-transparent dark:from-white dark:to-zinc-500 md:text-7xl lg:text-8xl`}
-        >
+        <h1 className='mi-fuente-2 bg-gradient-to-b from-zinc-800 to-zinc-500 bg-clip-text text-5xl font-black uppercase tracking-tighter text-transparent dark:from-white dark:to-zinc-500 md:text-7xl lg:text-8xl'>
           plano Interactivo
         </h1>
       </div>

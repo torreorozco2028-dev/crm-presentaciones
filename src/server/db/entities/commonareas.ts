@@ -3,6 +3,7 @@ import { common_areas } from '../schema';
 import { eq, desc, type InferInsertModel } from 'drizzle-orm';
 
 type NewCommonArea = InferInsertModel<typeof common_areas>;
+type UpdateCommonArea = Partial<Omit<NewCommonArea, 'buildingId'>>;
 
 export default class CommonAreasEntity {
   async createCommonArea(record: NewCommonArea) {
@@ -33,6 +34,15 @@ export default class CommonAreasEntity {
       .where(eq(common_areas.id, id))
       .limit(1);
     return area;
+  }
+
+  async updateCommonArea(id: string, data: UpdateCommonArea) {
+    const [updated] = await db
+      .update(common_areas)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(common_areas.id, id))
+      .returning();
+    return updated;
   }
 
   async deleteCommonArea(id: string) {

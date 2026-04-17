@@ -24,6 +24,7 @@ import {
 } from '@heroui/react';
 import LucideIcon from '@/components/lucide-icon';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import useUserRole from '@/lib/getUserRole';
 import { getBuildingsAction } from '../buildings/actions';
 import {
   createPointOfInterestAction,
@@ -33,6 +34,8 @@ import {
 
 export default function PointsOfInterestPage() {
   const queryClient = useQueryClient();
+  const role = useUserRole();
+  const isAdmin = role === 'admin';
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [filterBuilding, setFilterBuilding] = useState<string>('');
 
@@ -84,13 +87,15 @@ export default function PointsOfInterestPage() {
     <div className='space-y-6 p-8'>
       <div className='flex items-center justify-between'>
         <div></div>
-        <Button
-          color='primary'
-          onPress={onOpen}
-          startContent={<LucideIcon name='Plus' />}
-        >
-          Nuevo Punto
-        </Button>
+        {isAdmin && (
+          <Button
+            color='primary'
+            onPress={onOpen}
+            startContent={<LucideIcon name='Plus' />}
+          >
+            Nuevo Punto
+          </Button>
+        )}
       </div>
 
       <div className='max-w-xs'>
@@ -141,16 +146,18 @@ export default function PointsOfInterestPage() {
               </TableCell>
               <TableCell>
                 <div className='flex justify-center gap-2'>
-                  <Button
-                    isIconOnly
-                    size='sm'
-                    color='danger'
-                    variant='flat'
-                    onPress={() => deleteMutation.mutate(p.id)}
-                    isLoading={deleteMutation.isPending}
-                  >
-                    <LucideIcon name='Trash2' size='18' />
-                  </Button>
+                  {isAdmin && (
+                    <Button
+                      isIconOnly
+                      size='sm'
+                      color='danger'
+                      variant='flat'
+                      onPress={() => deleteMutation.mutate(p.id)}
+                      isLoading={deleteMutation.isPending}
+                    >
+                      <LucideIcon name='Trash2' size='18' />
+                    </Button>
+                  )}
                 </div>
               </TableCell>
             </TableRow>

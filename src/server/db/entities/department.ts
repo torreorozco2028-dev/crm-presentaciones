@@ -66,6 +66,28 @@ export default class DepartmentEntity {
     }));
   }
 
+  async getModelById(id: string) {
+    const result = await db.query.department_model.findFirst({
+      where: eq(department_model.id, id),
+      with: {
+        units: true,
+        features: {
+          with: {
+            feature: true,
+          },
+        },
+      },
+    });
+
+    if (result) {
+      return {
+        ...result,
+        features: result.features.map((f) => f.feature),
+      };
+    }
+    return null;
+  }
+
   async updateModel(id: string, data: ModelUpdate, featureIds?: string[]) {
     return await db.transaction(async (tx) => {
       const [updated] = await tx
