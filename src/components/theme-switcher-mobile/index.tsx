@@ -16,7 +16,7 @@ export function ThemeSwitcherMobile({ setIsMenuOpen }: any) {
   if (!mounted) return null;
 
   return (
-    <ButtonGroup>
+    <ButtonGroup className='grid w-full grid-cols-2'>
       <Button
         className='w-full'
         onPress={() => {

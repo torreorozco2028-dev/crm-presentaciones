@@ -11,7 +11,7 @@ export function LanguageSwitcherMobile({
   const { currentLang, switchLanguage } = useLanguageSwitcher();
 
   return (
-    <ButtonGroup>
+    <ButtonGroup className='grid w-full grid-cols-2'>
       <Button
         className='w-full'
         color={currentLang === 'en' ? 'success' : 'default'}

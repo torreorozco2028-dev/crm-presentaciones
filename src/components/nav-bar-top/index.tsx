@@ -22,9 +22,7 @@ import { ThemeSwitcherMobile } from '../theme-switcher-mobile';
 import SignOutBtnMobile from '../sign-out-btn-mobile';
 import UserDropdownMenu from '../user-dropdown-menu';
 import TitleNavBar from '../title-nav-bar';
-import { LanguageSwitcher } from '../language-switcher';
 import { Locale } from '@/i18n-config';
-import { LanguageSwitcherMobile } from '../language-switcher-mobile';
 import { useTranslations } from 'next-intl';
 
 interface UserData {
@@ -88,13 +86,10 @@ export default function NavBarTop({ user }: NavBarTopProps) {
           <ThemeSwitcher />
         </NavbarItem>
         <NavbarItem className='hidden sm:flex'>
-          <LanguageSwitcher />
-        </NavbarItem>
-        <NavbarItem className='hidden sm:flex'>
           <UserDropdownMenu user={user} />
         </NavbarItem>
       </NavbarContent>
-      <NavbarMenu>
+      <NavbarMenu className='overflow-y-auto pb-[max(env(safe-area-inset-bottom),5.5rem)]'>
         <NavbarMenuItem key='profile'>
           <User
             name={user.user.name}
@@ -137,11 +132,11 @@ export default function NavBarTop({ user }: NavBarTopProps) {
             </div>
           );
         })}
-        <LanguageSwitcherMobile setIsMenuOpen={setIsMenuOpen} />
-        <Divider />
-        <ThemeSwitcherMobile setIsMenuOpen={setIsMenuOpen} />
-        <Divider />
-        <SignOutBtnMobile />
+
+        <div className='sticky bottom-4 mt-3 space-y-3 rounded-t-xl border-t border-default-200/70 bg-background/95 px-1 pb-[max(env(safe-area-inset-bottom),1rem)] pt-3 shadow-[0_-8px_20px_rgba(0,0,0,0.08)] backdrop-blur supports-[backdrop-filter]:bg-background/80'>
+          <ThemeSwitcherMobile setIsMenuOpen={setIsMenuOpen} />
+          <SignOutBtnMobile />
+        </div>
       </NavbarMenu>
     </Navbar>
   );
