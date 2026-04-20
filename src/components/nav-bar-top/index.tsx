@@ -104,6 +104,18 @@ export default function NavBarTop({ user }: NavBarTopProps) {
             }}
           />
         </NavbarMenuItem>
+        <NavbarMenuItem key='user-settings'>
+          <Link
+            className='w-full'
+            color='foreground'
+            href={`/${currentLang}/settings`}
+            size='lg'
+            onPress={() => setIsMenuOpen(false)}
+          >
+            <LucideIcon name='UserCog' />
+            <span className='ml-3'>{t('dropdown.settings')}</span>
+          </Link>
+        </NavbarMenuItem>
         <Divider />
         {menuItems.map((item, index) => {
           const isActive = pathname === item.path;
@@ -115,9 +127,7 @@ export default function NavBarTop({ user }: NavBarTopProps) {
                   color={isActive ? 'primary' : 'foreground'}
                   href={item.path}
                   size='lg'
-                  onPress={() => {
-                    if (isActive) setIsMenuOpen(false);
-                  }}
+                  onPress={() => setIsMenuOpen(false)}
                 >
                   <LucideIcon name={item.icon} />
                   <span className='ml-3'>{t(item.label)}</span>

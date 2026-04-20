@@ -233,7 +233,7 @@ export default function CommonAreasPage() {
       {selectedBuilding && (
         <Card className='border border-default-200 shadow-sm'>
           <CardBody className='space-y-4'>
-            <div className='flex items-center justify-between'>
+            <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
               <h2 className='text-xl font-semibold'>
                 Áreas del edificio
                 {areas && (
@@ -247,13 +247,14 @@ export default function CommonAreasPage() {
                   color='primary'
                   startContent={<LucideIcon name='Plus' size='20' />}
                   onPress={openCreateModal}
+                  className='w-full sm:w-auto'
                 >
                   Nueva Área
                 </Button>
               )}
             </div>
 
-            <div className='overflow-x-auto rounded-xl border border-default-200'>
+            <div className='hidden overflow-x-auto rounded-xl border border-default-200 lg:block'>
               <Table aria-label='Lista de áreas comunes'>
                 <TableHeader>
                   <TableColumn>ÁREA</TableColumn>
@@ -334,6 +335,91 @@ export default function CommonAreasPage() {
                 </TableBody>
               </Table>
             </div>
+
+            <div className='space-y-3 lg:hidden'>
+              {loadingAreas && (
+                <Card className='border border-default-200'>
+                  <CardBody className='flex items-center justify-center py-6'>
+                    <Spinner size='sm' />
+                  </CardBody>
+                </Card>
+              )}
+
+              {!loadingAreas && (areas ?? []).length === 0 && (
+                <Card className='border border-default-200'>
+                  <CardBody className='text-sm text-default-500'>
+                    No hay áreas registradas para este edificio
+                  </CardBody>
+                </Card>
+              )}
+
+              {(areas ?? []).map((a) => {
+                const images = parseBatchImages(a.batch_images);
+
+                return (
+                  <Card key={a.id} className='border border-default-200'>
+                    <CardBody className='space-y-3'>
+                      <div className='flex items-start justify-between gap-3'>
+                        <div>
+                          <p className='font-semibold'>{a.common_area_name}</p>
+                          <p className='text-sm text-default-500'>
+                            {a.common_area_description ?? '-'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div>
+                        {images.length > 0 ? (
+                          <div className='flex gap-1'>
+                            {images.slice(0, 4).map((img, idx) => (
+                              <img
+                                key={idx}
+                                src={img}
+                                alt={`foto ${idx + 1}`}
+                                className='h-10 w-10 rounded-md border border-default-200 object-cover'
+                              />
+                            ))}
+                            {images.length > 4 && (
+                              <div className='flex h-10 w-10 items-center justify-center rounded-md border border-default-200 bg-default-100 text-tiny text-default-500'>
+                                +{images.length - 4}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className='text-sm text-default-400'>
+                            Sin fotos
+                          </span>
+                        )}
+                      </div>
+
+                      {isAdmin && (
+                        <div className='flex justify-end gap-2'>
+                          <Button
+                            isIconOnly
+                            size='sm'
+                            color='primary'
+                            variant='flat'
+                            onPress={() => openEditModal(a)}
+                          >
+                            <LucideIcon name='Pencil' size='18' />
+                          </Button>
+                          <Button
+                            isIconOnly
+                            size='sm'
+                            color='danger'
+                            variant='flat'
+                            onPress={() => deleteMutation.mutate(a.id)}
+                            isLoading={deleteMutation.isPending}
+                          >
+                            <LucideIcon name='Trash2' size='18' />
+                          </Button>
+                        </div>
+                      )}
+                    </CardBody>
+                  </Card>
+                );
+              })}
+            </div>
           </CardBody>
         </Card>
       )}
@@ -345,16 +431,19 @@ export default function CommonAreasPage() {
         size='2xl'
         scrollBehavior='inside'
         classNames={{
-          base: 'mx-2 my-4 sm:mx-6',
+          base: 'mx-2 my-4 h-[calc(100vh-2rem)] w-[calc(100vw-1rem)] sm:mx-6 sm:w-auto sm:h-[90vh] sm:max-h-[90vh]',
           body: 'py-4',
         }}
       >
-        <ModalContent>
-          <form onSubmit={handleSubmit}>
+        <ModalContent className='h-full'>
+          <form
+            onSubmit={handleSubmit}
+            className='flex h-full flex-col overflow-hidden'
+          >
             <ModalHeader>
               {editingArea ? 'Editar Área Común' : 'Nueva Área Común'}
             </ModalHeader>
-            <ModalBody className='space-y-4'>
+            <ModalBody className='flex-1 space-y-4 overflow-y-auto'>
               <Input
                 name='common_area_name'
                 label='Nombre del Área'
@@ -465,14 +554,19 @@ export default function CommonAreasPage() {
                 )}
               </div>
             </ModalBody>
-            <ModalFooter>
-              <Button variant='light' onPress={handleModalClose}>
+            <ModalFooter className='flex flex-col-reverse gap-2 sm:flex-row sm:justify-end'>
+              <Button
+                variant='light'
+                onPress={handleModalClose}
+                className='w-full sm:w-auto'
+              >
                 Cancelar
               </Button>
               <Button
                 color='primary'
                 type='submit'
                 isLoading={createMutation.isPending || updateMutation.isPending}
+                className='w-full sm:w-auto'
               >
                 {editingArea ? 'Guardar Cambios' : 'Crear Área'}
               </Button>

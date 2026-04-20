@@ -494,7 +494,7 @@ export default function DepartmentsPage() {
       {selectedBuilding && (
         <Card className='border border-default-200 shadow-sm'>
           <CardBody className='space-y-4'>
-            <div className='flex items-center justify-between'>
+            <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
               <h2 className='text-xl font-semibold'>
                 Modelos de Departamentos
               </h2>
@@ -502,6 +502,7 @@ export default function DepartmentsPage() {
                 <Button
                   color='primary'
                   startContent={<LucideIcon icon='Plus' size={20} />}
+                  className='w-full sm:w-auto'
                   onPress={() => {
                     setModelFormData({});
                     setSelectedFeatures([]);
@@ -522,36 +523,119 @@ export default function DepartmentsPage() {
             {loadingModels ? (
               <Spinner />
             ) : (
-              <div className='overflow-x-auto rounded-xl border border-default-200'>
-                <Table>
-                  <TableHeader>
-                    <TableColumn>Nombre</TableColumn>
-                    <TableColumn>Área Base (m²)</TableColumn>
-                    <TableColumn>Balcón</TableColumn>
-                    <TableColumn>Unidades</TableColumn>
-                    <TableColumn>Acciones</TableColumn>
-                  </TableHeader>
-                  <TableBody emptyContent={'No hay modelos'}>
-                    {(models || []).map((model: any) => (
-                      <TableRow key={model.id}>
-                        <TableCell>{model.name_model_department}</TableCell>
-                        <TableCell>{model.base_square_meters}</TableCell>
-                        <TableCell>{model.balcony ? 'Sí' : 'No'}</TableCell>
-                        <TableCell>
+              <>
+                <div className='hidden overflow-x-auto rounded-xl border border-default-200 lg:block'>
+                  <Table>
+                    <TableHeader>
+                      <TableColumn>Nombre</TableColumn>
+                      <TableColumn>Área Base (m²)</TableColumn>
+                      <TableColumn>Balcón</TableColumn>
+                      <TableColumn>Unidades</TableColumn>
+                      <TableColumn>Acciones</TableColumn>
+                    </TableHeader>
+                    <TableBody emptyContent={'No hay modelos'}>
+                      {(models || []).map((model: any) => (
+                        <TableRow key={model.id}>
+                          <TableCell>{model.name_model_department}</TableCell>
+                          <TableCell>{model.base_square_meters}</TableCell>
+                          <TableCell>{model.balcony ? 'Sí' : 'No'}</TableCell>
+                          <TableCell>
+                            <Button
+                              isIconOnly
+                              variant='light'
+                              onPress={() => {
+                                setSelectedModel(model);
+                                onUnitsOpen();
+                              }}
+                            >
+                              <LucideIcon icon='Eye' size={20} />
+                            </Button>
+                          </TableCell>
+                          <TableCell>
+                            <div className='flex gap-2'>
+                              {isAdmin && (
+                                <Button
+                                  isIconOnly
+                                  variant='light'
+                                  className='text-foreground-700 dark:text-foreground-300'
+                                  onPress={() => {
+                                    setModelFormData(model);
+                                    setSelectedFeatures(
+                                      model.features?.map((f: any) => f.id) ||
+                                        []
+                                    );
+                                    setFeatureSearch('');
+                                    setPrimaryImageFile(null);
+                                    setBatchImageFiles([]);
+                                    setExistingBatchImages(
+                                      parseBatchImages(model.batch_images)
+                                    );
+                                    setRemovedBatchImages([]);
+                                    setRemovePrimaryImage(false);
+                                    onModelOpen();
+                                  }}
+                                >
+                                  <LucideIcon icon='SquarePen' size={20} />
+                                </Button>
+                              )}
+                              {isAdmin && (
+                                <Button
+                                  isIconOnly
+                                  variant='light'
+                                  color='danger'
+                                  onPress={() =>
+                                    deleteModelMutation.mutate(model.id)
+                                  }
+                                >
+                                  <LucideIcon icon='Trash2' size={20} />
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                <div className='space-y-3 lg:hidden'>
+                  {(models || []).length === 0 && (
+                    <Card className='border border-default-200'>
+                      <CardBody className='text-sm text-default-500'>
+                        No hay modelos
+                      </CardBody>
+                    </Card>
+                  )}
+
+                  {(models || []).map((model: any) => (
+                    <Card key={model.id} className='border border-default-200'>
+                      <CardBody className='space-y-3'>
+                        <div>
+                          <p className='font-semibold'>
+                            {model.name_model_department}
+                          </p>
+                          <p className='text-sm text-default-500'>
+                            Área base: {model.base_square_meters} m²
+                          </p>
+                          <p className='text-sm text-default-500'>
+                            Balcón: {model.balcony ? 'Sí' : 'No'}
+                          </p>
+                        </div>
+
+                        <div className='flex items-center justify-between'>
                           <Button
-                            isIconOnly
-                            variant='light'
+                            size='sm'
+                            variant='flat'
                             onPress={() => {
                               setSelectedModel(model);
                               onUnitsOpen();
                             }}
                           >
-                            <LucideIcon icon='Eye' size={20} />
+                            Ver unidades
                           </Button>
-                        </TableCell>
-                        <TableCell>
-                          <div className='flex gap-2'>
-                            {isAdmin && (
+
+                          {isAdmin && (
+                            <div className='flex gap-2'>
                               <Button
                                 isIconOnly
                                 variant='light'
@@ -574,8 +658,6 @@ export default function DepartmentsPage() {
                               >
                                 <LucideIcon icon='SquarePen' size={20} />
                               </Button>
-                            )}
-                            {isAdmin && (
                               <Button
                                 isIconOnly
                                 variant='light'
@@ -586,14 +668,14 @@ export default function DepartmentsPage() {
                               >
                                 <LucideIcon icon='Trash2' size={20} />
                               </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                            </div>
+                          )}
+                        </div>
+                      </CardBody>
+                    </Card>
+                  ))}
+                </div>
+              </>
             )}
           </CardBody>
         </Card>
@@ -608,8 +690,12 @@ export default function DepartmentsPage() {
         }}
         size='5xl'
         scrollBehavior='inside'
+        classNames={{
+          base: 'mx-2 my-4 h-[calc(100vh-2rem)] w-[calc(100vw-1rem)] sm:mx-6 sm:w-auto sm:h-[90vh] sm:max-h-[90vh]',
+          body: 'py-4',
+        }}
       >
-        <ModalContent className='mx-2 sm:mx-6'>
+        <ModalContent className='mx-2 h-full sm:mx-6'>
           <ModalHeader className='flex flex-col gap-1'>
             <span className='text-base sm:text-lg'>
               Unidades de{' '}
@@ -619,7 +705,7 @@ export default function DepartmentsPage() {
               Gestiona el inventario por piso, área y estado comercial.
             </span>
           </ModalHeader>
-          <ModalBody className='space-y-4'>
+          <ModalBody className='flex-1 space-y-4 overflow-y-auto'>
             <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
               <div className='text-sm text-foreground-500'>
                 Total unidades: {Array.isArray(units) ? units.length : 0}
@@ -628,6 +714,7 @@ export default function DepartmentsPage() {
                 <Button
                   color='primary'
                   startContent={<LucideIcon icon='Plus' size={18} />}
+                  className='w-full sm:w-auto'
                   onPress={() => {
                     setSelectedUnit(null);
                     setUnitFormData({});
@@ -644,63 +731,126 @@ export default function DepartmentsPage() {
                 <Spinner />
               </div>
             ) : (
-              <div className='overflow-x-auto'>
-                <Table aria-label='Tabla de unidades por modelo'>
-                  <TableHeader>
-                    <TableColumn>Número</TableColumn>
-                    <TableColumn>Piso</TableColumn>
-                    <TableColumn>Área Real (m²)</TableColumn>
-                    <TableColumn>Estado</TableColumn>
-                    <TableColumn>Acciones</TableColumn>
-                  </TableHeader>
-                  <TableBody emptyContent={'No hay unidades'}>
-                    {(units || []).map((unit: any) => (
-                      <TableRow key={unit.id}>
-                        <TableCell>{unit.unit_number}</TableCell>
-                        <TableCell>{unit.floor}</TableCell>
-                        <TableCell>{unit.real_square_meters}</TableCell>
-                        <TableCell>
-                          {unit.state === 1
-                            ? '✓ Disponible'
-                            : unit.state === 2
-                              ? '⏳ Reservado'
-                              : '✗ Vendido'}
-                        </TableCell>
-                        <TableCell>
-                          <div className='flex gap-2'>
-                            {isAdmin && (
-                              <Button
-                                isIconOnly
-                                variant='light'
-                                className='text-foreground-700 dark:text-foreground-300'
-                                onPress={() => {
-                                  setSelectedUnit(unit);
-                                  setUnitFormData(unit);
-                                  onUnitFormOpen();
-                                }}
-                              >
-                                <LucideIcon icon='SquarePen' size={20} />
-                              </Button>
-                            )}
-                            {isAdmin && (
-                              <Button
-                                isIconOnly
-                                variant='light'
-                                color='danger'
-                                onPress={() =>
-                                  deleteUnitMutation.mutate(unit.id)
-                                }
-                              >
-                                <LucideIcon icon='Trash2' size={20} />
-                              </Button>
-                            )}
+              <>
+                <div className='hidden overflow-x-auto lg:block'>
+                  <Table aria-label='Tabla de unidades por modelo'>
+                    <TableHeader>
+                      <TableColumn>Número</TableColumn>
+                      <TableColumn>Piso</TableColumn>
+                      <TableColumn>Área Real (m²)</TableColumn>
+                      <TableColumn>Estado</TableColumn>
+                      <TableColumn>Acciones</TableColumn>
+                    </TableHeader>
+                    <TableBody emptyContent={'No hay unidades'}>
+                      {(units || []).map((unit: any) => (
+                        <TableRow key={unit.id}>
+                          <TableCell>{unit.unit_number}</TableCell>
+                          <TableCell>{unit.floor}</TableCell>
+                          <TableCell>{unit.real_square_meters}</TableCell>
+                          <TableCell>
+                            {unit.state === 1
+                              ? '✓ Disponible'
+                              : unit.state === 2
+                                ? '⏳ Reservado'
+                                : '✗ Vendido'}
+                          </TableCell>
+                          <TableCell>
+                            <div className='flex gap-2'>
+                              {isAdmin && (
+                                <Button
+                                  isIconOnly
+                                  variant='light'
+                                  className='text-foreground-700 dark:text-foreground-300'
+                                  onPress={() => {
+                                    setSelectedUnit(unit);
+                                    setUnitFormData(unit);
+                                    onUnitFormOpen();
+                                  }}
+                                >
+                                  <LucideIcon icon='SquarePen' size={20} />
+                                </Button>
+                              )}
+                              {isAdmin && (
+                                <Button
+                                  isIconOnly
+                                  variant='light'
+                                  color='danger'
+                                  onPress={() =>
+                                    deleteUnitMutation.mutate(unit.id)
+                                  }
+                                >
+                                  <LucideIcon icon='Trash2' size={20} />
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                <div className='space-y-3 lg:hidden'>
+                  {(units || []).length === 0 && (
+                    <Card className='border border-default-200'>
+                      <CardBody className='text-sm text-default-500'>
+                        No hay unidades
+                      </CardBody>
+                    </Card>
+                  )}
+
+                  {(units || []).map((unit: any) => (
+                    <Card key={unit.id} className='border border-default-200'>
+                      <CardBody className='space-y-2'>
+                        <p className='font-semibold'>
+                          Unidad {unit.unit_number}
+                        </p>
+                        <div className='grid grid-cols-2 gap-2 text-sm'>
+                          <span className='text-default-500'>Piso</span>
+                          <span className='text-right'>{unit.floor}</span>
+                          <span className='text-default-500'>Área real</span>
+                          <span className='text-right'>
+                            {unit.real_square_meters} m²
+                          </span>
+                          <span className='text-default-500'>Estado</span>
+                          <span className='text-right'>
+                            {unit.state === 1
+                              ? '✓ Disponible'
+                              : unit.state === 2
+                                ? '⏳ Reservado'
+                                : '✗ Vendido'}
+                          </span>
+                        </div>
+
+                        {isAdmin && (
+                          <div className='flex justify-end gap-2'>
+                            <Button
+                              isIconOnly
+                              variant='light'
+                              className='text-foreground-700 dark:text-foreground-300'
+                              onPress={() => {
+                                setSelectedUnit(unit);
+                                setUnitFormData(unit);
+                                onUnitFormOpen();
+                              }}
+                            >
+                              <LucideIcon icon='SquarePen' size={20} />
+                            </Button>
+                            <Button
+                              isIconOnly
+                              variant='light'
+                              color='danger'
+                              onPress={() => deleteUnitMutation.mutate(unit.id)}
+                            >
+                              <LucideIcon icon='Trash2' size={20} />
+                            </Button>
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                        )}
+                      </CardBody>
+                    </Card>
+                  ))}
+                </div>
+              </>
             )}
           </ModalBody>
           <ModalFooter>
@@ -723,12 +873,16 @@ export default function DepartmentsPage() {
         onClose={onModelClose}
         size='4xl'
         scrollBehavior='inside'
+        classNames={{
+          base: 'mx-2 my-4 h-[calc(100vh-2rem)] w-[calc(100vw-1rem)] sm:mx-6 sm:w-auto sm:h-[90vh] sm:max-h-[90vh]',
+          body: 'py-4',
+        }}
       >
-        <ModalContent className='mx-2 sm:mx-4'>
+        <ModalContent className='mx-2 h-full sm:mx-4'>
           <ModalHeader>
             {modelFormData.id ? 'Editar Modelo' : 'Crear Nuevo Modelo'}
           </ModalHeader>
-          <ModalBody className='space-y-4'>
+          <ModalBody className='flex-1 space-y-4 overflow-y-auto'>
             <Input
               label='Nombre del Modelo'
               placeholder='Ej: Apartamento Premium 2H'
@@ -1033,8 +1187,12 @@ export default function DepartmentsPage() {
               </div>
             </div>
           </ModalBody>
-          <ModalFooter>
-            <Button color='default' onPress={onModelClose}>
+          <ModalFooter className='flex flex-col-reverse gap-2 sm:flex-row sm:justify-end'>
+            <Button
+              color='default'
+              onPress={onModelClose}
+              className='w-full sm:w-auto'
+            >
               Cancelar
             </Button>
             <Button
@@ -1043,6 +1201,7 @@ export default function DepartmentsPage() {
                 createModelMutation.isPending || updateModelMutation.isPending
               }
               onPress={handleCreateModel}
+              className='w-full sm:w-auto'
             >
               {modelFormData.id ? 'Actualizar' : 'Crear'}
             </Button>
@@ -1051,12 +1210,20 @@ export default function DepartmentsPage() {
       </Modal>
 
       {/* Modal Crear/Editar Unidad */}
-      <Modal isOpen={isUnitFormOpen} onClose={onUnitFormClose}>
-        <ModalContent>
+      <Modal
+        isOpen={isUnitFormOpen}
+        onClose={onUnitFormClose}
+        scrollBehavior='inside'
+        classNames={{
+          base: 'mx-2 my-4 h-[calc(100vh-2rem)] w-[calc(100vw-1rem)] sm:mx-6 sm:w-auto sm:h-[90vh] sm:max-h-[90vh]',
+          body: 'py-4',
+        }}
+      >
+        <ModalContent className='h-full'>
           <ModalHeader>
             {selectedUnit?.id ? 'Editar Unidad' : 'Crear Nueva Unidad'}
           </ModalHeader>
-          <ModalBody className='space-y-4'>
+          <ModalBody className='flex-1 space-y-4 overflow-y-auto'>
             <Input
               label='Número de Unidad'
               placeholder='Ej: 101, 201'
@@ -1102,8 +1269,12 @@ export default function DepartmentsPage() {
               <SelectItem key='3'>✗ Vendido</SelectItem>
             </Select>
           </ModalBody>
-          <ModalFooter>
-            <Button color='default' onPress={onUnitFormClose}>
+          <ModalFooter className='flex flex-col-reverse gap-2 sm:flex-row sm:justify-end'>
+            <Button
+              color='default'
+              onPress={onUnitFormClose}
+              className='w-full sm:w-auto'
+            >
               Cancelar
             </Button>
             <Button
@@ -1112,6 +1283,7 @@ export default function DepartmentsPage() {
                 createUnitMutation.isPending || updateUnitMutation.isPending
               }
               onPress={handleCreateUnit}
+              className='w-full sm:w-auto'
             >
               {selectedUnit?.id ? 'Actualizar' : 'Crear'}
             </Button>
