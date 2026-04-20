@@ -11,8 +11,6 @@ import {
   Button,
   Input,
   Textarea,
-  Select,
-  SelectItem,
   Modal,
   ModalContent,
   ModalHeader,
@@ -22,6 +20,8 @@ import {
   addToast,
   Spinner,
   Chip,
+  Card,
+  CardBody,
 } from '@heroui/react';
 import LucideIcon from '@/components/lucide-icon';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -31,7 +31,7 @@ import {
   updateBuildingAction,
   deleteBuildingAction,
 } from './actions';
-import { getAllFeaturesAction } from '../generalfeatures/actions';
+// import { getAllFeaturesAction } from '../generalfeatures/actions';
 import useUserRole from '@/lib/getUserRole';
 
 export default function BuildingsPage() {
@@ -39,7 +39,7 @@ export default function BuildingsPage() {
   const role = useUserRole();
   const isAdmin = role === 'admin';
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+  // const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const [editingBuilding, setEditingBuilding] = useState<any | null>(null);
   const [selectedPrimaryPreviewUrl, setSelectedPrimaryPreviewUrl] =
     useState('');
@@ -100,10 +100,10 @@ export default function BuildingsPage() {
     queryFn: () => getBuildingsAction(10, 1),
   });
 
-  const { data: featureCatalog } = useQuery({
-    queryKey: ['generalfeatures'],
-    queryFn: () => getAllFeaturesAction(),
-  });
+  // const { data: featureCatalog } = useQuery({
+  //   queryKey: ['generalfeatures'],
+  //   queryFn: () => getAllFeaturesAction(),
+  // });
 
   const createMutation = useMutation({
     mutationFn: (formData: FormData) => createBuildingAction(formData),
@@ -116,7 +116,7 @@ export default function BuildingsPage() {
         });
         queryClient.invalidateQueries({ queryKey: ['buildings'] });
         onClose();
-        setSelectedFeatures([]);
+        // setSelectedFeatures([]);
       } else {
         addToast({ title: 'Error', description: res.error, color: 'danger' });
       }
@@ -155,7 +155,7 @@ export default function BuildingsPage() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
-    formData.append('featureIds', JSON.stringify(selectedFeatures));
+    // formData.append('featureIds', JSON.stringify(selectedFeatures));
 
     if (editingBuilding?.id) {
       formData.append(
@@ -240,7 +240,7 @@ export default function BuildingsPage() {
 
   const openCreateModal = () => {
     setEditingBuilding(null);
-    setSelectedFeatures([]);
+    // setSelectedFeatures([]);
     clearMainImageSelection();
     clearBatchSelection();
     clearGalleryEditState();
@@ -249,10 +249,10 @@ export default function BuildingsPage() {
 
   const openEditModal = (building: any) => {
     setEditingBuilding(building);
-    const currentFeatures = (building.buildingToFeatures ?? [])
-      .map((rel: any) => rel.feature?.id)
-      .filter(Boolean);
-    setSelectedFeatures(currentFeatures);
+    // const currentFeatures = (building.buildingToFeatures ?? [])
+    //   .map((rel: any) => rel.feature?.id)
+    //   .filter(Boolean);
+    // setSelectedFeatures(currentFeatures);
     setCurrentGalleryImages(parseBatchImages(building.batch_images));
     setRemovedGalleryImages([]);
     clearMainImageSelection();
@@ -263,7 +263,7 @@ export default function BuildingsPage() {
   const handleModalClose = () => {
     onClose();
     setEditingBuilding(null);
-    setSelectedFeatures([]);
+    // setSelectedFeatures([]);
     clearMainImageSelection();
     clearBatchSelection();
     clearGalleryEditState();
@@ -272,8 +272,8 @@ export default function BuildingsPage() {
   if (loadingBuildings) return <Spinner className='flex h-screen w-full' />;
 
   return (
-    <div className='space-y-6 p-8'>
-      <div className='flex items-center justify-between'>
+    <div className='space-y-6 p-4 sm:p-6 lg:p-8'>
+      <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
         <div>
           <h1 className='text-2xl font-bold text-foreground'>
             Gestion de Edificios
@@ -285,13 +285,14 @@ export default function BuildingsPage() {
             color='primary'
             onPress={openCreateModal}
             startContent={<LucideIcon name='Plus' />}
+            className='w-full sm:w-auto'
           >
             Nuevo Edificio
           </Button>
         )}
       </div>
 
-      <div className='overflow-x-auto rounded-xl border border-default-200 bg-content1'>
+      <div className='hidden overflow-x-auto rounded-xl border border-default-200 bg-content1 lg:block'>
         <Table aria-label='Lista de edificios' className='min-w-[980px]'>
           <TableHeader>
             <TableColumn>VISTA</TableColumn>
@@ -410,6 +411,89 @@ export default function BuildingsPage() {
             ))}
           </TableBody>
         </Table>
+      </div>
+
+      <div className='space-y-3 lg:hidden'>
+        {(buildings ?? []).length === 0 && (
+          <Card className='border border-default-200'>
+            <CardBody className='text-sm text-default-500'>
+              No hay edificios registrados.
+            </CardBody>
+          </Card>
+        )}
+
+        {(buildings ?? []).map((b) => (
+          <Card key={b.id} className='border border-default-200'>
+            <CardBody className='space-y-3'>
+              <div className='flex items-start gap-3'>
+                <img
+                  src={b.prymary_image || ''}
+                  alt={b.building_title}
+                  className='h-14 w-14 rounded-md bg-default-100 object-cover'
+                />
+                <div className='min-w-0 flex-1'>
+                  <p className='truncate font-bold'>{b.building_title}</p>
+                  <p className='text-xs text-default-500'>
+                    {b.total_floors} pisos
+                  </p>
+                  <p className='mt-1 text-sm text-default-600'>
+                    {b.building_location || '-'}
+                  </p>
+                </div>
+              </div>
+
+              {b.building_description && (
+                <p className='line-clamp-2 text-sm text-default-500'>
+                  {b.building_description}
+                </p>
+              )}
+
+              {b.building_locationURL && (
+                <a
+                  href={b.building_locationURL}
+                  target='_blank'
+                  rel='noreferrer'
+                  className='block truncate text-sm text-primary underline-offset-2 hover:underline'
+                >
+                  Ver ubicación en mapa
+                </a>
+              )}
+
+              <div className='flex items-center justify-between text-sm'>
+                <span className='text-default-600'>
+                  Garajes: {b.number_garages}
+                </span>
+                <span className='text-default-600'>
+                  Depósitos: {b.number_storages}
+                </span>
+              </div>
+
+              {isAdmin && (
+                <div className='flex justify-end gap-2'>
+                  <Button
+                    isIconOnly
+                    size='sm'
+                    color='primary'
+                    variant='flat'
+                    onPress={() => openEditModal(b)}
+                  >
+                    <LucideIcon name='Pencil' size='18' />
+                  </Button>
+                  <Button
+                    isIconOnly
+                    size='sm'
+                    color='danger'
+                    variant='flat'
+                    onPress={() => deleteMutation.mutate(b.id)}
+                    isLoading={deleteMutation.isPending}
+                  >
+                    <LucideIcon name='Trash2' size='18' />
+                  </Button>
+                </div>
+              )}
+            </CardBody>
+          </Card>
+        ))}
       </div>
 
       <Modal
@@ -737,7 +821,8 @@ export default function BuildingsPage() {
                 )}
               </div>
 
-              <div className='border-t pt-4 md:col-span-2'>
+              {/* Características generales deshabilitadas temporalmente */}
+              {/* <div className='border-t pt-4 md:col-span-2'>
                 <p className='mb-2 text-small font-bold'>
                   Asociar Características
                 </p>
@@ -757,16 +842,21 @@ export default function BuildingsPage() {
                     </SelectItem>
                   ))}
                 </Select>
-              </div>
+              </div> */}
             </ModalBody>
-            <ModalFooter>
-              <Button variant='light' onPress={handleModalClose}>
+            <ModalFooter className='flex flex-col-reverse gap-2 sm:flex-row sm:justify-end'>
+              <Button
+                variant='light'
+                onPress={handleModalClose}
+                className='w-full sm:w-auto'
+              >
                 Cancelar
               </Button>
               <Button
                 color='primary'
                 type='submit'
                 isLoading={createMutation.isPending || updateMutation.isPending}
+                className='w-full sm:w-auto'
               >
                 {editingBuilding ? 'Guardar Cambios' : 'Guardar Edificio'}
               </Button>

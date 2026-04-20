@@ -51,14 +51,14 @@ export const menuOptions = {
       displayDivider: true,
       roles: ['admin'],
     },
-    {
-      key: 'generalfeatures',
-      label: 'menu.generalfeatures',
-      path: '/generalfeatures',
-      icon: 'BrickWall',
-      displayDivider: false,
-      roles: ['admin'],
-    },
+    // {
+    //   key: 'generalfeatures',
+    //   label: 'menu.generalfeatures',
+    //   path: '/generalfeatures',
+    //   icon: 'BrickWall',
+    //   displayDivider: false,
+    //   roles: ['admin'],
+    // },
     {
       key: 'departments',
       label: 'menu.departments',

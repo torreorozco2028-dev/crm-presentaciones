@@ -160,7 +160,7 @@ export default function Settings() {
   return (
     <div className='container mx-auto px-4 py-8'>
       <Card className='mx-auto max-w-3xl'>
-        <CardHeader className='flex items-center justify-between px-6 py-4'>
+        <CardHeader className='flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between'>
           <h2 className='text-xl font-bold'>{t('title')}</h2>
           {!isEditing && (
             <Button
@@ -168,6 +168,7 @@ export default function Settings() {
               variant='flat'
               onPress={() => setIsEditing(true)}
               startContent={<LucideIcon name='Pencil' />}
+              className='w-full sm:w-auto'
             >
               {t('editProfile')}
             </Button>
@@ -291,16 +292,22 @@ export default function Settings() {
           </CardBody>
 
           {isEditing && (
-            <CardFooter className='flex justify-end gap-3 bg-default-50 px-6 py-4'>
+            <CardFooter className='flex flex-col-reverse gap-2 bg-default-50 px-6 py-4 sm:flex-row sm:justify-end'>
               <Button
                 color='danger'
                 variant='light'
                 onPress={handleCancel}
                 isDisabled={isPending}
+                className='w-full sm:w-auto'
               >
                 {t('cancel')}
               </Button>
-              <Button color='primary' type='submit' isLoading={isPending}>
+              <Button
+                color='primary'
+                type='submit'
+                isLoading={isPending}
+                className='w-full sm:w-auto'
+              >
                 {t('saveChanges')}
               </Button>
             </CardFooter>
