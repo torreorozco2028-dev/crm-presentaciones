@@ -329,7 +329,7 @@ export default function Floors({ units }: Props) {
           >
             <div className='mb-16 px-4 text-center'>
               <h2 className='mi-fuente-2 mb-4 bg-gradient-to-b from-zinc-800 to-zinc-500 bg-clip-text text-3xl font-black tracking-tight text-transparent dark:from-white dark:to-zinc-500 sm:text-4xl md:text-5xl'>
-                Detalles de Selección
+                DETALLES DE SELECCIÓN
               </h2>
             </div>
             <div className='mx-auto max-w-[1400px] px-4'>
@@ -384,26 +384,28 @@ export default function Floors({ units }: Props) {
                               </p>
                             </div>
 
-                            <div className='mb-3 flex items-center justify-between gap-2'>
-                              <Chip
-                                variant='flat'
-                                color={stateMeta.chipColor}
-                                className='w-fit px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider'
-                              >
-                                {stateMeta.label}
-                              </Chip>
-                              {unit.state === 1 && (
-                                <Button
-                                  size='sm'
-                                  color='warning'
-                                  variant='solid'
-                                  onClick={() => handleReserve(unit.id)}
-                                  className='px-3 text-[10px] font-bold uppercase tracking-wider'
+                            {rowIndex === 0 && (
+                              <div className='mb-3 flex items-center justify-between gap-2'>
+                                <Chip
+                                  variant='flat'
+                                  color={stateMeta.chipColor}
+                                  className='w-fit px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider'
                                 >
-                                  Reservar
-                                </Button>
-                              )}
-                            </div>
+                                  {stateMeta.label}
+                                </Chip>
+                                {unit.state === 1 && (
+                                  <Button
+                                    size='sm'
+                                    color='warning'
+                                    variant='solid'
+                                    onClick={() => handleReserve(unit.id)}
+                                    className='px-3 text-[10px] font-bold uppercase tracking-wider'
+                                  >
+                                    Reservar
+                                  </Button>
+                                )}
+                              </div>
+                            )}
 
                             {roomFeatures.length > 0 ? (
                               <div className='space-y-2'>
