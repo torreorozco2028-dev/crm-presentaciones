@@ -4,6 +4,7 @@ import { signOut } from 'next-auth/react';
 export default function SignOutBtnMobile() {
   return (
     <Button
+      className='w-full'
       color='danger'
       onPress={() => signOut({ callbackUrl: '/auth/login' })}
     >
