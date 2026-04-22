@@ -37,6 +37,11 @@ export default auth(async (req) => {
   const isApiRoute = apiRoutes.some((route) => pathname.startsWith(route));
   if (isApiRoute) return NextResponse.next();
 
+  // Force redirect to Spanish if accessing root
+  if (pathname === '/') {
+    return NextResponse.redirect(new URL(`/${i18n.defaultLocale}`, nextUrl));
+  }
+
   const response = await intlMiddleware(req);
   if (response.headers.has('Location')) return response;
 
