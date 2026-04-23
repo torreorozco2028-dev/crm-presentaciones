@@ -34,7 +34,7 @@ export default function SideBarLeft() {
           aria-label='Sidebar Options'
           className='my-4'
           itemClasses={{
-            base: 'px-3 pt-0 first:rounded-medium last:rounded-medium gap-3 h-12 data-[hover=true]:bg-success-100 data-[hover=true]:text-foreground-700',
+            base: 'px-3 pt-0 first:rounded-medium last:rounded-medium gap-3 h-12 data-[hover=true]:bg-warning-100 data-[hover=true]:text-foreground-700',
           }}
         >
           {Object.keys(menuOptions).map((section) => (
@@ -52,9 +52,9 @@ export default function SideBarLeft() {
                     key={item.key}
                     href={item.path}
                     className={
-                      pathname === item.path ? 'bg-primary/10 text-primary' : ''
+                      pathname === item.path ? 'bg-warning/10 text-warning' : ''
                     }
-                    color='primary'
+                    color='warning'
                     startContent={<LucideIcon name={item.icon} />}
                     endContent={
                       pathname === item.path ? (
@@ -87,7 +87,7 @@ export default function SideBarLeft() {
         aria-label='Sidebar Options'
         className='my-4'
         itemClasses={{
-          base: 'px-3 pt-0 first:rounded-medium last:rounded-medium gap-3 h-12 data-[hover=true]:bg-success-100 data-[hover=true]:text-foreground-700',
+          base: 'px-3 pt-0 first:rounded-medium last:rounded-medium gap-3 h-12 data-[hover=true]:bg-warning-100 data-[hover=true]:text-foreground-700',
         }}
       >
         {Object.keys(menuOptions).map((section) => (
@@ -106,10 +106,10 @@ export default function SideBarLeft() {
                   href={item.path}
                   className={
                     normalizedPath === item.path
-                      ? 'bg-primary/10 text-primary'
+                      ? 'bg-warning/10 text-warning'
                       : ''
                   }
-                  color='primary'
+                  color='warning'
                   startContent={<LucideIcon name={item.icon} />}
                   endContent={
                     pathname === item.path ? (

@@ -73,12 +73,8 @@ export default function BuildingHero({ building }: BuildingHeroProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className='mi-fuente border-l-4 border-[#64320e] pl-5 pt-5 text-5xl font-bold leading-[0.9] md:text-7xl lg:text-[3rem] xl:text-[4rem]'
+              className='mi-fuente border-l-4 border-[#64320e] pl-5 pt-5 text-5xl font-bold leading-[0.9] text-[#64320e] dark:text-[#fd8129] md:text-7xl lg:text-[3rem] xl:text-[4rem]'
               style={{
-                background:
-                  'linear-gradient(90deg, #64320e 0%, #64320e 25%, #64320e 50%, #64320e 75%, #64320e 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
                 backgroundSize: '200% auto',
               }}

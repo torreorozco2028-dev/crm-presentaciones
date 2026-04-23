@@ -638,13 +638,13 @@ export default function LoanCalculator() {
   };
 
   return (
-    <section className='rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_20px_50px_-32px_rgba(15,23,42,0.3)] dark:border-slate-800 dark:bg-slate-950 sm:p-6 lg:p-8'>
+    <section className='rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_20px_50px_-32px_rgba(15,23,42,0.3)] dark:border-zinc-900 dark:bg-zinc-950 sm:p-6 lg:p-8'>
       <div className='mb-8 flex flex-wrap items-start justify-between gap-3'>
         <div>
-          <h1 className='text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-3xl'>
+          <h1 className='text-2xl font-extrabold tracking-tight text-slate-900 dark:text-zinc-50 sm:text-3xl'>
             Calculadora de Prestamo
           </h1>
-          <p className='mt-2 max-w-2xl text-sm text-slate-600 dark:text-slate-300 sm:text-[15px]'>
+          <p className='mt-2 max-w-2xl text-sm text-slate-600 dark:text-zinc-400 sm:text-[15px]'>
             Modulo independiente para simular financiamiento y cronograma de
             pagos.
           </p>
@@ -653,58 +653,58 @@ export default function LoanCalculator() {
           <button
             type='button'
             onClick={exportToCsv}
-            className='flex-1 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 sm:flex-none'
+            className='flex-1 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 sm:flex-none'
           >
             Exportar Excel (CSV)
           </button>
           <button
             type='button'
             onClick={exportToPdf}
-            className='flex-1 rounded-xl bg-[#0e3344] px-4 py-2.5 text-xs font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#12495f] dark:bg-[#12495f] dark:hover:bg-[#165b75] sm:flex-none'
+            className='flex-1 rounded-xl bg-[#0e3344] px-4 py-2.5 text-xs font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#12495f] dark:bg-[#0a2230] dark:hover:bg-[#0e3344] sm:flex-none'
           >
             Exportar PDF
           </button>
         </div>
       </div>
 
-      <div className='mb-8 grid gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:grid-cols-[1fr_auto]'>
+      <div className='mb-8 grid gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 shadow-sm dark:border-zinc-900 dark:bg-zinc-900 md:grid-cols-[1fr_auto]'>
         <div className='grid gap-2 md:grid-cols-2'>
           <input
             value={scenarioName}
             onChange={(event) => setScenarioName(event.target.value)}
             placeholder='Nombre del escenario (ej. Oferta Torre Norte)'
-            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-[#7fa0b4] dark:focus:ring-slate-800'
+            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-600 dark:focus:border-[#7fa0b4] dark:focus:ring-zinc-900'
           />
           <input
             value={clientName}
             onChange={(event) => setClientName(event.target.value)}
             placeholder='Nombre del cliente'
-            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-[#7fa0b4] dark:focus:ring-slate-800'
+            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-600 dark:focus:border-[#7fa0b4] dark:focus:ring-zinc-900'
           />
           <input
             type='date'
             value={offerValidUntil}
             onChange={(event) => setOfferValidUntil(event.target.value)}
-            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-[#7fa0b4] dark:focus:ring-slate-800'
+            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-[#7fa0b4] dark:focus:ring-zinc-900'
           />
           <button
             type='button'
             onClick={saveScenario}
-            className='rounded-xl bg-[#0e3344] px-3 py-2 text-xs font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#12495f] dark:bg-[#12495f] dark:hover:bg-[#165b75]'
+            className='rounded-xl bg-[#0e3344] px-3 py-2 text-xs font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#12495f] dark:bg-[#0a2230] dark:hover:bg-[#0e3344]'
           >
             Guardar escenario
           </button>
         </div>
 
-        <span className='self-center text-xs text-slate-500 dark:text-slate-400'>
+        <span className='self-center text-xs text-slate-500 dark:text-zinc-500'>
           Debes completar nombre de escenario, cliente y vigencia.
         </span>
       </div>
 
       {savedScenarios.length > 0 && (
-        <div className='mb-8 overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950'>
+        <div className='mb-8 overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-zinc-900 dark:bg-zinc-950'>
           <table className='min-w-full text-xs sm:text-sm'>
-            <thead className='bg-slate-900 text-white dark:bg-slate-800'>
+            <thead className='bg-slate-900 text-white dark:bg-zinc-900'>
               <tr>
                 <th className='px-3 py-2 text-left'>Escenario</th>
                 <th className='px-3 py-2 text-left'>Cliente</th>
@@ -717,16 +717,16 @@ export default function LoanCalculator() {
               {savedScenarios.map((scenario) => (
                 <tr
                   key={scenario.id}
-                  className='border-t border-slate-100 text-slate-700 dark:border-slate-700 dark:text-slate-200'
+                  className='border-t border-slate-100 text-slate-700 dark:border-zinc-800 dark:text-zinc-200'
                 >
                   <td className='px-3 py-2 font-semibold'>{scenario.name}</td>
-                  <td className='px-3 py-2 text-slate-600 dark:text-slate-300'>
+                  <td className='px-3 py-2 text-slate-600 dark:text-zinc-400'>
                     {scenario.clientName}
                   </td>
-                  <td className='px-3 py-2 text-slate-600 dark:text-slate-300'>
+                  <td className='px-3 py-2 text-slate-600 dark:text-zinc-400'>
                     {scenario.offerValidUntil}
                   </td>
-                  <td className='px-3 py-2 text-slate-500 dark:text-slate-400'>
+                  <td className='px-3 py-2 text-slate-500 dark:text-zinc-500'>
                     {new Date(scenario.createdAt).toLocaleString('es-MX')}
                   </td>
                   <td className='px-3 py-2 text-right'>
@@ -734,7 +734,7 @@ export default function LoanCalculator() {
                       <button
                         type='button'
                         onClick={() => loadScenario(scenario)}
-                        className='rounded-lg bg-slate-800 px-2 py-1 text-[11px] font-semibold text-white transition hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600'
+                        className='rounded-lg bg-slate-800 px-2 py-1 text-[11px] font-semibold text-white transition hover:bg-slate-700 dark:bg-zinc-800 dark:hover:bg-zinc-700'
                       >
                         Cargar
                       </button>
@@ -754,9 +754,9 @@ export default function LoanCalculator() {
         </div>
       )}
 
-      <div className='mb-8 grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 md:grid-cols-2'>
+      <div className='mb-8 grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-900 dark:bg-zinc-950 md:grid-cols-2'>
         <label className='flex flex-col gap-1'>
-          <span className='text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400'>
+          <span className='text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-500'>
             Metros cuadrados
           </span>
           <input
@@ -767,12 +767,12 @@ export default function LoanCalculator() {
             onChange={(event) =>
               setSquareMeters(Number(event.target.value) || 0)
             }
-            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-[#7fa0b4] dark:focus:ring-slate-800'
+            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-[#7fa0b4] dark:focus:ring-zinc-900'
           />
         </label>
 
         <label className='flex flex-col gap-1'>
-          <span className='text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400'>
+          <span className='text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-500'>
             Precio por metro cuadrado
           </span>
           <input
@@ -781,12 +781,12 @@ export default function LoanCalculator() {
             step='0.01'
             value={pricePerM2}
             onChange={(event) => setPricePerM2(Number(event.target.value) || 0)}
-            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-[#7fa0b4] dark:focus:ring-slate-800'
+            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-[#7fa0b4] dark:focus:ring-zinc-900'
           />
         </label>
 
         <label className='flex flex-col gap-1'>
-          <span className='text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400'>
+          <span className='text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-500'>
             Pago inicial porcentual (minimo 20%)
           </span>
           <input
@@ -796,12 +796,12 @@ export default function LoanCalculator() {
             value={downPaymentPercent}
             onChange={(event) => onDownPaymentPercentChange(event.target.value)}
             onBlur={onDownPaymentPercentBlur}
-            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-[#7fa0b4] dark:focus:ring-slate-800'
+            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-[#7fa0b4] dark:focus:ring-zinc-900'
           />
         </label>
 
         <label className='flex flex-col gap-1'>
-          <span className='text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400'>
+          <span className='text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-500'>
             Pago inicial total
           </span>
           <input
@@ -811,12 +811,12 @@ export default function LoanCalculator() {
             value={downPaymentTotal}
             onChange={(event) => onDownPaymentTotalChange(event.target.value)}
             onBlur={onDownPaymentTotalBlur}
-            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-[#7fa0b4] dark:focus:ring-slate-800'
+            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-[#7fa0b4] dark:focus:ring-zinc-900'
           />
         </label>
 
         <label className='flex flex-col gap-1'>
-          <span className='text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400'>
+          <span className='text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-500'>
             Cuota mensual para 2 años sin interés
           </span>
           <input
@@ -827,13 +827,13 @@ export default function LoanCalculator() {
             onChange={(event) =>
               setMonthlyQuotaTwoYears(Number(event.target.value) || 0)
             }
-            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-[#7fa0b4] dark:focus:ring-slate-800'
+            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-[#7fa0b4] dark:focus:ring-zinc-900'
           />
         </label>
 
         <label className='flex flex-col gap-1'>
-          <span className='text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400'>
-            Duracion del prestamo (anos 6-12)
+          <span className='text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-500'>
+            Duracion del prestamo (años 6-12)
           </span>
           <input
             type='number'
@@ -850,24 +850,24 @@ export default function LoanCalculator() {
                 )
               )
             }
-            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-[#7fa0b4] dark:focus:ring-slate-800'
+            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-[#7fa0b4] dark:focus:ring-zinc-900'
           />
         </label>
 
         <label className='flex flex-col gap-1'>
-          <span className='text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400'>
+          <span className='text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-500'>
             Primera fecha de pago
           </span>
           <input
             type='date'
             value={firstPaymentDate}
             onChange={(event) => setFirstPaymentDate(event.target.value)}
-            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-[#7fa0b4] dark:focus:ring-slate-800'
+            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-[#7fa0b4] dark:focus:ring-zinc-900'
           />
         </label>
 
         <label className='flex flex-col gap-1'>
-          <span className='text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400'>
+          <span className='text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-500'>
             Cambio oficial $ - Bs
           </span>
           <input
@@ -878,12 +878,12 @@ export default function LoanCalculator() {
             onChange={(event) =>
               setOfficialExchangeRate(Number(event.target.value) || 0)
             }
-            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-[#7fa0b4] dark:focus:ring-slate-800'
+            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-[#7fa0b4] dark:focus:ring-zinc-900'
           />
         </label>
 
         <label className='flex flex-col gap-1'>
-          <span className='text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400'>
+          <span className='text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-500'>
             Pago adicional mensual
           </span>
           <input
@@ -894,119 +894,119 @@ export default function LoanCalculator() {
             onChange={(event) =>
               setMonthlyAdditionalPayment(Number(event.target.value) || 0)
             }
-            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-[#7fa0b4] dark:focus:ring-slate-800'
+            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-[#7fa0b4] dark:focus:ring-zinc-900'
           />
         </label>
       </div>
 
-      <div className='overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950'>
+      <div className='overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-zinc-900 dark:bg-zinc-950'>
         <table className='w-full text-sm'>
           <tbody>
-            <tr className='bg-slate-100 dark:bg-slate-900'>
-              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-800 dark:text-slate-100 sm:text-sm'>
+            <tr className='bg-slate-100 dark:bg-zinc-900'>
+              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-800 dark:text-zinc-50 sm:text-sm'>
                 Cliente
               </td>
-              <td className='px-4 py-2 text-right font-semibold text-slate-800 dark:text-slate-100 sm:text-base'>
+              <td className='px-4 py-2 text-right font-semibold text-slate-800 dark:text-zinc-50 sm:text-base'>
                 {clientName || 'No definido'}
               </td>
             </tr>
-            <tr className='bg-white dark:bg-slate-950'>
-              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:text-slate-300 sm:text-sm'>
+            <tr className='bg-white dark:bg-zinc-950'>
+              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:text-zinc-400 sm:text-sm'>
                 Oferta valida hasta
               </td>
-              <td className='px-4 py-2 text-right text-slate-700 dark:text-slate-300'>
+              <td className='px-4 py-2 text-right text-slate-700 dark:text-zinc-400'>
                 {offerValidUntil || 'No definido'}
               </td>
             </tr>
-            <tr className='bg-slate-100 dark:bg-slate-900'>
-              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-800 dark:text-slate-200 sm:text-sm'>
+            <tr className='bg-slate-100 dark:bg-zinc-900'>
+              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-800 dark:text-zinc-300 sm:text-sm'>
                 Precio de compra
               </td>
-              <td className='px-4 py-2 text-right font-semibold text-slate-800 dark:text-slate-200 sm:text-base'>
+              <td className='px-4 py-2 text-right font-semibold text-slate-800 dark:text-zinc-300 sm:text-base'>
                 {toCurrency(purchasePrice)}
               </td>
             </tr>
-            <tr className='bg-white dark:bg-slate-950'>
-              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:text-slate-300 sm:text-sm'>
+            <tr className='bg-white dark:bg-zinc-950'>
+              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:text-zinc-400 sm:text-sm'>
                 Pago inicial porcentual
               </td>
-              <td className='px-4 py-2 text-right text-slate-700 dark:text-slate-300'>
+              <td className='px-4 py-2 text-right text-slate-700 dark:text-zinc-400'>
                 {toNumber(safeDownPaymentPercent)}%
               </td>
             </tr>
-            <tr className='bg-slate-100 dark:bg-slate-900'>
-              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-800 dark:text-slate-200 sm:text-sm'>
+            <tr className='bg-slate-100 dark:bg-zinc-900'>
+              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-800 dark:text-zinc-300 sm:text-sm'>
                 Pago inicial total
               </td>
-              <td className='px-4 py-2 text-right text-slate-800 dark:text-slate-200'>
+              <td className='px-4 py-2 text-right text-slate-800 dark:text-zinc-300'>
                 {toCurrency(downPaymentTotal)}
               </td>
             </tr>
-            <tr className='bg-slate-100 dark:bg-slate-900'>
-              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-800 dark:text-slate-200 sm:text-sm'>
+            <tr className='bg-slate-100 dark:bg-zinc-900'>
+              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-800 dark:text-zinc-300 sm:text-sm'>
                 Cuota mensual
               </td>
-              <td className='px-4 py-2 text-right font-semibold text-slate-800 dark:text-slate-200 sm:text-base'>
+              <td className='px-4 py-2 text-right font-semibold text-slate-800 dark:text-zinc-300 sm:text-base'>
                 {toCurrency(monthlyQuotaTwoYears)}
               </td>
             </tr>
-            <tr className='bg-white dark:bg-slate-950'>
-              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:text-slate-300 sm:text-sm'>
+            <tr className='bg-white dark:bg-zinc-950'>
+              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:text-zinc-400 sm:text-sm'>
                 2 años sin interés
               </td>
-              <td className='px-4 py-2 text-right text-slate-700 dark:text-slate-300'>
+              <td className='px-4 py-2 text-right text-slate-700 dark:text-zinc-400'>
                 {toCurrency(twoYearsNoInterestTotal)}
               </td>
             </tr>
-            <tr className='bg-[#0e3344] text-white dark:bg-slate-950'>
-              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-white dark:text-slate-300 sm:text-sm'>
+            <tr className='bg-[#0e3344] text-white dark:bg-zinc-950'>
+              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-white dark:text-zinc-400 sm:text-sm'>
                 Monto del prestamo
               </td>
-              <td className='px-4 py-2 text-right font-bold text-white dark:text-slate-300 sm:text-base'>
+              <td className='px-4 py-2 text-right font-bold text-white dark:text-zinc-400 sm:text-base'>
                 {toCurrency(loanAmount)}
               </td>
             </tr>
-            <tr className='bg-slate-100 dark:bg-slate-900'>
-              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-800 dark:text-slate-200 sm:text-sm'>
+            <tr className='bg-slate-100 dark:bg-zinc-900'>
+              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-800 dark:text-zinc-300 sm:text-sm'>
                 Tasa de interes anual
               </td>
-              <td className='px-4 py-2 text-right text-slate-800 dark:text-slate-200'>
+              <td className='px-4 py-2 text-right text-slate-800 dark:text-zinc-300'>
                 {toNumber(FIXED_ANNUAL_INTEREST_PERCENT)}%
               </td>
             </tr>
-            <tr className='bg-white dark:bg-slate-950'>
-              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:text-slate-300 sm:text-sm'>
+            <tr className='bg-white dark:bg-zinc-950'>
+              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:text-zinc-400 sm:text-sm'>
                 Duracion del prestamo en anos
               </td>
-              <td className='px-4 py-2 text-right text-slate-700 dark:text-slate-300'>
+              <td className='px-4 py-2 text-right text-slate-700 dark:text-zinc-400'>
                 {loanYears}
               </td>
             </tr>
-            <tr className='bg-slate-100 dark:bg-slate-900'>
-              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-800 dark:text-slate-200 sm:text-sm'>
+            <tr className='bg-slate-100 dark:bg-zinc-900'>
+              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-800 dark:text-zinc-300 sm:text-sm'>
                 Frecuencia de pago
               </td>
-              <td className='px-4 py-2 text-right text-slate-800 dark:text-slate-200'>
+              <td className='px-4 py-2 text-right text-slate-800 dark:text-zinc-300'>
                 Mensual
               </td>
             </tr>
-            <tr className='bg-white dark:bg-slate-950'>
-              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:text-slate-300 sm:text-sm'>
+            <tr className='bg-white dark:bg-zinc-950'>
+              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:text-zinc-400 sm:text-sm'>
                 Cambio oficial $ - Bs
               </td>
-              <td className='px-4 py-2 text-right text-slate-700 dark:text-slate-300'>
+              <td className='px-4 py-2 text-right text-slate-700 dark:text-zinc-400'>
                 {toNumber(officialExchangeRate)}
               </td>
             </tr>
-            <tr className='bg-slate-100 dark:bg-slate-900'>
-              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-800 dark:text-slate-200 sm:text-sm'>
+            <tr className='bg-slate-100 dark:bg-zinc-900'>
+              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-800 dark:text-zinc-300 sm:text-sm'>
                 Primera fecha de pago
               </td>
-              <td className='px-4 py-2 text-right text-slate-800 dark:text-slate-200'>
+              <td className='px-4 py-2 text-right text-slate-800 dark:text-zinc-300'>
                 {firstPaymentDate}
               </td>
             </tr>
-            <tr className='bg-white dark:bg-[#12495f]'>
+            <tr className='bg-white dark:bg-[#0a2230]'>
               <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide sm:text-sm'>
                 Tasa de interes mensual
               </td>
@@ -1014,43 +1014,43 @@ export default function LoanCalculator() {
                 {toNumber(monthlyInterestRate * 100)}%
               </td>
             </tr>
-            <tr className='bg-slate-100 dark:bg-slate-900'>
-              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-800 dark:text-slate-200 sm:text-sm'>
+            <tr className='bg-slate-100 dark:bg-zinc-900'>
+              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-800 dark:text-zinc-300 sm:text-sm'>
                 Mensualidad base
               </td>
-              <td className='px-4 py-2 text-right font-bold text-slate-800 dark:text-slate-200 sm:text-base'>
+              <td className='px-4 py-2 text-right font-bold text-slate-800 dark:text-zinc-300 sm:text-base'>
                 {toCurrency(baseScheduledPayment)}
               </td>
             </tr>
-            <tr className='bg-white dark:bg-slate-950'>
-              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:text-slate-300 sm:text-sm'>
+            <tr className='bg-white dark:bg-zinc-950'>
+              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:text-zinc-400 sm:text-sm'>
                 Mensualidad en Bs
               </td>
-              <td className='px-4 py-2 text-right font-bold text-slate-700 dark:text-slate-300 sm:text-base'>
+              <td className='px-4 py-2 text-right font-bold text-slate-700 dark:text-zinc-400 sm:text-base'>
                 Bs {toNumber(monthlyPaymentInBs)}
               </td>
             </tr>
-            <tr className='bg-slate-100 dark:bg-slate-900'>
-              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-800 dark:text-slate-200 sm:text-sm'>
+            <tr className='bg-slate-100 dark:bg-zinc-900'>
+              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-800 dark:text-zinc-300 sm:text-sm'>
                 Numero de pagos
               </td>
-              <td className='px-4 py-2 text-right text-slate-800 dark:text-slate-200'>
+              <td className='px-4 py-2 text-right text-slate-800 dark:text-zinc-300'>
                 {amortizationRows.length}
               </td>
             </tr>
-            <tr className='bg-white dark:bg-slate-950'>
-              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:text-slate-300 sm:text-sm'>
+            <tr className='bg-white dark:bg-zinc-950'>
+              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:text-zinc-400 sm:text-sm'>
                 Interes total
               </td>
-              <td className='px-4 py-2 text-right font-bold text-slate-700 dark:text-slate-300 sm:text-base'>
+              <td className='px-4 py-2 text-right font-bold text-slate-700 dark:text-zinc-400 sm:text-base'>
                 {toCurrency(amortizationTotalInterest)}
               </td>
             </tr>
-            <tr className='bg-slate-100 dark:bg-slate-900'>
-              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-800 dark:text-slate-200 sm:text-sm'>
+            <tr className='bg-slate-100 dark:bg-zinc-900'>
+              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-800 dark:text-zinc-300 sm:text-sm'>
                 Interes total (sin pago adicional)
               </td>
-              <td className='px-4 py-2 text-right text-slate-800 dark:text-slate-200'>
+              <td className='px-4 py-2 text-right text-slate-800 dark:text-zinc-300'>
                 {toCurrency(totalInterestWithoutAdditional)}
               </td>
             </tr>
@@ -1058,12 +1058,12 @@ export default function LoanCalculator() {
         </table>
       </div>
 
-      <div className='mt-8 hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950 md:block'>
-        <div className='bg-[#0e3344] px-3 py-2 text-center text-sm font-bold uppercase tracking-wide text-white dark:bg-[#12495f]'>
+      <div className='mt-8 hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-zinc-900 dark:bg-zinc-950 md:block'>
+        <div className='bg-[#0e3344] px-3 py-2 text-center text-sm font-bold uppercase tracking-wide text-white dark:bg-[#0a2230]'>
           Cronograma de amortizacion de prestamos
         </div>
         <table className='min-w-full text-xs sm:text-sm'>
-          <thead className='bg-slate-700 text-white dark:bg-slate-800'>
+          <thead className='bg-slate-700 text-white dark:bg-zinc-900'>
             <tr>
               <th className='px-3 py-2 text-left'>PYMT #</th>
               <th className='px-3 py-2 text-left'>Fecha de pago</th>
@@ -1081,7 +1081,7 @@ export default function LoanCalculator() {
               <tr>
                 <td
                   colSpan={9}
-                  className='px-3 py-4 text-center text-slate-500 dark:text-slate-400'
+                  className='px-3 py-4 text-center text-slate-500 dark:text-zinc-500'
                 >
                   No hay saldo por financiar con los valores actuales.
                 </td>
@@ -1090,7 +1090,7 @@ export default function LoanCalculator() {
               amortizationRows.map((row, index) => (
                 <tr
                   key={row.paymentNumber}
-                  className='border-t border-slate-100 text-slate-700 odd:bg-slate-50/60 dark:border-slate-700 dark:text-slate-200 dark:odd:bg-slate-800/50'
+                  className='border-t border-slate-100 text-slate-700 odd:bg-slate-50/60 dark:border-zinc-800 dark:text-zinc-200 dark:odd:bg-zinc-800/50'
                 >
                   <td className='px-3 py-2'>{row.paymentNumber}</td>
                   <td className='px-3 py-2'>{row.paymentDate}</td>
@@ -1115,7 +1115,7 @@ export default function LoanCalculator() {
                           event.target.value
                         )
                       }
-                      className='w-24 rounded-lg border border-slate-300 bg-white px-2 py-1 text-right text-xs outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-[#7fa0b4] dark:focus:ring-slate-800'
+                      className='w-24 rounded-lg border border-slate-300 bg-white px-2 py-1 text-right text-xs outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-[#7fa0b4] dark:focus:ring-zinc-900'
                     />
                   </td>
                   <td className='px-3 py-2 text-right'>
@@ -1137,55 +1137,55 @@ export default function LoanCalculator() {
       </div>
 
       <div className='mt-6 space-y-3 md:hidden'>
-        <div className='rounded-xl bg-[#0e3344] px-3 py-2 text-center text-xs font-bold uppercase tracking-wide text-white dark:bg-[#12495f]'>
+        <div className='rounded-xl bg-[#0e3344] px-3 py-2 text-center text-xs font-bold uppercase tracking-wide text-white dark:bg-[#0a2230]'>
           Cronograma de amortizacion
         </div>
         {amortizationRows.length === 0 ? (
-          <div className='rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400'>
+          <div className='rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-500'>
             No hay saldo por financiar con los valores actuales.
           </div>
         ) : (
           amortizationRows.map((row, index) => (
             <div
               key={`mobile-${row.paymentNumber}`}
-              className='rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900'
+              className='rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-zinc-800 dark:bg-zinc-900'
             >
               <div className='mb-2 flex items-center justify-between'>
-                <p className='text-sm font-bold text-slate-800 dark:text-slate-100'>
+                <p className='text-sm font-bold text-slate-800 dark:text-zinc-50'>
                   Cuota #{row.paymentNumber}
                 </p>
-                <p className='text-xs text-slate-500 dark:text-slate-400'>
+                <p className='text-xs text-slate-500 dark:text-zinc-500'>
                   {row.paymentDate}
                 </p>
               </div>
               <div className='grid grid-cols-2 gap-x-2 gap-y-1 text-xs'>
-                <span className='text-slate-500 dark:text-slate-400'>
+                <span className='text-slate-500 dark:text-zinc-500'>
                   Saldo inicial
                 </span>
                 <span className='text-right font-semibold'>
                   {toCurrency(row.startingBalance)}
                 </span>
-                <span className='text-slate-500 dark:text-slate-400'>
+                <span className='text-slate-500 dark:text-zinc-500'>
                   Pago programado
                 </span>
                 <span className='text-right font-semibold'>
                   {toCurrency(row.scheduledPayment)}
                 </span>
-                <span className='text-slate-500 dark:text-slate-400'>
+                <span className='text-slate-500 dark:text-zinc-500'>
                   Pago en Bs
                 </span>
                 <span className='text-right'>
                   Bs {toNumber(row.paymentInBs)}
                 </span>
-                <span className='text-slate-500 dark:text-slate-400'>
+                <span className='text-slate-500 dark:text-zinc-500'>
                   Interes
                 </span>
                 <span className='text-right'>{toCurrency(row.interest)}</span>
-                <span className='text-slate-500 dark:text-slate-400'>
+                <span className='text-slate-500 dark:text-zinc-500'>
                   Principal
                 </span>
                 <span className='text-right'>{toCurrency(row.principal)}</span>
-                <span className='text-slate-500 dark:text-slate-400'>
+                <span className='text-slate-500 dark:text-zinc-500'>
                   Equilibrar
                 </span>
                 <span className='text-right font-semibold'>
@@ -1195,7 +1195,7 @@ export default function LoanCalculator() {
                 </span>
               </div>
               <div className='mt-3'>
-                <label className='mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400'>
+                <label className='mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-500'>
                   Pago adicional
                 </label>
                 <input
@@ -1206,7 +1206,7 @@ export default function LoanCalculator() {
                   onChange={(event) =>
                     onAdditionalRowChange(row.paymentNumber, event.target.value)
                   }
-                  className='w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-[#7fa0b4] dark:focus:ring-slate-800'
+                  className='w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-[#7fa0b4] dark:focus:ring-zinc-900'
                 />
               </div>
             </div>
