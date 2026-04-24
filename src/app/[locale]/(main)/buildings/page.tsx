@@ -44,6 +44,8 @@ export default function BuildingsPage() {
   const [selectedPrimaryPreviewUrl, setSelectedPrimaryPreviewUrl] =
     useState('');
   const [selectedPlanPreviewUrl, setSelectedPlanPreviewUrl] = useState('');
+  const [selectedDistributionPreviewUrl, setSelectedDistributionPreviewUrl] =
+    useState('');
   const [selectedBatchCount, setSelectedBatchCount] = useState(0);
   const [selectedBatchPreviewUrls, setSelectedBatchPreviewUrls] = useState<
     string[]
@@ -56,6 +58,7 @@ export default function BuildingsPage() {
   );
   const primaryImageInputRef = useRef<HTMLInputElement>(null);
   const planImageInputRef = useRef<HTMLInputElement>(null);
+  const distributionImageInputRef = useRef<HTMLInputElement>(null);
   const batchImagesInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -72,8 +75,15 @@ export default function BuildingsPage() {
       if (selectedPlanPreviewUrl) {
         URL.revokeObjectURL(selectedPlanPreviewUrl);
       }
+      if (selectedDistributionPreviewUrl) {
+        URL.revokeObjectURL(selectedDistributionPreviewUrl);
+      }
     };
-  }, [selectedPrimaryPreviewUrl, selectedPlanPreviewUrl]);
+  }, [
+    selectedPrimaryPreviewUrl,
+    selectedPlanPreviewUrl,
+    selectedDistributionPreviewUrl,
+  ]);
 
   const parseBatchImages = (batchImages: unknown): string[] => {
     if (!batchImages) return [];
@@ -193,11 +203,18 @@ export default function BuildingsPage() {
       if (prev) URL.revokeObjectURL(prev);
       return '';
     });
+    setSelectedDistributionPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return '';
+    });
     if (primaryImageInputRef.current) {
       primaryImageInputRef.current.value = '';
     }
     if (planImageInputRef.current) {
       planImageInputRef.current.value = '';
+    }
+    if (distributionImageInputRef.current) {
+      distributionImageInputRef.current.value = '';
     }
   };
 
@@ -212,6 +229,16 @@ export default function BuildingsPage() {
   const handlePlanImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     setSelectedPlanPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return file ? URL.createObjectURL(file) : '';
+    });
+  };
+
+  const handleDistributionImageChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    setSelectedDistributionPreviewUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev);
       return file ? URL.createObjectURL(file) : '';
     });
@@ -676,6 +703,57 @@ export default function BuildingsPage() {
                           className='hidden'
                         />
                       </div>
+                      <div className='rounded-lg border border-default-200 p-2'>
+                        <p className='mb-2 text-tiny font-medium uppercase tracking-wider text-default-500'>
+                          Distribución
+                        </p>
+                        <div className='relative'>
+                          {editingBuilding?.distribution_image ||
+                          selectedDistributionPreviewUrl ? (
+                            <img
+                              src={
+                                selectedDistributionPreviewUrl ||
+                                editingBuilding.distribution_image
+                              }
+                              alt='Distribución actual'
+                              className='h-24 w-full rounded-md border border-default-200 bg-default-100 object-contain sm:h-28'
+                            />
+                          ) : (
+                            <div className='flex h-24 items-center justify-center rounded-md border border-dashed border-default-300 text-tiny text-default-400 sm:h-28'>
+                              Sin imagen de distribución
+                            </div>
+                          )}
+                          <div className='pointer-events-none absolute inset-x-0 bottom-0 rounded-b-md bg-black/50 px-2 py-1 text-center text-[11px] text-white'>
+                            Haz clic para reemplazar
+                          </div>
+                          <button
+                            type='button'
+                            className='absolute inset-0 rounded-md'
+                            onClick={() =>
+                              distributionImageInputRef.current?.click()
+                            }
+                            aria-label='Reemplazar imagen de distribución'
+                          />
+                        </div>
+                        {selectedDistributionPreviewUrl && (
+                          <Chip
+                            size='sm'
+                            color='primary'
+                            variant='flat'
+                            className='mt-2'
+                          >
+                            Nueva imagen de distribución seleccionada
+                          </Chip>
+                        )}
+                        <input
+                          ref={distributionImageInputRef}
+                          name='distribution_image'
+                          type='file'
+                          accept='image/*'
+                          onChange={handleDistributionImageChange}
+                          className='hidden'
+                        />
+                      </div>
                     </div>
 
                     <div>
@@ -785,6 +863,23 @@ export default function BuildingsPage() {
                         <img
                           src={selectedPlanPreviewUrl}
                           alt='Preview plano'
+                          className='h-24 w-full rounded-md border border-default-200 bg-default-100 object-contain sm:h-28'
+                        />
+                      )}
+                    </div>
+                    <div className='space-y-2'>
+                      <Input
+                        name='distribution_image'
+                        label='Imagen de Distribución'
+                        type='file'
+                        accept='image/*'
+                        onChange={handleDistributionImageChange}
+                        labelPlacement='outside'
+                      />
+                      {selectedDistributionPreviewUrl && (
+                        <img
+                          src={selectedDistributionPreviewUrl}
+                          alt='Preview distribución'
                           className='h-24 w-full rounded-md border border-default-200 bg-default-100 object-contain sm:h-28'
                         />
                       )}

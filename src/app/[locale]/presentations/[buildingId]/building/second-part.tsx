@@ -66,7 +66,7 @@ export default function BuildingLocation({ building }: BuildingLocationProps) {
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
-            className='absolute inset-0 z-0 transition-all duration-1000 [filter:brightness(0.75)_saturate(0.9)_sepia(0.15)] hover:[filter:brightness(1)_saturate(1)_sepia(0)] dark:[filter:brightness(0.6)_invert(0.05)_saturate(0.8)] dark:hover:[filter:brightness(0.85)_invert(0.05)_saturate(1)]'
+            className='absolute inset-0 z-0 overflow-hidden rounded-lg transition-all duration-1000 [filter:brightness(0.75)_saturate(0.9)_sepia(0.15)] hover:[filter:brightness(1)_saturate(1)_sepia(0)] dark:[filter:brightness(0.6)_invert(0.05)_saturate(0.8)] dark:hover:[filter:brightness(0.85)_invert(0.05)_saturate(1)]'
           >
             {mapUrl ? (
               <iframe
@@ -116,7 +116,7 @@ export default function BuildingLocation({ building }: BuildingLocationProps) {
               points.map((poi) => (
                 <motion.div
                   key={poi.id}
-                  className='group relative min-w-[260px] overflow-hidden border border-zinc-900 bg-white p-6 shadow-xl dark:border-white dark:bg-zinc-950 lg:min-w-[320px]'
+                  className='group relative min-w-[260px] overflow-hidden rounded-lg border border-zinc-900 bg-white p-6 shadow-xl dark:border-white dark:bg-zinc-950 lg:min-w-[320px]'
                   whileHover={{ y: -10 }}
                   transition={{ type: 'spring', stiffness: 300 }}
                 >

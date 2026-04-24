@@ -31,11 +31,20 @@ export default function Carousel({
 }: CarouselProps) {
   const filteredImages = images.filter(Boolean);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [loaded, setLoaded] = useState<Record<number, boolean>>({});
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
   const autoplayRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
   const touchDeltaX = useRef<number>(0);
+  const touchStartPan = useRef({ x: 0, y: 0 });
+  const isPinching = useRef(false);
+  const pinchStartDistance = useRef<number | null>(null);
+  const pinchStartZoom = useRef(1);
+  const pinchStartCenter = useRef<{ x: number; y: number } | null>(null);
+  const pinchStartPan = useRef({ x: 0, y: 0 });
   const SWIPE_THRESHOLD = 50;
 
   useEffect(() => {
@@ -43,6 +52,39 @@ export default function Carousel({
       setCurrentImageIndex(0);
     }
   }, [filteredImages.length, currentImageIndex]);
+
+  useEffect(() => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  }, [currentImageIndex]);
+
+  const clampPan = (nextX: number, nextY: number, zoomLevel = zoom) => {
+    const el = containerRef.current;
+    if (!el) return { x: nextX, y: nextY };
+
+    const maxX = ((zoomLevel - 1) * el.clientWidth) / 2;
+    const maxY = ((zoomLevel - 1) * el.clientHeight) / 2;
+
+    return {
+      x: Math.max(-maxX, Math.min(maxX, nextX)),
+      y: Math.max(-maxY, Math.min(maxY, nextY)),
+    };
+  };
+
+  useEffect(() => {
+    setPan((prev) => clampPan(prev.x, prev.y, zoom));
+  }, [zoom]);
+
+  const getTouchDistance = (touches: React.TouchList) => {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.hypot(dx, dy);
+  };
+
+  const getTouchCenter = (touches: React.TouchList) => ({
+    x: (touches[0].clientX + touches[1].clientX) / 2,
+    y: (touches[0].clientY + touches[1].clientY) / 2,
+  });
 
   useEffect(() => {
     if (!autoPlay || filteredImages.length <= 1) return;
@@ -108,44 +150,134 @@ export default function Carousel({
   }, [filteredImages.length]);
 
   const onTouchStart: React.TouchEventHandler = (e) => {
+    if (e.touches.length === 2) {
+      isPinching.current = true;
+      pinchStartDistance.current = getTouchDistance(e.touches);
+      pinchStartZoom.current = zoom;
+      pinchStartCenter.current = getTouchCenter(e.touches);
+      pinchStartPan.current = pan;
+      setIsPanning(true);
+      return;
+    }
+
     touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    touchStartPan.current = pan;
+    if (zoom > 1) setIsPanning(true);
     touchDeltaX.current = 0;
   };
 
   const onTouchMove: React.TouchEventHandler = (e) => {
-    if (touchStartX.current == null) return;
+    if (
+      isPinching.current &&
+      e.touches.length === 2 &&
+      pinchStartDistance.current &&
+      pinchStartCenter.current
+    ) {
+      e.preventDefault();
+      const distance = getTouchDistance(e.touches);
+      const center = getTouchCenter(e.touches);
+      const rawZoom =
+        (pinchStartZoom.current * distance) / pinchStartDistance.current;
+      const nextZoom = Math.max(1, Math.min(3, Number(rawZoom.toFixed(2))));
+
+      const nextPan = clampPan(
+        pinchStartPan.current.x + (center.x - pinchStartCenter.current.x),
+        pinchStartPan.current.y + (center.y - pinchStartCenter.current.y),
+        nextZoom
+      );
+
+      setZoom(nextZoom);
+      setPan(nextPan);
+      return;
+    }
+
+    if (isPinching.current) return;
+
+    if (touchStartX.current == null || touchStartY.current == null) return;
     const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+
+    if (zoom > 1) {
+      const next = clampPan(
+        touchStartPan.current.x + (currentX - touchStartX.current),
+        touchStartPan.current.y + (currentY - touchStartY.current)
+      );
+      setPan(next);
+      return;
+    }
+
     touchDeltaX.current = currentX - touchStartX.current;
   };
 
   const onTouchEnd: React.TouchEventHandler = () => {
-    if (touchDeltaX.current > SWIPE_THRESHOLD) {
-      handlePrevImage();
-    } else if (touchDeltaX.current < -SWIPE_THRESHOLD) {
-      handleNextImage();
+    if (isPinching.current) {
+      isPinching.current = false;
+      pinchStartDistance.current = null;
+      pinchStartCenter.current = null;
+      setIsPanning(false);
+      touchStartX.current = null;
+      touchStartY.current = null;
+      touchDeltaX.current = 0;
+      return;
+    }
+
+    if (zoom <= 1) {
+      if (touchDeltaX.current > SWIPE_THRESHOLD) {
+        handlePrevImage();
+      } else if (touchDeltaX.current < -SWIPE_THRESHOLD) {
+        handleNextImage();
+      }
     }
     touchStartX.current = null;
+    touchStartY.current = null;
+    setIsPanning(false);
     touchDeltaX.current = 0;
   };
   const pointerStartX = useRef<number | null>(null);
+  const pointerStartY = useRef<number | null>(null);
+  const pointerStartPan = useRef({ x: 0, y: 0 });
   const pointerDeltaX = useRef<number>(0);
   const onPointerDown: React.PointerEventHandler = (e) => {
     pointerStartX.current = e.clientX;
+    pointerStartY.current = e.clientY;
+    pointerStartPan.current = pan;
+    if (zoom > 1) setIsPanning(true);
     (e.target as Element).setPointerCapture?.((e as any).pointerId);
   };
   const onPointerMove: React.PointerEventHandler = (e) => {
-    if (pointerStartX.current == null) return;
+    if (pointerStartX.current == null || pointerStartY.current == null) return;
+
+    if (zoom > 1) {
+      const next = clampPan(
+        pointerStartPan.current.x + (e.clientX - pointerStartX.current),
+        pointerStartPan.current.y + (e.clientY - pointerStartY.current)
+      );
+      setPan(next);
+      return;
+    }
+
     pointerDeltaX.current = e.clientX - pointerStartX.current;
   };
   const onPointerUp: React.PointerEventHandler = () => {
-    if (pointerDeltaX.current > SWIPE_THRESHOLD) handlePrevImage();
-    else if (pointerDeltaX.current < -SWIPE_THRESHOLD) handleNextImage();
+    if (zoom <= 1) {
+      if (pointerDeltaX.current > SWIPE_THRESHOLD) handlePrevImage();
+      else if (pointerDeltaX.current < -SWIPE_THRESHOLD) handleNextImage();
+    }
 
     pointerStartX.current = null;
+    pointerStartY.current = null;
+    setIsPanning(false);
     pointerDeltaX.current = 0;
   };
-  const handleImageLoad = (index: number) => {
-    setLoaded((s) => ({ ...s, [index]: true }));
+
+  const handleWheelZoom: React.WheelEventHandler<HTMLDivElement> = (e) => {
+    if (filteredImages.length === 0) return;
+    e.preventDefault();
+    setZoom((prev) => {
+      const next = e.deltaY < 0 ? prev + 0.2 : prev - 0.2;
+      return Math.max(1, Math.min(3, Number(next.toFixed(2))));
+    });
   };
 
   return (
@@ -155,29 +287,47 @@ export default function Carousel({
       role='region'
       aria-roledescription='carousel'
       aria-label='Image carousel'
-      className={`relative overflow-hidden ${height} ${width} rounded-sm ${className}`}
+      className={`relative overflow-hidden ${height} ${width} rounded-sm ${zoom > 1 ? 'cursor-grab active:cursor-grabbing' : ''} ${className}`}
+      style={{ touchAction: 'none' }}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
+      onWheel={handleWheelZoom}
     >
       {filteredImages.length > 0 ? (
         <>
-          <div className='absolute inset-0 flex items-center justify-center bg-black/80 lg:bg-black/90'>
+          <div className='absolute inset-0 flex items-center justify-center bg-white/90 dark:bg-black/90'>
             {filteredImages.map((src, idx) => {
               const isActive = idx === currentImageIndex;
-              const isVisible = isActive && loaded[idx];
               return (
                 <img
                   key={idx}
                   src={src}
                   alt={`Imagen ${idx + 1} de ${filteredImages.length}`}
-                  onLoad={() => handleImageLoad(idx)}
                   loading={idx === currentImageIndex ? 'eager' : 'lazy'}
-                  className={`absolute inset-0 m-auto transition-opacity duration-300 ease-in-out ${isVisible ? 'z-20 opacity-100' : 'pointer-events-none z-0 opacity-0'} max-h-full max-w-full object-contain`}
-                  style={{ maxHeight: '100%', maxWidth: '100%' }}
+                  onDoubleClick={() => {
+                    if (zoom > 1) {
+                      setZoom(1);
+                      setPan({ x: 0, y: 0 });
+                    } else {
+                      setZoom(2);
+                    }
+                  }}
+                  className={`absolute inset-0 m-auto transition-opacity duration-300 ease-in-out ${isActive ? 'z-20 opacity-100' : 'pointer-events-none z-0 opacity-0'} max-h-full max-w-full object-contain`}
+                  style={{
+                    maxHeight: '100%',
+                    maxWidth: '100%',
+                    transform: isActive
+                      ? `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`
+                      : 'translate(0px, 0px) scale(1)',
+                    transformOrigin: 'center center',
+                    transition: isPanning
+                      ? 'opacity 300ms ease-in-out'
+                      : 'opacity 300ms ease-in-out, transform 160ms ease-out',
+                  }}
                   draggable={false}
                 />
               );

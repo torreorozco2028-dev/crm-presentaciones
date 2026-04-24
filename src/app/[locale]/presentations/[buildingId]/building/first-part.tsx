@@ -88,13 +88,13 @@ export default function BuildingHero({ building }: BuildingHeroProps) {
             initial={{ opacity: 0, scale: 1.05, y: 50 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 1.2, ease: 'easeOut' }}
-            className='relative z-0 mx-auto aspect-[4/5] w-[88%] rounded-3xl border-[12px] border-white shadow-2xl dark:border-zinc-800 md:aspect-[5/6] md:max-w-[540px] lg:mx-0 lg:aspect-[5/7] lg:w-[90%] lg:max-w-[600px] lg:-translate-x-12 lg:rounded-none lg:border-0 lg:shadow-none'
+            className='relative z-0 mx-auto aspect-[4/5] w-[88%] overflow-hidden rounded-2xl border-[12px] border-white shadow-2xl dark:border-zinc-800 md:aspect-[5/6] md:max-w-[540px] lg:mx-0 lg:aspect-[5/7] lg:w-[90%] lg:max-w-[600px] lg:-translate-x-12 lg:rounded-lg lg:border-0 lg:shadow-none'
           >
             <Image
               src={primaryImage}
               alt='Vista Principal'
               fill
-              className='object-contain object-center'
+              className='object-center'
               priority
             />
             <div className='absolute inset-0 bg-gradient-to-t from-black/20 to-transparent lg:hidden' />

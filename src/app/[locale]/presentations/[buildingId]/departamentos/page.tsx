@@ -11,10 +11,8 @@ import {
   useDisclosure,
 } from '@heroui/react';
 import { X, Map } from 'lucide-react';
-import dynamic from 'next/dynamic';
+import Carousel from '@/components/carousel';
 import { getPresentationGalleryImages } from '@/lib/presentation-gallery';
-
-const Carousel = dynamic(() => import('@/components/carousel'), { ssr: false });
 
 interface DepartmentModel {
   id: string;
@@ -284,10 +282,11 @@ export default function DepartmentsPage({ data }: { data: any }) {
       <Modal
         isOpen={isOpen}
         onOpenChange={onOpenChange}
-        backdrop='blur'
+        hideCloseButton
+        backdrop={isMobileViewport ? 'opaque' : 'blur'}
         classNames={{
           wrapper: 'p-0',
-          base: 'bg-black m-0 h-[100dvh] max-h-[100dvh] w-full max-w-full rounded-none sm:m-4 sm:h-[90vh] sm:max-h-[90vh] sm:max-w-5xl sm:rounded-2xl',
+          base: 'bg-white dark:bg-black m-0 h-[100dvh] max-h-[100dvh] w-full max-w-full rounded-none sm:m-4 sm:h-[90vh] sm:max-h-[90vh] sm:max-w-5xl sm:rounded-2xl',
           body: 'p-0 flex-1 overflow-hidden',
           header: 'p-0 border-none',
         }}
@@ -300,7 +299,8 @@ export default function DepartmentsPage({ data }: { data: any }) {
                   isIconOnly
                   variant='flat'
                   onPress={onClose}
-                  className='rounded-full bg-white/10 text-white backdrop-blur-xl'
+                  className='h-11 w-11 rounded-full border border-zinc-300 bg-white/90 text-zinc-900 shadow-lg backdrop-blur-md transition hover:bg-white dark:border-white/20 dark:bg-black/55 dark:text-white dark:hover:bg-black/70'
+                  aria-label='Cerrar visor de imagen'
                 >
                   <X size={24} />
                 </Button>
