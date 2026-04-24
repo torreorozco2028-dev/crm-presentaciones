@@ -46,11 +46,16 @@ export async function createBuildingAction(formData: FormData) {
   try {
     const primaryFile = formData.get('primary_image') as File;
     const planFile = formData.get('plan_image') as File;
+    const distributionFile = formData.get('distribution_image') as File;
     const batchFiles = formData.getAll('batch_images') as File[];
 
     const primaryUrl =
       primaryFile.size > 0 ? await uploadSingleImage(primaryFile) : '';
     const planUrl = planFile.size > 0 ? await uploadBuildingPlan(planFile) : '';
+    const distributionUrl =
+      distributionFile.size > 0
+        ? await uploadSingleImage(distributionFile)
+        : '';
     const batchUrls = await uploadMultipleImages(batchFiles);
 
     const featureIdsString = formData.get('featureIds') as string;
@@ -65,6 +70,7 @@ export async function createBuildingAction(formData: FormData) {
       building_locationURL: formData.get('building_locationURL') as string,
       prymary_image: primaryUrl,
       plan_image: planUrl,
+      distribution_image: distributionUrl,
       total_floors: parseInt(formData.get('total_floors') as string) || 0,
       number_garages: parseInt(formData.get('number_garages') as string) || 0,
       number_storages: parseInt(formData.get('number_storages') as string) || 0,
@@ -99,6 +105,12 @@ export async function updateBuildingAction(id: string, formData: FormData) {
       if (existingBuilding.plan_image)
         filesToDelete.push(existingBuilding.plan_image);
       updateData.plan_image = await uploadBuildingPlan(planFile);
+    }
+    const distributionFile = formData.get('distribution_image') as File;
+    if (distributionFile && distributionFile.size > 0) {
+      if (existingBuilding.distribution_image)
+        filesToDelete.push(existingBuilding.distribution_image);
+      updateData.distribution_image = await uploadSingleImage(distributionFile);
     }
 
     const existingBatchImages = parseBatchImages(existingBuilding.batch_images);
@@ -180,6 +192,7 @@ export async function deleteBuildingAction(id: string) {
     const urlsToDelete = [
       buildingToDelete.prymary_image,
       buildingToDelete.plan_image,
+      buildingToDelete.distribution_image,
       ...((buildingToDelete.batch_images as string[]) || []),
     ].filter(Boolean) as string[];
 

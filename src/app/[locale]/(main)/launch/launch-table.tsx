@@ -74,7 +74,7 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
               exit={{ scale: 0.9, opacity: 0 }}
               whileHover={{ scale: 1.02 }}
               // Definimos una altura fija para que el % funcione, o puedes usar h-full si el padre tiene altura
-              className='flex h-[500px] cursor-pointer flex-col overflow-hidden rounded-xl border-1 border-foreground-50 bg-transparent hover:shadow-xl'
+              className='flex h-[500px] cursor-pointer flex-col overflow-hidden rounded-xl border-1 border-foreground-50 bg-transparent shadow-md hover:shadow-xl'
               onClick={() => navToPresentation(building.id)}
             >
               <div className='group relative flex h-full flex-col'>
