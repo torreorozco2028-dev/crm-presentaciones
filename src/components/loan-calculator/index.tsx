@@ -33,7 +33,7 @@ interface SavedScenario {
 
 const MIN_DOWN_PAYMENT_PERCENT = 20;
 const FIXED_ANNUAL_INTEREST_PERCENT = 5;
-const MIN_LOAN_YEARS = 6;
+const MIN_LOAN_YEARS = 1;
 const MAX_LOAN_YEARS = 12;
 const SCENARIOS_STORAGE_KEY = 'loan-calculator-scenarios-v1';
 
@@ -833,7 +833,7 @@ export default function LoanCalculator() {
 
         <label className='flex flex-col gap-1'>
           <span className='text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-500'>
-            Duracion del prestamo (años 6-12)
+            Duracion del prestamo (años 1-12)
           </span>
           <input
             type='number'
