@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 interface AmortizationRow {
   paymentNumber: number;
@@ -20,8 +20,10 @@ interface SavedScenario {
   clientName: string;
   offerValidUntil: string;
   createdAt: string;
+  purchaseInputMode: 'sqm' | 'total';
   squareMeters: number;
   pricePerM2: number;
+  totalPurchaseAmount: number;
   downPaymentPercent: number;
   monthlyQuotaTwoYears: number;
   loanYears: number;
@@ -110,8 +112,13 @@ function escapeHtml(value: string) {
 }
 
 export default function LoanCalculator() {
+  const [purchaseInputMode, setPurchaseInputMode] = useState<'sqm' | 'total'>(
+    'sqm'
+  );
   const [squareMeters, setSquareMeters] = useState<number>(90);
   const [pricePerM2, setPricePerM2] = useState<number>(1200);
+  const [totalPurchaseAmount, setTotalPurchaseAmount] =
+    useState<number>(108000);
   const [downPaymentPercent, setDownPaymentPercent] = useState<number>(30);
   const [monthlyQuotaTwoYears, setMonthlyQuotaTwoYears] = useState<number>(400);
   const [loanYears, setLoanYears] = useState<number>(8);
@@ -136,7 +143,10 @@ export default function LoanCalculator() {
     downPaymentPercent,
     MIN_DOWN_PAYMENT_PERCENT
   );
-  const purchasePrice = squareMeters * pricePerM2;
+  const purchasePrice =
+    purchaseInputMode === 'total'
+      ? Math.max(totalPurchaseAmount, 0)
+      : Math.max(squareMeters, 0) * Math.max(pricePerM2, 0);
   const downPaymentTotal = purchasePrice * (safeDownPaymentPercent / 100);
   const monthlyInterestRate = FIXED_ANNUAL_INTEREST_PERCENT / 100 / 12;
   const twoYearsNoInterestTotal = monthlyQuotaTwoYears * 24;
@@ -166,13 +176,16 @@ export default function LoanCalculator() {
   const baseScheduledPayment = monthlyInstallment + monthlyAdditionalPayment;
   const monthlyPaymentInBs = baseScheduledPayment * officialExchangeRate;
 
-  const getRequestedAdditionalByPayment = (paymentNumber: number) => {
-    const custom = additionalPaymentsByRow[paymentNumber];
-    if (typeof custom === 'number' && !Number.isNaN(custom)) {
-      return Math.max(custom, 0);
-    }
-    return Math.max(monthlyAdditionalPayment, 0);
-  };
+  const getRequestedAdditionalByPayment = useCallback(
+    (paymentNumber: number) => {
+      const custom = additionalPaymentsByRow[paymentNumber];
+      if (typeof custom === 'number' && !Number.isNaN(custom)) {
+        return Math.max(custom, 0);
+      }
+      return Math.max(monthlyAdditionalPayment, 0);
+    },
+    [additionalPaymentsByRow, monthlyAdditionalPayment]
+  );
 
   const amortizationRows = useMemo(() => {
     const rows: AmortizationRow[] = [];
@@ -227,9 +240,7 @@ export default function LoanCalculator() {
     firstPaymentDate,
     monthlyInstallment,
     monthlyInterestRate,
-    monthlyAdditionalPayment,
     officialExchangeRate,
-    additionalPaymentsByRow,
     getRequestedAdditionalByPayment,
   ]);
 
@@ -267,8 +278,10 @@ export default function LoanCalculator() {
       clientName: trimmedClient,
       offerValidUntil,
       createdAt: new Date().toISOString(),
+      purchaseInputMode,
       squareMeters,
       pricePerM2,
+      totalPurchaseAmount,
       downPaymentPercent,
       monthlyQuotaTwoYears,
       loanYears,
@@ -285,8 +298,13 @@ export default function LoanCalculator() {
   };
 
   const loadScenario = (scenario: SavedScenario) => {
+    setPurchaseInputMode(scenario.purchaseInputMode || 'sqm');
     setSquareMeters(scenario.squareMeters);
     setPricePerM2(scenario.pricePerM2);
+    setTotalPurchaseAmount(
+      scenario.totalPurchaseAmount ||
+        scenario.squareMeters * scenario.pricePerM2
+    );
     setDownPaymentPercent(scenario.downPaymentPercent);
     setMonthlyQuotaTwoYears(scenario.monthlyQuotaTwoYears);
     setLoanYears(scenario.loanYears);
@@ -345,6 +363,20 @@ export default function LoanCalculator() {
 
   const onDownPaymentTotalBlur = () => {
     setDownPaymentPercent((prev) => Math.max(prev, MIN_DOWN_PAYMENT_PERCENT));
+  };
+
+  const onPurchaseInputModeChange = (nextMode: 'sqm' | 'total') => {
+    setPurchaseInputMode(nextMode);
+    if (nextMode === 'total') {
+      setTotalPurchaseAmount(
+        Math.max(squareMeters, 0) * Math.max(pricePerM2, 0)
+      );
+      return;
+    }
+
+    if (squareMeters > 0) {
+      setPricePerM2(Math.max(totalPurchaseAmount, 0) / squareMeters);
+    }
   };
 
   const onAdditionalRowChange = (paymentNumber: number, rawValue: string) => {
@@ -757,6 +789,22 @@ export default function LoanCalculator() {
       <div className='mb-8 grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-900 dark:bg-zinc-950 md:grid-cols-2'>
         <label className='flex flex-col gap-1'>
           <span className='text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-500'>
+            Tipo de precio de compra
+          </span>
+          <select
+            value={purchaseInputMode}
+            onChange={(event) =>
+              onPurchaseInputModeChange(event.target.value as 'sqm' | 'total')
+            }
+            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-[#7fa0b4] dark:focus:ring-zinc-900'
+          >
+            <option value='sqm'>Metros cuadrados x precio por m2</option>
+            <option value='total'>Monto total</option>
+          </select>
+        </label>
+
+        <label className='flex flex-col gap-1'>
+          <span className='text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-500'>
             Metros cuadrados
           </span>
           <input
@@ -767,6 +815,7 @@ export default function LoanCalculator() {
             onChange={(event) =>
               setSquareMeters(Number(event.target.value) || 0)
             }
+            disabled={purchaseInputMode === 'total'}
             className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-[#7fa0b4] dark:focus:ring-zinc-900'
           />
         </label>
@@ -781,6 +830,24 @@ export default function LoanCalculator() {
             step='0.01'
             value={pricePerM2}
             onChange={(event) => setPricePerM2(Number(event.target.value) || 0)}
+            disabled={purchaseInputMode === 'total'}
+            className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-[#7fa0b4] dark:focus:ring-zinc-900 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500'
+          />
+        </label>
+
+        <label className='flex flex-col gap-1'>
+          <span className='text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-500'>
+            Monto total de compra
+          </span>
+          <input
+            type='number'
+            min={0}
+            step='0.01'
+            value={totalPurchaseAmount}
+            onChange={(event) =>
+              setTotalPurchaseAmount(Number(event.target.value) || 0)
+            }
+            disabled={purchaseInputMode === 'sqm'}
             className='rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-[#7fa0b4] dark:focus:ring-zinc-900'
           />
         </label>
