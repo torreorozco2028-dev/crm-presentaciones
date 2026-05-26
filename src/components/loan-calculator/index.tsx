@@ -210,7 +210,7 @@ export default function LoanCalculator() {
       );
 
       const currentDate = new Date(baseDate);
-      currentDate.setMonth(baseDate.getMonth() + (i - 1));
+      currentDate.setMonth(baseDate.getMonth() + 24 + (i - 1));
 
       rows.push({
         paymentNumber: i,
