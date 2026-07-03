@@ -31,12 +31,14 @@ interface SavedScenario {
   firstPaymentDate: string;
   monthlyAdditionalPayment: number;
   additionalPaymentsByRow: Record<number, number>;
+  additionalPaymentsByRowPhase1: Record<number, number>;
 }
 
 const MIN_DOWN_PAYMENT_PERCENT = 20;
 const FIXED_ANNUAL_INTEREST_PERCENT = 5;
 const MIN_LOAN_YEARS = 1;
 const MAX_LOAN_YEARS = 12;
+const PHASE1_MONTHS = 24;
 const SCENARIOS_STORAGE_KEY = 'loan-calculator-scenarios-v1';
 
 function toCurrency(value: number) {
@@ -132,6 +134,8 @@ export default function LoanCalculator() {
   const [additionalPaymentsByRow, setAdditionalPaymentsByRow] = useState<
     Record<number, number>
   >({});
+  const [additionalPaymentsByRowPhase1, setAdditionalPaymentsByRowPhase1] =
+    useState<Record<number, number>>({});
   const [scenarioName, setScenarioName] = useState<string>('');
   const [clientName, setClientName] = useState<string>('');
   const [offerValidUntil, setOfferValidUntil] = useState<string>(
@@ -149,9 +153,15 @@ export default function LoanCalculator() {
       : Math.max(squareMeters, 0) * Math.max(pricePerM2, 0);
   const downPaymentTotal = purchasePrice * (safeDownPaymentPercent / 100);
   const monthlyInterestRate = FIXED_ANNUAL_INTEREST_PERCENT / 100 / 12;
-  const twoYearsNoInterestTotal = monthlyQuotaTwoYears * 24;
+  const twoYearsNoInterestTotal = monthlyQuotaTwoYears * PHASE1_MONTHS;
+  const totalPhase1AdditionalPayments = Object.values(
+    additionalPaymentsByRowPhase1
+  ).reduce((acc, value) => acc + Math.max(value || 0, 0), 0);
   const loanAmount = Math.max(
-    purchasePrice - downPaymentTotal - twoYearsNoInterestTotal,
+    purchasePrice -
+      downPaymentTotal -
+      twoYearsNoInterestTotal -
+      totalPhase1AdditionalPayments,
     0
   );
   const totalPayments = clamp(loanYears, MIN_LOAN_YEARS, MAX_LOAN_YEARS) * 12;
@@ -187,6 +197,57 @@ export default function LoanCalculator() {
     [additionalPaymentsByRow, monthlyAdditionalPayment]
   );
 
+  const getRequestedAdditionalPhase1ByPayment = useCallback(
+    (paymentNumber: number) => {
+      const custom = additionalPaymentsByRowPhase1[paymentNumber];
+      if (typeof custom === 'number' && !Number.isNaN(custom)) {
+        return Math.max(custom, 0);
+      }
+      return 0;
+    },
+    [additionalPaymentsByRowPhase1]
+  );
+
+  const phase1Rows = useMemo(() => {
+    const rows: AmortizationRow[] = [];
+    let balance = twoYearsNoInterestTotal;
+    const baseDate = firstPaymentDate
+      ? new Date(`${firstPaymentDate}T00:00:00`)
+      : new Date();
+
+    for (let i = 1; i <= PHASE1_MONTHS; i += 1) {
+      const scheduledPayment = Math.min(monthlyQuotaTwoYears, balance);
+      const additionalPayment = getRequestedAdditionalPhase1ByPayment(i);
+      const remainingBalance = Math.max(balance - scheduledPayment, 0);
+
+      const currentDate = new Date(baseDate);
+      currentDate.setMonth(baseDate.getMonth() + (i - 1));
+
+      rows.push({
+        paymentNumber: i,
+        paymentDate: currentDate.toISOString().split('T')[0],
+        startingBalance: balance,
+        scheduledPayment,
+        paymentInBs:
+          (scheduledPayment + additionalPayment) * officialExchangeRate,
+        additionalPayment,
+        interest: 0,
+        principal: scheduledPayment,
+        remainingBalance,
+      });
+
+      balance = remainingBalance;
+    }
+
+    return rows;
+  }, [
+    twoYearsNoInterestTotal,
+    monthlyQuotaTwoYears,
+    firstPaymentDate,
+    officialExchangeRate,
+    getRequestedAdditionalPhase1ByPayment,
+  ]);
+
   const amortizationRows = useMemo(() => {
     const rows: AmortizationRow[] = [];
     if (loanAmount <= 0 || totalPayments <= 0) {
@@ -210,7 +271,7 @@ export default function LoanCalculator() {
       );
 
       const currentDate = new Date(baseDate);
-      currentDate.setMonth(baseDate.getMonth() + 24 + (i - 1));
+      currentDate.setMonth(baseDate.getMonth() + PHASE1_MONTHS + (i - 1));
 
       rows.push({
         paymentNumber: i,
@@ -289,6 +350,7 @@ export default function LoanCalculator() {
       firstPaymentDate,
       monthlyAdditionalPayment,
       additionalPaymentsByRow,
+      additionalPaymentsByRowPhase1,
     };
 
     const next = [nextScenario, ...savedScenarios].slice(0, 20);
@@ -312,6 +374,9 @@ export default function LoanCalculator() {
     setFirstPaymentDate(scenario.firstPaymentDate);
     setMonthlyAdditionalPayment(scenario.monthlyAdditionalPayment);
     setAdditionalPaymentsByRow(scenario.additionalPaymentsByRow || {});
+    setAdditionalPaymentsByRowPhase1(
+      scenario.additionalPaymentsByRowPhase1 || {}
+    );
     setScenarioName(scenario.name);
     setClientName(scenario.clientName || '');
     setOfferValidUntil(scenario.offerValidUntil || getNextMonthISODate());
@@ -400,12 +465,43 @@ export default function LoanCalculator() {
     }));
   };
 
+  const onAdditionalPhase1RowChange = (
+    paymentNumber: number,
+    rawValue: string
+  ) => {
+    if (rawValue === '') {
+      setAdditionalPaymentsByRowPhase1((prev) => {
+        const next = { ...prev };
+        delete next[paymentNumber];
+        return next;
+      });
+      return;
+    }
+
+    const parsed = Number(rawValue);
+    if (Number.isNaN(parsed)) {
+      return;
+    }
+
+    setAdditionalPaymentsByRowPhase1((prev) => ({
+      ...prev,
+      [paymentNumber]: Math.max(parsed, 0),
+    }));
+  };
+
   const exportToCsv = () => {
     if (!amortizationRows.length) {
       return;
     }
 
-    const content = createCsvContent(amortizationRows);
+    const combinedRows = [
+      ...phase1Rows,
+      ...amortizationRows.map((row) => ({
+        ...row,
+        paymentNumber: PHASE1_MONTHS + row.paymentNumber,
+      })),
+    ];
+    const content = createCsvContent(combinedRows);
     const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -431,12 +527,13 @@ export default function LoanCalculator() {
       ['Pago inicial total', toCurrency(downPaymentTotal)],
       ['Cuota mensual', toCurrency(monthlyQuotaTwoYears)],
       ['2 anos sin interes', toCurrency(twoYearsNoInterestTotal)],
+      ['Abonos adelantados 2026', toCurrency(totalPhase1AdditionalPayments)],
       ['Monto del prestamo', toCurrency(loanAmount)],
       ['Tasa de interes anual', `${toNumber(FIXED_ANNUAL_INTEREST_PERCENT)}%`],
       ['Tasa de interes mensual', `${toNumber(monthlyInterestRate * 100)}%`],
       ['Mensualidad base', toCurrency(baseScheduledPayment)],
       ['Mensualidad en Bs', `Bs ${toNumber(monthlyPaymentInBs)}`],
-      ['Numero de pagos', String(24 + amortizationRows.length)],
+      ['Numero de pagos', String(PHASE1_MONTHS + amortizationRows.length)],
       ['Interes total', toCurrency(amortizationTotalInterest)],
     ];
 
@@ -444,40 +541,35 @@ export default function LoanCalculator() {
       (acc, r) => acc + r.scheduledPayment,
       0
     );
+    const phase1TotalScheduled = phase1Rows.reduce(
+      (acc, r) => acc + r.scheduledPayment,
+      0
+    );
     const clampedLoanYears = clamp(loanYears, MIN_LOAN_YEARS, MAX_LOAN_YEARS);
 
-    const baseAmortDate = firstPaymentDate
-      ? new Date(`${firstPaymentDate}T00:00:00`)
-      : new Date();
-
-    const phase1Html = Array.from({ length: 24 }, (_, i) => {
-      const d = new Date(baseAmortDate);
-      d.setMonth(baseAmortDate.getMonth() + i);
-      const dateStr = d.toISOString().split('T')[0];
-      const payInBs = monthlyQuotaTwoYears * officialExchangeRate;
-      const balance = Math.max(
-        twoYearsNoInterestTotal - monthlyQuotaTwoYears * (i + 1),
-        0
-      );
-      const rowClass = i % 2 === 0 ? 'row-odd' : 'row-even';
-      return `<tr class="${rowClass}">
-        <td>${i + 1}</td>
-        <td>${escapeHtml(dateStr)}</td>
-        <td class="right">${escapeHtml(toCurrency(twoYearsNoInterestTotal - monthlyQuotaTwoYears * i))}</td>
-        <td class="right">${escapeHtml(toCurrency(monthlyQuotaTwoYears))}</td>
-        <td class="right">${escapeHtml(`Bs ${toNumber(payInBs)}`)}</td>
-        <td class="right">${escapeHtml(toCurrency(0))}</td>
-        <td class="right">${escapeHtml(toCurrency(0))}</td>
-        <td class="right">${escapeHtml(toCurrency(monthlyQuotaTwoYears))}</td>
-        <td class="right">${escapeHtml(toCurrency(balance))}</td>
+    const phase1Html = phase1Rows
+      .map((row, i) => {
+        const rowClass = i % 2 === 0 ? 'row-odd' : 'row-even';
+        return `<tr class="${rowClass}">
+        <td>${row.paymentNumber}</td>
+        <td>${escapeHtml(row.paymentDate)}</td>
+        <td class="right">${escapeHtml(toCurrency(row.startingBalance))}</td>
+        <td class="right">${escapeHtml(toCurrency(row.scheduledPayment))}</td>
+        <td class="right">${escapeHtml(`Bs ${toNumber(row.paymentInBs)}`)}</td>
+        <td class="right">${escapeHtml(toCurrency(row.additionalPayment))}</td>
+        <td class="right">${escapeHtml(toCurrency(row.interest))}</td>
+        <td class="right">${escapeHtml(toCurrency(row.principal))}</td>
+        <td class="right">${escapeHtml(toCurrency(row.remainingBalance))}</td>
       </tr>`;
-    }).join('');
+      })
+      .join('');
 
     const phase2Html = amortizationRows
       .map((row, index) => {
-        const rowClass = (24 + index) % 2 === 0 ? 'row-odd' : 'row-even';
+        const rowClass =
+          (PHASE1_MONTHS + index) % 2 === 0 ? 'row-odd' : 'row-even';
         return `<tr class="${rowClass}">
-          <td>${24 + index + 1}</td>
+          <td>${PHASE1_MONTHS + index + 1}</td>
           <td>${escapeHtml(row.paymentDate)}</td>
           <td class="right">${escapeHtml(toCurrency(row.startingBalance))}</td>
           <td class="right">${escapeHtml(toCurrency(row.scheduledPayment))}</td>
@@ -492,7 +584,7 @@ export default function LoanCalculator() {
 
     const amortizationHtml = `
       <tr class="phase-separator">
-        <td colspan="9">Fase 1 — 2 años sin interés (24 cuotas · Total: ${escapeHtml(toCurrency(twoYearsNoInterestTotal))})</td>
+        <td colspan="9">Fase 1 — 2 años sin interés (${PHASE1_MONTHS} cuotas · Total: ${escapeHtml(toCurrency(phase1TotalScheduled))})</td>
       </tr>
       ${phase1Html}
       <tr class="phase-separator">
@@ -1025,6 +1117,14 @@ export default function LoanCalculator() {
                 {toCurrency(twoYearsNoInterestTotal)}
               </td>
             </tr>
+            <tr className='bg-slate-100 dark:bg-zinc-900'>
+              <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-slate-800 dark:text-zinc-300 sm:text-sm'>
+                Abonos adelantados 2026
+              </td>
+              <td className='px-4 py-2 text-right text-slate-800 dark:text-zinc-300'>
+                {toCurrency(totalPhase1AdditionalPayments)}
+              </td>
+            </tr>
             <tr className='bg-[#0e3344] text-white dark:bg-zinc-950'>
               <td className='px-4 py-2 text-xs font-bold uppercase tracking-wide text-white dark:text-zinc-400 sm:text-sm'>
                 Monto del prestamo
@@ -1127,6 +1227,65 @@ export default function LoanCalculator() {
 
       <div className='mt-8 hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-zinc-900 dark:bg-zinc-950 md:block'>
         <div className='bg-[#0e3344] px-3 py-2 text-center text-sm font-bold uppercase tracking-wide text-white dark:bg-[#0a2230]'>
+          Fase 1 — 2 años sin interés ({PHASE1_MONTHS} cuotas)
+        </div>
+        <table className='min-w-full text-xs sm:text-sm'>
+          <thead className='bg-slate-700 text-white dark:bg-zinc-900'>
+            <tr>
+              <th className='px-3 py-2 text-left'>PYMT #</th>
+              <th className='px-3 py-2 text-left'>Fecha de pago</th>
+              <th className='px-3 py-2 text-right'>Saldo inicial</th>
+              <th className='px-3 py-2 text-right'>Cuota programada</th>
+              <th className='px-3 py-2 text-right'>Pago en Bs</th>
+              <th className='px-3 py-2 text-right'>Pago adicional</th>
+              <th className='px-3 py-2 text-right'>Restante</th>
+            </tr>
+          </thead>
+          <tbody>
+            {phase1Rows.map((row) => (
+              <tr
+                key={`phase1-${row.paymentNumber}`}
+                className='border-t border-slate-100 text-slate-700 odd:bg-slate-50/60 dark:border-zinc-800 dark:text-zinc-200 dark:odd:bg-zinc-800/50'
+              >
+                <td className='px-3 py-2'>{row.paymentNumber}</td>
+                <td className='px-3 py-2'>{row.paymentDate}</td>
+                <td className='px-3 py-2 text-right'>
+                  {toCurrency(row.startingBalance)}
+                </td>
+                <td className='px-3 py-2 text-right'>
+                  {toCurrency(row.scheduledPayment)}
+                </td>
+                <td className='px-3 py-2 text-right'>
+                  Bs {toNumber(row.paymentInBs)}
+                </td>
+                <td className='px-3 py-2 text-right'>
+                  <input
+                    type='number'
+                    min={0}
+                    step='0.01'
+                    value={getRequestedAdditionalPhase1ByPayment(
+                      row.paymentNumber
+                    )}
+                    onChange={(event) =>
+                      onAdditionalPhase1RowChange(
+                        row.paymentNumber,
+                        event.target.value
+                      )
+                    }
+                    className='w-24 rounded-lg border border-slate-300 bg-white px-2 py-1 text-right text-xs outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-[#7fa0b4] dark:focus:ring-zinc-900'
+                  />
+                </td>
+                <td className='px-3 py-2 text-right font-semibold'>
+                  {toCurrency(row.remainingBalance)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className='mt-8 hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-zinc-900 dark:bg-zinc-950 md:block'>
+        <div className='bg-[#0e3344] px-3 py-2 text-center text-sm font-bold uppercase tracking-wide text-white dark:bg-[#0a2230]'>
           Cronograma de amortizacion de prestamos
         </div>
         <table className='min-w-full text-xs sm:text-sm'>
@@ -1201,6 +1360,69 @@ export default function LoanCalculator() {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className='mt-6 space-y-3 md:hidden'>
+        <div className='rounded-xl bg-[#0e3344] px-3 py-2 text-center text-xs font-bold uppercase tracking-wide text-white dark:bg-[#0a2230]'>
+          Fase 1 — 2 años sin interés ({PHASE1_MONTHS} cuotas)
+        </div>
+        {phase1Rows.map((row) => (
+          <div
+            key={`mobile-phase1-${row.paymentNumber}`}
+            className='rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-zinc-800 dark:bg-zinc-900'
+          >
+            <div className='mb-2 flex items-center justify-between'>
+              <p className='text-sm font-bold text-slate-800 dark:text-zinc-50'>
+                Cuota #{row.paymentNumber}
+              </p>
+              <p className='text-xs text-slate-500 dark:text-zinc-500'>
+                {row.paymentDate}
+              </p>
+            </div>
+            <div className='grid grid-cols-2 gap-x-2 gap-y-1 text-xs'>
+              <span className='text-slate-500 dark:text-zinc-500'>
+                Saldo inicial
+              </span>
+              <span className='text-right font-semibold'>
+                {toCurrency(row.startingBalance)}
+              </span>
+              <span className='text-slate-500 dark:text-zinc-500'>
+                Cuota programada
+              </span>
+              <span className='text-right font-semibold'>
+                {toCurrency(row.scheduledPayment)}
+              </span>
+              <span className='text-slate-500 dark:text-zinc-500'>
+                Pago en Bs
+              </span>
+              <span className='text-right'>Bs {toNumber(row.paymentInBs)}</span>
+              <span className='text-slate-500 dark:text-zinc-500'>
+                Restante
+              </span>
+              <span className='text-right font-semibold'>
+                {toCurrency(row.remainingBalance)}
+              </span>
+            </div>
+            <div className='mt-3'>
+              <label className='mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-zinc-500'>
+                Pago adicional
+              </label>
+              <input
+                type='number'
+                min={0}
+                step='0.01'
+                value={getRequestedAdditionalPhase1ByPayment(row.paymentNumber)}
+                onChange={(event) =>
+                  onAdditionalPhase1RowChange(
+                    row.paymentNumber,
+                    event.target.value
+                  )
+                }
+                className='w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-[#0e3344] focus:ring-2 focus:ring-slate-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-[#7fa0b4] dark:focus:ring-zinc-900'
+              />
+            </div>
+          </div>
+        ))}
       </div>
 
       <div className='mt-6 space-y-3 md:hidden'>
