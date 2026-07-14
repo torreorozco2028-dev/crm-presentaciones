@@ -42,6 +42,23 @@ function toOptionalInteger(value: unknown) {
   return Math.trunc(parsed);
 }
 
+function parseRequiredDocumentNumber(value: unknown): number | null {
+  const text = String(value ?? '').trim();
+  if (!text) return null;
+  const parsed = Number(text);
+  if (!Number.isFinite(parsed)) return null;
+  return Math.trunc(parsed);
+}
+
+function isUniqueDocumentViolation(error: unknown) {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: unknown }).code === '23505'
+  );
+}
+
 export async function registerClientAction(formData: any) {
   try {
     const session = await auth();
@@ -62,13 +79,33 @@ export async function registerClientAction(formData: any) {
       };
     }
 
+    const documentNumber = parseRequiredDocumentNumber(formData?.n_document);
+    if (documentNumber === null) {
+      return {
+        success: false,
+        error: 'El número de documento es obligatorio',
+      };
+    }
+
+    const existingDocument = await db.query.client.findFirst({
+      where: eq(client.n_document, documentNumber),
+      columns: { id: true },
+    });
+
+    if (existingDocument) {
+      return {
+        success: false,
+        error: 'Ya existe un cliente registrado con ese número de documento',
+      };
+    }
+
     const newClient = await clientEntity.createClient({
       names,
       first_last_name: firstLastName,
       second_last_name: toOptionalText(formData?.second_last_name),
       // In schema this field is NOT NULL, so keep a safe default when omitted.
       type_document: toOptionalText(formData?.type_document) ?? 'CI',
-      n_document: toOptionalInteger(formData?.n_document),
+      n_document: documentNumber,
       email: toOptionalText(formData?.email),
       cellphone: toOptionalInteger(formData?.cellphone),
       location: toOptionalText(formData?.location),
@@ -82,6 +119,12 @@ export async function registerClientAction(formData: any) {
     return { success: true, data: newClient };
   } catch (error) {
     console.error('Error registering client:', error);
+    if (isUniqueDocumentViolation(error)) {
+      return {
+        success: false,
+        error: 'Ya existe un cliente registrado con ese número de documento',
+      };
+    }
     return { success: false, error: 'No se pudo registrar el cliente' };
   }
 }

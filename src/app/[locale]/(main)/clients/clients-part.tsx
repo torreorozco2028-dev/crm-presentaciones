@@ -630,6 +630,7 @@ function ClientModal({
             name='n_document'
             label='N de Documento'
             type='number'
+            required
             defaultValue={initialValues.n_document}
           />
           <ClientInput

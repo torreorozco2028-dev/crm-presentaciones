@@ -4,8 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
 import { db } from '@/server/db/config';
 import { client } from '@/server/db/schema';
-import { isAdminRole, resolveClientVisibility } from '@/lib/ownership';
-import { and, desc, eq, ilike, or, sql } from 'drizzle-orm';
+import { isAdminRole } from '@/lib/ownership';
+import { and, desc, eq, ilike, ne, or, sql } from 'drizzle-orm';
 
 function toOptionalText(value: unknown) {
   const text = String(value ?? '').trim();
@@ -22,25 +22,32 @@ function toOptionalInteger(value: unknown) {
   return Math.trunc(parsed);
 }
 
+function parseRequiredDocumentNumber(value: unknown): number | null {
+  const text = String(value ?? '').trim();
+  if (!text) return null;
+
+  const parsed = Number(text);
+  if (!Number.isFinite(parsed)) return null;
+
+  return Math.trunc(parsed);
+}
+
+function isUniqueDocumentViolation(error: unknown) {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: unknown }).code === '23505'
+  );
+}
+
 function normalizePage(value: unknown, fallback: number) {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : fallback;
 }
 
-function buildClientWhere(
-  search: string | undefined,
-  currentUserId: string | null,
-  canManageAnyClient: boolean
-) {
+function buildClientWhere(search: string | undefined) {
   const conditions = [];
-  const { ownerUserId } = resolveClientVisibility(
-    currentUserId,
-    canManageAnyClient
-  );
-
-  if (ownerUserId) {
-    conditions.push(eq(client.userId, ownerUserId));
-  }
 
   const query = search?.trim();
   if (query) {
@@ -106,11 +113,7 @@ export async function getClientsListAction(input: GetClientsListInput = {}) {
     const page = normalizePage(input.page, 1);
     const pageSize = Math.min(50, normalizePage(input.pageSize, 10));
     const offset = (page - 1) * pageSize;
-    const whereClause = buildClientWhere(
-      input.search,
-      currentUserId,
-      canManageAnyClient
-    );
+    const whereClause = buildClientWhere(input.search);
 
     const [rows, totalResult] = await Promise.all([
       db.query.client.findMany({
@@ -227,6 +230,26 @@ export async function createClientAction(input: ClientInput) {
       };
     }
 
+    const documentNumber = parseRequiredDocumentNumber(input.n_document);
+    if (documentNumber === null) {
+      return {
+        success: false,
+        error: 'El número de documento es obligatorio',
+      };
+    }
+
+    const existingDocument = await db.query.client.findFirst({
+      where: eq(client.n_document, documentNumber),
+      columns: { id: true },
+    });
+
+    if (existingDocument) {
+      return {
+        success: false,
+        error: 'Ya existe un cliente registrado con ese número de documento',
+      };
+    }
+
     const [createdClient] = await db
       .insert(client)
       .values({
@@ -234,7 +257,7 @@ export async function createClientAction(input: ClientInput) {
         first_last_name: firstLastName,
         second_last_name: toOptionalText(input.second_last_name),
         type_document: toOptionalText(input.type_document) ?? 'CI',
-        n_document: toOptionalInteger(input.n_document),
+        n_document: documentNumber,
         email: toOptionalText(input.email),
         cellphone: toOptionalInteger(input.cellphone),
         location: toOptionalText(input.location),
@@ -251,6 +274,12 @@ export async function createClientAction(input: ClientInput) {
     return { success: true, data: createdClient };
   } catch (error) {
     console.error('Error creating client:', error);
+    if (isUniqueDocumentViolation(error)) {
+      return {
+        success: false,
+        error: 'Ya existe un cliente registrado con ese número de documento',
+      };
+    }
     return { success: false, error: 'No se pudo registrar el cliente' };
   }
 }
@@ -306,6 +335,29 @@ export async function updateClientAction(input: UpdateClientInput) {
       };
     }
 
+    const documentNumber = parseRequiredDocumentNumber(input.n_document);
+    if (documentNumber === null) {
+      return {
+        success: false,
+        error: 'El número de documento es obligatorio',
+      };
+    }
+
+    const existingDocument = await db.query.client.findFirst({
+      where: and(
+        eq(client.n_document, documentNumber),
+        ne(client.id, input.clientId)
+      ),
+      columns: { id: true },
+    });
+
+    if (existingDocument) {
+      return {
+        success: false,
+        error: 'Ya existe un cliente registrado con ese número de documento',
+      };
+    }
+
     await db
       .update(client)
       .set({
@@ -313,7 +365,7 @@ export async function updateClientAction(input: UpdateClientInput) {
         first_last_name: firstLastName,
         second_last_name: toOptionalText(input.second_last_name),
         type_document: toOptionalText(input.type_document) ?? 'CI',
-        n_document: toOptionalInteger(input.n_document),
+        n_document: documentNumber,
         email: toOptionalText(input.email),
         cellphone: toOptionalInteger(input.cellphone),
         location: toOptionalText(input.location),
@@ -330,6 +382,12 @@ export async function updateClientAction(input: UpdateClientInput) {
     return { success: true };
   } catch (error) {
     console.error('Error updating client:', error);
+    if (isUniqueDocumentViolation(error)) {
+      return {
+        success: false,
+        error: 'Ya existe un cliente registrado con ese número de documento',
+      };
+    }
     return { success: false, error: 'No se pudo editar el cliente' };
   }
 }

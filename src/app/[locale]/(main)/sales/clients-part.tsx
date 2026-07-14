@@ -295,6 +295,7 @@ export default function ClientsPart() {
       const secondLastName = String(
         formData.get('new_second_last_name') ?? ''
       ).trim();
+      const nDocument = String(formData.get('new_n_document') ?? '').trim();
       const email = String(formData.get('new_email') ?? '').trim();
       const cellphone = String(formData.get('new_cellphone') ?? '').trim();
 
@@ -307,11 +308,21 @@ export default function ClientsPart() {
         return;
       }
 
+      if (!nDocument) {
+        setIsSaleSubmitting(false);
+        const error =
+          'Para registrar cliente nuevo debes completar el número de documento';
+        toast.error(error);
+        setSalesError(error);
+        return;
+      }
+
       const newClientResult = await registerClientAction({
         names,
         first_last_name: firstLastName,
         second_last_name: secondLastName,
         type_document: 'CI',
+        n_document: nDocument,
         email,
         cellphone,
       });
@@ -1092,6 +1103,7 @@ export default function ClientsPart() {
                     name='n_document'
                     label='N de Documento'
                     type='number'
+                    required
                   />
                   <InputField name='email' label='Email' type='email' />
                   <InputField name='cellphone' label='Telefono' type='number' />
@@ -1356,6 +1368,12 @@ export default function ClientsPart() {
                       <InputField
                         name='new_second_last_name'
                         label='Apellido materno'
+                      />
+                      <InputField
+                        name='new_n_document'
+                        label='N de Documento'
+                        type='number'
+                        required={saleClientMode === 'new'}
                       />
                       <InputField name='new_email' label='Email' type='email' />
                       <InputField
