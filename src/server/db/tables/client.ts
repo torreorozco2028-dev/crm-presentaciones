@@ -18,7 +18,7 @@ export const client = pgTable('client', {
   first_last_name: varchar({ length: 30 }).notNull(),
   second_last_name: varchar({ length: 30 }),
   type_document: varchar({ length: 50 }).notNull(),
-  n_document: integer('number_of_document'),
+  n_document: integer('number_of_document').unique(),
   email: varchar({ length: 50 }),
   cellphone: integer(),
   location: text(),
