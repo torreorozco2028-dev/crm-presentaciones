@@ -9,6 +9,6 @@ export const siteConfig = {
   links: {},
   contact: {
     email: 'structec.srl@gmail.com',
-    whatsapp: 'https://wa.me/59176995773',
+    whatsapp: 'https://wa.me/59174835858',
   },
 };
