@@ -10,11 +10,12 @@ import {
   NavbarItem,
   Link,
   Divider,
-  Avatar,
   User,
 } from '@heroui/react';
+import Image from 'next/image';
 import { MenuItem, MenuOptions, menuOptions } from '../sidebar-left/options';
 import { ThemeSwitcher } from '../theme-switcher';
+import { useTheme } from 'next-themes';
 import { usePathname } from 'next/navigation';
 import getNavbarBrand from '@/lib/get-navbar-brand';
 import LucideIcon from '../lucide-icon';
@@ -37,10 +38,19 @@ interface NavBarTopProps {
   user: UserData;
 }
 
+const LOGO_WHITE = '/logo2.png';
+const LOGO_DARK = '/logo1.png';
+
 export default function NavBarTop({ user }: NavBarTopProps) {
   const t = useTranslations('Common');
+  const { theme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const pathname = usePathname();
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+  const logoSrc = mounted && theme === 'dark' ? LOGO_WHITE : LOGO_DARK;
   const currentLang = pathname.split('/')[1] as Locale;
   const menuItems = Object.keys(menuOptions).reduce<MenuItem[]>(
     (acc, key) => [
@@ -75,7 +85,13 @@ export default function NavBarTop({ user }: NavBarTopProps) {
       </NavbarBrand>
       <NavbarContent className='sm:hidden' justify='center'>
         <NavbarBrand>
-          <Avatar src='/logo.png' className='bg-inherint' />
+          <Image
+            src={logoSrc}
+            alt='Logo'
+            width={120}
+            height={40}
+            className='h-8 w-auto object-contain'
+          />
           <p className='pl-1 font-bold uppercase text-inherit'>
             {translatedTitle}
           </p>
@@ -103,7 +119,7 @@ export default function NavBarTop({ user }: NavBarTopProps) {
           <Link
             className='w-full'
             color='foreground'
-            href={`/${currentLang}/settings`}
+            href={`/${currentLang}/admin/settings`}
             size='lg'
             onPress={() => setIsMenuOpen(false)}
           >

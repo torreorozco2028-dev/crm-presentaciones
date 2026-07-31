@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { Button, Card, Chip } from '@heroui/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -8,6 +9,7 @@ import {
   getMaxFloorSelections,
 } from '@/lib/floor-selection';
 import { useParams, useRouter } from 'next/navigation';
+import { siteConfig } from '@/config/site';
 
 interface DepartmentFeature {
   id: string;
@@ -49,6 +51,7 @@ interface Building {
 interface Props {
   units: UnitDepartment[];
   building?: Building;
+  isAuthenticated?: boolean;
 }
 
 const roomOrder: Record<string, number> = {
@@ -101,7 +104,7 @@ function getUnitStateMeta(state: number) {
   };
 }
 
-export default function Floors({ units }: Props) {
+export default function Floors({ units, building, isAuthenticated }: Props) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const router = useRouter();
   const params = useParams<{ locale?: string }>();
@@ -156,7 +159,19 @@ export default function Floors({ units }: Props) {
   };
 
   const handleReserve = (unitId: string) => {
-    router.push(`/${locale}/sales?reserveUnitId=${encodeURIComponent(unitId)}`);
+    if (isAuthenticated) {
+      router.push(
+        `/${locale}/admin/sales?reserveUnitId=${encodeURIComponent(unitId)}`
+      );
+      return;
+    }
+
+    const unit = units.find((u) => u.id === unitId);
+    const message = `Hola, me interesa el departamento ${unit?.unit_number ?? ''}${
+      building?.building_title ? ` de ${building.building_title}` : ''
+    } y quisiera más información para reservarlo.`;
+    const whatsappUrl = `${siteConfig.contact.whatsapp}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
   const selectedUnits = units.filter((u) => selectedIds.includes(u.id));
@@ -348,12 +363,13 @@ export default function Floors({ units }: Props) {
                     }`}
                   >
                     <div className='mb-4 flex items-center justify-center gap-2'>
-                      <img
+                      <Image
                         src={categoryIcons[room] ?? '/clogo5.png'}
                         alt={`${room} icono`}
+                        width={32}
+                        height={32}
                         className='h-8 w-8 object-contain brightness-0 dark:invert'
                         loading='lazy'
-                        decoding='async'
                       />
                       <div className='text-center'>
                         <p className='text-xs font-bold uppercase tracking-[0.2em] text-default-400'>
@@ -401,7 +417,9 @@ export default function Floors({ units }: Props) {
                                     onClick={() => handleReserve(unit.id)}
                                     className='px-3 text-[10px] font-bold uppercase tracking-wider'
                                   >
-                                    Reservar
+                                    {isAuthenticated
+                                      ? 'Reservar'
+                                      : 'Contactar asesor'}
                                   </Button>
                                 )}
                               </div>
@@ -492,7 +510,9 @@ export default function Floors({ units }: Props) {
                                   onClick={() => handleReserve(unit.id)}
                                   className='mt-3 px-4 text-[11px] font-bold uppercase tracking-wider'
                                 >
-                                  Reservar
+                                  {isAuthenticated
+                                    ? 'Reservar'
+                                    : 'Contactar asesor'}
                                 </Button>
                               )}
                             </div>
@@ -519,12 +539,12 @@ export default function Floors({ units }: Props) {
                               <div className='min-h-[180px] border-t border-default-200/70 py-8 dark:border-default-100/10'>
                                 <div className='mb-6 flex flex-col items-center justify-center gap-2'>
                                   <div className='relative h-9 w-9 shrink-0'>
-                                    <img
+                                    <Image
                                       src={categoryIcons[room] ?? '/clogo5.png'}
                                       alt={`${room} icono`}
-                                      className='h-full w-full object-contain brightness-0 dark:invert'
+                                      fill
+                                      className='object-contain brightness-0 dark:invert'
                                       loading='lazy'
-                                      decoding='async'
                                     />
                                   </div>
                                   <div className='text-center'>

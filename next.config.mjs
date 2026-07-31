@@ -8,7 +8,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'keemamv5crgjwr1x.public.blob.vercel-storage.com',
+        hostname: '*.public.blob.vercel-storage.com',
         port: '',
       },
       {
@@ -21,18 +21,6 @@ const nextConfig = {
         hostname: 'res.cloudinary.com',
         port: '',
       },
-      {
-        protocol: 'https',
-        hostname: 'zsychn5egyn9ii5x.public.blob.vercel-storage.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'hw4cgr1g8tib3xqh.public.blob.vercel-storage.com',
-        port: '',
-      },
-
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',

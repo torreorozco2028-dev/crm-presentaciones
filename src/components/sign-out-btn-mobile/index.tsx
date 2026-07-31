@@ -6,7 +6,7 @@ export default function SignOutBtnMobile() {
     <Button
       className='w-full'
       color='danger'
-      onPress={() => signOut({ callbackUrl: '/auth/login' })}
+      onPress={() => signOut({ callbackUrl: '/admin/login' })}
     >
       <LucideIcon name='CirclePower' />
       Sign out
