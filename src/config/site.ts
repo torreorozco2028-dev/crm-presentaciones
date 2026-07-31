@@ -8,7 +8,7 @@ export const siteConfig = {
   navMenuItems: [],
   links: {},
   contact: {
-    email: 'contacto@structec.com',
-    whatsapp: 'https://wa.me/59100000000',
+    email: 'structec.srl@gmail.com',
+    whatsapp: 'https://wa.me/59176995773',
   },
 };
