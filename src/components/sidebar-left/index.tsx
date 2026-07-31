@@ -9,9 +9,11 @@ import { useTranslations } from 'next-intl';
 import useUserRole from '../../lib/getUserRole';
 import { useTheme } from 'next-themes';
 
+const LOGO_WHITE = '/logo2.png';
+const LOGO_DARK = '/logo1.png';
+
 const organization = {
   name: 'STRUCTEC S.R.L.',
-  logo: '/logo.png',
 };
 
 export default function SideBarLeft() {
@@ -74,13 +76,15 @@ export default function SideBarLeft() {
     );
   }
 
+  const logoSrc = theme === 'dark' ? LOGO_WHITE : LOGO_DARK;
+
   return (
     <div className='w-full p-1'>
-      <div className='flex h-16 w-16 items-center pt-2'>
+      <div className='flex h-12 w-full items-center pt-2'>
         <Image
-          src={theme === 'dark' ? organization.logo : organization.logo}
-          alt='Logo'
-          className='h-auto max-w-full'
+          src={logoSrc}
+          alt={organization.name}
+          className='h-12 w-auto max-w-full object-contain'
         />
       </div>
       <Listbox

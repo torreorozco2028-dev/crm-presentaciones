@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { Button } from '@heroui/react';
 import LucideIcon from '@/components/lucide-icon';
 
@@ -58,22 +59,25 @@ export default function Carousel({
     setPan({ x: 0, y: 0 });
   }, [currentImageIndex]);
 
-  const clampPan = (nextX: number, nextY: number, zoomLevel = zoom) => {
-    const el = containerRef.current;
-    if (!el) return { x: nextX, y: nextY };
+  const clampPan = useCallback(
+    (nextX: number, nextY: number, zoomLevel = zoom) => {
+      const el = containerRef.current;
+      if (!el) return { x: nextX, y: nextY };
 
-    const maxX = ((zoomLevel - 1) * el.clientWidth) / 2;
-    const maxY = ((zoomLevel - 1) * el.clientHeight) / 2;
+      const maxX = ((zoomLevel - 1) * el.clientWidth) / 2;
+      const maxY = ((zoomLevel - 1) * el.clientHeight) / 2;
 
-    return {
-      x: Math.max(-maxX, Math.min(maxX, nextX)),
-      y: Math.max(-maxY, Math.min(maxY, nextY)),
-    };
-  };
+      return {
+        x: Math.max(-maxX, Math.min(maxX, nextX)),
+        y: Math.max(-maxY, Math.min(maxY, nextY)),
+      };
+    },
+    [zoom]
+  );
 
   useEffect(() => {
     setPan((prev) => clampPan(prev.x, prev.y, zoom));
-  }, [zoom]);
+  }, [zoom, clampPan]);
 
   const getTouchDistance = (touches: React.TouchList) => {
     const dx = touches[0].clientX - touches[1].clientX;
@@ -303,10 +307,12 @@ export default function Carousel({
             {filteredImages.map((src, idx) => {
               const isActive = idx === currentImageIndex;
               return (
-                <img
+                <Image
                   key={idx}
                   src={src}
                   alt={`Imagen ${idx + 1} de ${filteredImages.length}`}
+                  fill
+                  sizes='100vw'
                   loading={idx === currentImageIndex ? 'eager' : 'lazy'}
                   onDoubleClick={() => {
                     if (zoom > 1) {
@@ -316,10 +322,8 @@ export default function Carousel({
                       setZoom(2);
                     }
                   }}
-                  className={`absolute inset-0 m-auto transition-opacity duration-300 ease-in-out ${isActive ? 'z-20 opacity-100' : 'pointer-events-none z-0 opacity-0'} max-h-full max-w-full object-contain`}
+                  className={`transition-opacity duration-300 ease-in-out ${isActive ? 'z-20 opacity-100' : 'pointer-events-none z-0 opacity-0'} object-contain`}
                   style={{
-                    maxHeight: '100%',
-                    maxWidth: '100%',
                     transform: isActive
                       ? `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`
                       : 'translate(0px, 0px) scale(1)',

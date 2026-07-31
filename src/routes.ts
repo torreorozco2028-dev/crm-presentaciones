@@ -1,19 +1,19 @@
 export const publicRoutes = [
-  '/en/auth/login',
-  '/es/auth/login',
-  '/en/auth/register',
-  '/es/auth/register',
+  '/en',
+  '/es',
+  '/en/admin/login',
+  '/es/admin/login',
+  '/en/admin/register',
+  '/es/admin/register',
 ];
 
 export const authRoutes = [
-  '/en/auth/login',
-  '/es/auth/login',
-  '/en/auth/register',
-  '/es/auth/register',
-  '/en/auth/error',
-  '/es/auth/error',
+  '/en/admin/login',
+  '/es/admin/login',
+  '/en/admin/register',
+  '/es/admin/register',
 ];
 
 export const apiRoutes = ['/api/auth'];
 
-export const DEFAULT_LOGIN_REDIRECT = '/launch';
+export const DEFAULT_LOGIN_REDIRECT = '/admin/launch';

@@ -11,6 +11,7 @@ import {
   useDisclosure,
 } from '@heroui/react';
 import { X, Map } from 'lucide-react';
+import Image from 'next/image';
 import Carousel from '@/components/carousel';
 import { getPresentationGalleryImages } from '@/lib/presentation-gallery';
 
@@ -175,7 +176,7 @@ export default function DepartmentsPage({ data }: { data: any }) {
       <div className='flex h-auto w-full max-w-[1700px] flex-col gap-8 lg:h-[calc(100vh-250px)] lg:flex-row'>
         <section className='relative w-full overflow-visible rounded-[30px] border-[2px] border-zinc-100 bg-[#fcfcfc] shadow-xl dark:border-[#949494] dark:bg-transparent lg:w-[70%] lg:overflow-hidden'>
           <AnimatePresence mode='wait'>
-            {mobileTab === 'map' && (
+            {mobileTab === 'map' && isMobileViewport && (
               <motion.div
                 key='mobile-map'
                 initial={{ opacity: 0 }}
@@ -188,13 +189,15 @@ export default function DepartmentsPage({ data }: { data: any }) {
                     <button
                       type='button'
                       onClick={onOpen}
-                      className='block w-full'
+                      className='relative block h-[32vh] w-full'
                       aria-label='Ampliar distribución'
                     >
-                      <img
+                      <Image
                         src={currentImage}
                         alt='Distribución del piso'
-                        className='h-[32vh] w-full bg-white object-contain p-2 dark:bg-black'
+                        fill
+                        sizes='100vw'
+                        className='bg-white object-contain p-2 dark:bg-black'
                       />
                     </button>
                   ) : (
@@ -242,14 +245,22 @@ export default function DepartmentsPage({ data }: { data: any }) {
                 onDragEnd={onDragEnd}
                 className={`flex h-full w-full flex-col lg:relative ${mobileTab === 'model' ? 'p-2 lg:p-4' : ''}`}
               >
-                <div className='mb-4 flex min-h-[74vh] w-full items-center justify-center lg:absolute lg:inset-0 lg:mb-0 lg:min-h-0 lg:p-10'>
-                  <img
-                    key={currentImage || 'fallback-distribution-image'}
-                    src={currentImage}
-                    onClick={currentImage ? onOpen : undefined}
-                    className={`h-[70vh] w-full object-contain transition-all duration-500 lg:h-auto lg:max-h-full lg:w-full ${currentImage ? 'cursor-zoom-in' : ''}`}
-                    alt='Vista Departamento'
-                  />
+                <div className='relative mb-4 flex min-h-[74vh] w-full items-center justify-center lg:absolute lg:inset-0 lg:mb-0 lg:min-h-0 lg:p-10'>
+                  {currentImage ? (
+                    <Image
+                      key={currentImage}
+                      src={currentImage}
+                      onClick={onOpen}
+                      fill
+                      sizes='(min-width: 1024px) 70vw, 100vw'
+                      className='cursor-zoom-in object-contain transition-all duration-500'
+                      alt='Vista Departamento'
+                    />
+                  ) : (
+                    <div className='flex h-[70vh] w-full items-center justify-center text-sm text-zinc-500 dark:text-zinc-400'>
+                      Sin imagen disponible
+                    </div>
+                  )}
                 </div>
 
                 {selectedModel && (

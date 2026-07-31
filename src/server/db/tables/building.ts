@@ -7,6 +7,7 @@ import {
   text,
   timestamp,
   jsonb,
+  boolean,
   primaryKey,
 } from 'drizzle-orm/pg-core';
 import { department_model, unit_department } from './department';
@@ -40,6 +41,7 @@ export const building = pgTable('building', {
   number_garages: integer(),
   number_storages: integer(),
   batch_images: jsonb().default([]),
+  is_published: boolean('is_published').notNull().default(false),
   createdAt: timestamp('created_at').default(sql`now()`),
   updatedAt: timestamp('updated_at').default(sql`now()`),
 });

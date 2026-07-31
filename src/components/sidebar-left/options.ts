@@ -22,7 +22,7 @@ export const menuOptions = {
     {
       key: 'launch',
       label: 'menu.launch',
-      path: '/launch',
+      path: '/admin/launch',
       icon: 'Rocket',
       displayDivider: true,
       roles: ['user', 'admin'],
@@ -30,7 +30,7 @@ export const menuOptions = {
     {
       key: 'calculator',
       label: 'menu.calculator',
-      path: '/calculator',
+      path: '/admin/calculator',
       icon: 'Calculator',
       displayDivider: false,
       roles: ['user', 'admin'],
@@ -38,7 +38,7 @@ export const menuOptions = {
     {
       key: 'building',
       label: 'menu.building',
-      path: '/buildings',
+      path: '/admin/buildings',
       icon: 'Building',
       displayDivider: false,
       roles: ['admin'],
@@ -46,7 +46,7 @@ export const menuOptions = {
     {
       key: 'pointsofinterest',
       label: 'menu.pointsofinterest',
-      path: '/pointsofinterest',
+      path: '/admin/pointsofinterest',
       icon: 'MapPin',
       displayDivider: true,
       roles: ['admin'],
@@ -62,7 +62,7 @@ export const menuOptions = {
     {
       key: 'departments',
       label: 'menu.departments',
-      path: '/departments',
+      path: '/admin/departments',
       icon: 'Building2',
       displayDivider: false,
       roles: ['admin'],
@@ -70,7 +70,7 @@ export const menuOptions = {
     {
       key: 'commonareas',
       label: 'menu.commonareas',
-      path: '/commonareas',
+      path: '/admin/commonareas',
       icon: 'LayoutGrid',
       displayDivider: false,
       roles: ['admin'],
@@ -78,7 +78,7 @@ export const menuOptions = {
     {
       key: 'departmentfeatures',
       label: 'menu.departmentfeatures',
-      path: '/departmentfeatures',
+      path: '/admin/departmentfeatures',
       icon: 'Layers',
       displayDivider: true,
       roles: ['admin'],
@@ -86,7 +86,7 @@ export const menuOptions = {
     {
       key: 'users',
       label: 'menu.users',
-      path: '/users',
+      path: '/admin/users',
       icon: 'Users',
       displayDivider: true,
       roles: ['admin'],
@@ -94,7 +94,7 @@ export const menuOptions = {
     {
       key: 'clients',
       label: 'menu.clients',
-      path: '/clients',
+      path: '/admin/clients',
       icon: 'ContactRound',
       displayDivider: false,
       roles: ['user', 'admin'],
@@ -102,7 +102,7 @@ export const menuOptions = {
     {
       key: 'sales',
       label: 'menu.sales',
-      path: '/sales',
+      path: '/admin/sales',
       icon: 'Store',
       displayDivider: true,
       roles: ['user', 'admin'],

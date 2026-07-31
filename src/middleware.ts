@@ -50,8 +50,8 @@ export default auth(async (req) => {
   const isPublicRoute = publicRoutes.includes(pathname);
   const isAuthRoute = authRoutes.includes(pathname);
 
-  if (pathname === '/' || pathname === `/${locale}`) {
-    const target = isLoggedIn ? DEFAULT_LOGIN_REDIRECT : '/auth/login';
+  if (pathname === `/${locale}/admin`) {
+    const target = isLoggedIn ? DEFAULT_LOGIN_REDIRECT : '/admin/login';
     return NextResponse.redirect(new URL(`/${locale}${target}`, nextUrl));
   }
 
@@ -65,8 +65,8 @@ export default auth(async (req) => {
   }
 
   if (!isLoggedIn && !isPublicRoute) {
-    if (!pathname.includes('/auth/login')) {
-      const redirectUrl = new URL(`/${locale}/auth/login`, nextUrl);
+    if (!pathname.includes('/admin/login')) {
+      const redirectUrl = new URL(`/${locale}/admin/login`, nextUrl);
       redirectUrl.searchParams.set('callbackUrl', pathname);
       return NextResponse.redirect(redirectUrl);
     }

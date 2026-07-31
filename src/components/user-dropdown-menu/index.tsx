@@ -46,7 +46,7 @@ export default function UserDropdownMenu({ user }: any) {
           key='sign-out-alternative'
           color='danger'
           startContent={<LucideIcon name='CirclePower' />}
-          onPress={() => signOut({ callbackUrl: '/auth/login' })}
+          onPress={() => signOut({ callbackUrl: '/admin/login' })}
         >
           {t('dropdown.signOutBtn')}
         </DropdownItem>

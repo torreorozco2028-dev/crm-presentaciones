@@ -192,4 +192,24 @@ export default class BuildingEntity {
       .from(building);
     return Number(result?.count) || 0;
   }
+
+  async getPublishedBuildingId() {
+    const result = await db.query.building.findFirst({
+      where: eq(building.is_published, true),
+      columns: { id: true },
+    });
+    return result?.id ?? null;
+  }
+
+  async setPublishedBuilding(id: string) {
+    return await db.transaction(async (tx) => {
+      await tx.update(building).set({ is_published: false });
+      const [published] = await tx
+        .update(building)
+        .set({ is_published: true })
+        .where(eq(building.id, id))
+        .returning();
+      return published;
+    });
+  }
 }

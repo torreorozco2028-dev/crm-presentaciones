@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useParams } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import {
   motion,
@@ -11,6 +12,14 @@ import {
   useMotionValueEvent,
 } from 'framer-motion';
 import { FiMenu, FiX, FiChevronDown } from 'react-icons/fi';
+import { signOut } from 'next-auth/react';
+import {
+  Avatar,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+} from '@heroui/react';
 
 const LOGO_WHITE = '/logo2.png';
 const LOGO_DARK = '/logo1.png';
@@ -29,8 +38,26 @@ const BASE_NAV_LINKS = [
   { title: 'UNIDADES', href: '#unidades' },
 ];
 
-export default function CreativeNavbar() {
+interface CreativeNavbarSessionUser {
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+}
+
+interface CreativeNavbarProps {
+  session?: { user?: CreativeNavbarSessionUser } | null;
+}
+
+export default function CreativeNavbar({ session }: CreativeNavbarProps) {
   const { theme } = useTheme();
+  const params = useParams<{ locale?: string }>();
+  const locale =
+    typeof params?.locale === 'string'
+      ? params.locale
+      : Array.isArray(params?.locale)
+        ? params.locale[0]
+        : 'es';
+  const user = session?.user;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -46,7 +73,7 @@ export default function CreativeNavbar() {
         dropdown: [
           { title: 'Introducción', href: '#introduccion' },
           { title: 'Ubicación', href: '#ubicacion' },
-          { title: 'Departamentos', href: '#departamentos' },
+          { title: 'Departamentos', href: '#distribucion' },
         ],
       };
     }
@@ -205,13 +232,63 @@ export default function CreativeNavbar() {
             </ul>
           </nav>
 
-          <div className='md:hidden'>
-            <button
-              onClick={() => setIsMobileMenuOpen(true)}
-              className='rounded-full p-2 text-2xl text-zinc-800 transition-colors hover:bg-black/5 dark:text-zinc-200 dark:hover:bg-white/10'
-            >
-              <FiMenu />
-            </button>
+          <div className='flex items-center gap-3'>
+            <div className='hidden md:block'>
+              {user ? (
+                <Dropdown placement='bottom-end' backdrop='blur'>
+                  <DropdownTrigger>
+                    <Avatar
+                      as='button'
+                      name={user.name?.toUpperCase()}
+                      src={user.image || ''}
+                      isBordered
+                      color='warning'
+                      size='sm'
+                      className='transition-transform'
+                    />
+                  </DropdownTrigger>
+                  <DropdownMenu aria-label='Opciones de usuario' variant='flat'>
+                    <DropdownItem
+                      key='profile'
+                      className='h-14 gap-1'
+                      textValue='info'
+                      isReadOnly
+                    >
+                      <p className='font-semibold'>{user.name}</p>
+                      <p className='text-xs text-default-500'>{user.email}</p>
+                    </DropdownItem>
+                    <DropdownItem key='panel' href={`/${locale}/admin/launch`}>
+                      Ir al panel
+                    </DropdownItem>
+                    <DropdownItem
+                      key='sign-out'
+                      color='danger'
+                      onPress={() =>
+                        signOut({ callbackUrl: `/${locale}/admin/login` })
+                      }
+                    >
+                      Cerrar sesión
+                    </DropdownItem>
+                  </DropdownMenu>
+                </Dropdown>
+              ) : (
+                <Link
+                  href={`/${locale}/admin/login`}
+                  className='flex items-center rounded-full border border-amber-500/60 bg-amber-500/10 px-5 py-2 text-sm font-semibold uppercase tracking-wider text-amber-600 transition-colors hover:bg-amber-500 hover:text-white dark:text-amber-400'
+                >
+                  Ingresar
+                </Link>
+              )}
+            </div>
+
+            <div className='md:hidden'>
+              <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className='rounded-full p-2 text-2xl text-zinc-800 transition-colors hover:bg-black/5 dark:text-zinc-200 dark:hover:bg-white/10'
+              >
+                <FiMenu />
+              </button>
+            </div>
           </div>
         </div>
       </motion.header>
@@ -272,7 +349,44 @@ export default function CreativeNavbar() {
             </nav>
             <motion.div
               variants={mobileItemVariants}
-              className='p-10 text-zinc-400'
+              className='flex flex-col gap-3 px-10 pb-4'
+            >
+              {user ? (
+                <>
+                  <p className='text-sm text-zinc-400'>
+                    Conectado como{' '}
+                    <span className='font-medium text-white'>{user.name}</span>
+                  </p>
+                  <Link
+                    href={`/${locale}/admin/launch`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className='flex items-center justify-center rounded-full border border-white/30 px-4 py-2 text-sm font-semibold uppercase tracking-wider text-white transition-colors hover:bg-white hover:text-black'
+                  >
+                    Ir al panel
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      signOut({ callbackUrl: `/${locale}/admin/login` });
+                    }}
+                    className='flex items-center justify-center rounded-full border border-rose-500/40 px-4 py-2 text-sm font-semibold uppercase tracking-wider text-rose-400 transition-colors hover:bg-rose-500 hover:text-white'
+                  >
+                    Cerrar sesión
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href={`/${locale}/admin/login`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className='flex items-center justify-center rounded-full border border-amber-500/60 bg-amber-500/10 px-4 py-2 text-sm font-semibold uppercase tracking-wider text-amber-400 transition-colors hover:bg-amber-500 hover:text-white'
+                >
+                  Ingresar
+                </Link>
+              )}
+            </motion.div>
+            <motion.div
+              variants={mobileItemVariants}
+              className='p-10 pt-0 text-zinc-400'
             >
               <p className='text-lg font-medium text-white'>Contacto</p>
               <p>info@structec.com</p>
