@@ -97,5 +97,9 @@
       "lefthook",
       "sharp"
     ]
+  },
+  "overrides": {
+    "@react-aria/utils": "3.32.0",
+    "@react-aria/ssr": "3.9.10"
   }
 }

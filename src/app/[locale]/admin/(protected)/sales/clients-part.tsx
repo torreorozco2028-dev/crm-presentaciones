@@ -43,6 +43,11 @@ const unitStateOptions: Array<{ value: UnitState; label: string }> = [
   { value: 3, label: 'Vendido' },
 ];
 
+const currencyOptions: Array<{ value: 'BOB' | 'USD'; label: string }> = [
+  { value: 'BOB', label: 'Bs (BOB)' },
+  { value: 'USD', label: '$ (USD)' },
+];
+
 const normalizeSearch = (value: string) =>
   value
     .toLowerCase()
@@ -50,11 +55,19 @@ const normalizeSearch = (value: string) =>
     .replace(/[\u0300-\u036f]/g, '')
     .trim();
 
+const formatSquareMeters = (value: number | null) =>
+  value != null ? `${value.toLocaleString('es-BO')} m\u00b2` : null;
+
 interface SalesSetupData {
   currentUserId: string | null;
   currentUserRole: string;
   clients: Array<{ id: string; fullName: string; email: string | null }>;
-  units: Array<{ id: string; label: string; state: UnitState }>;
+  units: Array<{
+    id: string;
+    label: string;
+    state: UnitState;
+    squareMeters: number | null;
+  }>;
   users: Array<{ id: string; name: string; email: string | null }>;
 }
 
@@ -66,12 +79,17 @@ interface SaleRow {
   clientId: string;
   clientName: string;
   unitLabel: string;
+  unitSquareMeters: number | null;
   detail: string;
   paymentMethod: string;
   paymentNotes: string;
   state: UnitState;
   finalPrice: number | null;
+  currency: string;
+  exchangeRate: number | null;
+  advanceType: 'percentage' | 'amount';
   advancePercentage: number | null;
+  advanceFixedAmount: number | null;
   advanceAmount: number | null;
   remainingAmount: number | null;
   salesDate: string | null;
@@ -97,17 +115,15 @@ export default function ClientsPart() {
   const [showClientForm, setShowClientForm] = useState(false);
   const [showSaleForm, setShowSaleForm] = useState(false);
   const [editingSale, setEditingSale] = useState<SaleRow | null>(null);
-  const saleClientSelectRef = useRef<HTMLDivElement | null>(null);
+  const [editUnitId, setEditUnitId] = useState('');
   const reserveQueryAppliedRef = useRef(false);
 
   const [detailQuery, setDetailQuery] = useState('');
-  const [saleClientQuery, setSaleClientQuery] = useState('');
   const [saleClientMode, setSaleClientMode] = useState<'existing' | 'new'>(
     'existing'
   );
   const [selectedSaleClientId, setSelectedSaleClientId] = useState('');
   const [selectedSaleUnitId, setSelectedSaleUnitId] = useState('');
-  const [isSaleClientSelectOpen, setIsSaleClientSelectOpen] = useState(false);
   const [clientFilter, setClientFilter] = useState('all');
   const [unitFilter, setUnitFilter] = useState('all');
   const [userFilter, setUserFilter] = useState('all');
@@ -142,13 +158,15 @@ export default function ClientsPart() {
 
   useEffect(() => {
     if (!showSaleForm) {
-      setSaleClientQuery('');
       setSelectedSaleClientId('');
       setSelectedSaleUnitId('');
       setSaleClientMode('existing');
-      setIsSaleClientSelectOpen(false);
     }
   }, [showSaleForm]);
+
+  useEffect(() => {
+    setEditUnitId(editingSale?.unitId ?? '');
+  }, [editingSale]);
 
   useEffect(() => {
     if (reserveQueryAppliedRef.current || !setupData) return;
@@ -174,20 +192,6 @@ export default function ClientsPart() {
     setSalesError(null);
     toast.success('Unidad preseleccionada para crear la reserva');
   }, [searchParams, setupData]);
-
-  useEffect(() => {
-    function handleOutsideClick(event: MouseEvent) {
-      if (!isSaleClientSelectOpen) return;
-      const target = event.target as Node;
-      if (saleClientSelectRef.current?.contains(target)) return;
-      setIsSaleClientSelectOpen(false);
-    }
-
-    document.addEventListener('mousedown', handleOutsideClick);
-    return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-    };
-  }, [isSaleClientSelectOpen]);
 
   async function loadSetupData() {
     setIsSalesLoading(true);
@@ -281,9 +285,15 @@ export default function ClientsPart() {
     const unitId = String(formData.get('unitId') ?? '').trim();
     const state = Number(formData.get('state') ?? 2) as UnitState;
     const finalPriceRaw = String(formData.get('finalPrice') ?? '').trim();
+    const currency = String(formData.get('currency') ?? 'BOB').trim();
+    const exchangeRateRaw = String(formData.get('exchangeRate') ?? '').trim();
+    const advanceType = String(
+      formData.get('advanceType') ?? 'percentage'
+    ).trim();
     const advancePercentageRaw = String(
       formData.get('advancePercentage') ?? ''
     ).trim();
+    const advanceAmountRaw = String(formData.get('advanceAmount') ?? '').trim();
     const paymentMethod = String(formData.get('paymentMethod') ?? '').trim();
     const paymentNotes = String(formData.get('paymentNotes') ?? '').trim();
 
@@ -359,9 +369,13 @@ export default function ClientsPart() {
       unitId,
       state,
       finalPrice: finalPriceRaw ? Number(finalPriceRaw) : null,
+      currency,
+      exchangeRate: exchangeRateRaw ? Number(exchangeRateRaw) : null,
+      advanceType,
       advancePercentage: advancePercentageRaw
         ? Number(advancePercentageRaw)
         : null,
+      advanceAmount: advanceAmountRaw ? Number(advanceAmountRaw) : null,
       paymentMethod,
       paymentNotes,
     });
@@ -431,19 +445,31 @@ export default function ClientsPart() {
     setSalesError(null);
 
     const formData = new FormData(form);
+    const unitId = String(formData.get('unitId') ?? editingSale.unitId).trim();
     const finalPriceRaw = String(formData.get('finalPrice') ?? '').trim();
+    const currency = String(formData.get('currency') ?? 'BOB').trim();
+    const exchangeRateRaw = String(formData.get('exchangeRate') ?? '').trim();
+    const advanceType = String(
+      formData.get('advanceType') ?? 'percentage'
+    ).trim();
     const advancePercentageRaw = String(
       formData.get('advancePercentage') ?? ''
     ).trim();
+    const advanceAmountRaw = String(formData.get('advanceAmount') ?? '').trim();
     const paymentMethod = String(formData.get('paymentMethod') ?? '').trim();
     const paymentNotes = String(formData.get('paymentNotes') ?? '').trim();
 
     const result = await updateSaleAction({
       saleId: editingSale.id,
+      unitId,
       finalPrice: finalPriceRaw ? Number(finalPriceRaw) : null,
+      currency,
+      exchangeRate: exchangeRateRaw ? Number(exchangeRateRaw) : null,
+      advanceType,
       advancePercentage: advancePercentageRaw
         ? Number(advancePercentageRaw)
         : null,
+      advanceAmount: advanceAmountRaw ? Number(advanceAmountRaw) : null,
       paymentMethod,
       paymentNotes,
     });
@@ -486,22 +512,6 @@ export default function ClientsPart() {
   const clientOptions = useMemo(() => {
     return setupData?.clients ?? [];
   }, [setupData]);
-
-  const filteredSaleClientOptions = useMemo(() => {
-    const query = normalizeSearch(saleClientQuery);
-    if (!query) return clientOptions;
-
-    return clientOptions.filter((client) => {
-      const normalizedName = normalizeSearch(client.fullName);
-      const normalizedEmail = normalizeSearch(client.email ?? '');
-      return normalizedName.includes(query) || normalizedEmail.includes(query);
-    });
-  }, [clientOptions, saleClientQuery]);
-
-  const selectedSaleClient = useMemo(
-    () => clientOptions.find((client) => client.id === selectedSaleClientId),
-    [clientOptions, selectedSaleClientId]
-  );
 
   const unitOptions = useMemo(() => {
     return setupData?.units ?? [];
@@ -723,6 +733,11 @@ export default function ClientsPart() {
                           </td>
                           <td className='px-4 py-3 text-slate-700 dark:text-zinc-300'>
                             {sale.unitLabel}
+                            {sale.unitSquareMeters != null && (
+                              <div className='text-xs text-slate-500 dark:text-zinc-400'>
+                                {formatSquareMeters(sale.unitSquareMeters)}
+                              </div>
+                            )}
                           </td>
                           <td className='max-w-44 px-4 py-3 text-slate-700 dark:text-zinc-300'>
                             <span className='line-clamp-2'>
@@ -736,23 +751,28 @@ export default function ClientsPart() {
                           </td>
                           <td className='px-4 py-3 text-slate-700 dark:text-zinc-300'>
                             {sale.finalPrice
-                              ? sale.finalPrice.toLocaleString('es-BO')
+                              ? `${sale.finalPrice.toLocaleString('es-BO')} ${sale.currency}`
                               : '-'}
+                            {sale.exchangeRate != null && (
+                              <div className='text-xs text-slate-500 dark:text-zinc-400'>
+                                TC: {sale.exchangeRate}
+                              </div>
+                            )}
                           </td>
                           <td className='px-4 py-3 text-slate-700 dark:text-zinc-300'>
-                            {sale.advancePercentage != null ? (
+                            {sale.advanceAmount != null ? (
                               <div>
                                 <div className='font-medium'>
-                                  {sale.advancePercentage}%
+                                  {sale.advanceType === 'amount'
+                                    ? `${sale.advanceFixedAmount?.toLocaleString('es-BO')} ${sale.currency} (monto fijo)`
+                                    : `${sale.advancePercentage}%`}
                                 </div>
                                 <div className='text-xs text-slate-500 dark:text-zinc-400'>
-                                  {sale.advanceAmount != null
-                                    ? `Adelanto: ${sale.advanceAmount.toLocaleString('es-BO')} Bs`
-                                    : 'Sin cálculo'}
+                                  {`Adelanto: ${sale.advanceAmount.toLocaleString('es-BO')} ${sale.currency}`}
                                 </div>
                                 <div className='text-xs text-slate-500 dark:text-zinc-400'>
                                   {sale.remainingAmount != null
-                                    ? `Saldo: ${sale.remainingAmount.toLocaleString('es-BO')} Bs`
+                                    ? `Saldo: ${sale.remainingAmount.toLocaleString('es-BO')} ${sale.currency}`
                                     : ''}
                                 </div>
                               </div>
@@ -812,33 +832,33 @@ export default function ClientsPart() {
                             )}
                           </td>
                           <td className='px-4 py-3'>
-                            {sale.canUpdate ? (
-                              <div className='flex items-center gap-2'>
-                                <button
-                                  type='button'
-                                  onClick={() => setEditingSale(sale)}
-                                  className='inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800'
-                                  aria-label='Editar reserva'
-                                  title='Editar reserva'
-                                >
-                                  <Pencil size={16} />
-                                </button>
-                                <button
-                                  type='button'
-                                  onClick={() => void handleDeleteSale(sale.id)}
-                                  disabled={deletingSaleId === sale.id}
-                                  className='inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950'
-                                  aria-label='Eliminar reserva'
-                                  title='Eliminar reserva'
-                                >
-                                  <Trash2 size={16} />
-                                </button>
-                              </div>
-                            ) : (
-                              <span className='text-xs text-slate-400 dark:text-zinc-500'>
-                                -
-                              </span>
-                            )}
+                            <div className='flex items-center gap-2'>
+                              {sale.canUpdate && (
+                                <>
+                                  <button
+                                    type='button'
+                                    onClick={() => setEditingSale(sale)}
+                                    className='inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800'
+                                    aria-label='Editar reserva'
+                                    title='Editar reserva'
+                                  >
+                                    <Pencil size={16} />
+                                  </button>
+                                  <button
+                                    type='button'
+                                    onClick={() =>
+                                      void handleDeleteSale(sale.id)
+                                    }
+                                    disabled={deletingSaleId === sale.id}
+                                    className='inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950'
+                                    aria-label='Eliminar reserva'
+                                    title='Eliminar reserva'
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -870,6 +890,11 @@ export default function ClientsPart() {
                         </p>
                         <p className='text-right text-slate-700 dark:text-zinc-300'>
                           {sale.unitLabel}
+                          {sale.unitSquareMeters != null && (
+                            <span className='block text-xs text-slate-500 dark:text-zinc-400'>
+                              {formatSquareMeters(sale.unitSquareMeters)}
+                            </span>
+                          )}
                         </p>
                         <p className='text-slate-500 dark:text-zinc-400'>
                           Metodo
@@ -888,15 +913,19 @@ export default function ClientsPart() {
                         </p>
                         <p className='text-right text-slate-700 dark:text-zinc-300'>
                           {sale.finalPrice
-                            ? `${sale.finalPrice.toLocaleString('es-BO')} Bs`
+                            ? `${sale.finalPrice.toLocaleString('es-BO')} ${sale.currency}`
                             : '-'}
                         </p>
                         <p className='text-slate-500 dark:text-zinc-400'>
                           Adelanto
                         </p>
                         <p className='text-right text-slate-700 dark:text-zinc-300'>
-                          {sale.advancePercentage != null
-                            ? `${sale.advancePercentage}% · ${sale.advanceAmount?.toLocaleString('es-BO') ?? '-'} Bs · saldo ${sale.remainingAmount?.toLocaleString('es-BO') ?? '-'} Bs`
+                          {sale.advanceAmount != null
+                            ? `${
+                                sale.advanceType === 'amount'
+                                  ? 'monto fijo'
+                                  : `${sale.advancePercentage}%`
+                              } · ${sale.advanceAmount.toLocaleString('es-BO')} ${sale.currency} · saldo ${sale.remainingAmount?.toLocaleString('es-BO') ?? '-'} ${sale.currency}`
                             : '-'}
                         </p>
                         <p className='text-slate-500 dark:text-zinc-400'>
@@ -947,31 +976,33 @@ export default function ClientsPart() {
                             </span>
                           )}
                         </div>
-                        {sale.canUpdate ? (
-                          <div className='flex items-center gap-2'>
-                            <button
-                              type='button'
-                              onClick={() => setEditingSale(sale)}
-                              className='inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800'
-                              aria-label='Editar reserva'
-                            >
-                              <Pencil size={16} />
-                            </button>
-                            <button
-                              type='button'
-                              onClick={() => void handleDeleteSale(sale.id)}
-                              disabled={deletingSaleId === sale.id}
-                              className='inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950'
-                              aria-label='Eliminar reserva'
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        ) : (
-                          <span className='text-xs text-amber-700 dark:text-amber-400'>
-                            Solo propietario
-                          </span>
-                        )}
+                        <div className='flex items-center gap-2'>
+                          {sale.canUpdate ? (
+                            <>
+                              <button
+                                type='button'
+                                onClick={() => setEditingSale(sale)}
+                                className='inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800'
+                                aria-label='Editar reserva'
+                              >
+                                <Pencil size={16} />
+                              </button>
+                              <button
+                                type='button'
+                                onClick={() => void handleDeleteSale(sale.id)}
+                                disabled={deletingSaleId === sale.id}
+                                className='inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950'
+                                aria-label='Eliminar reserva'
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </>
+                          ) : (
+                            <span className='text-xs text-amber-700 dark:text-amber-400'>
+                              Solo propietario
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1255,104 +1286,23 @@ export default function ClientsPart() {
                   </div>
 
                   {saleClientMode === 'existing' ? (
-                    <div className='flex flex-col gap-1.5'>
-                      <label className='ml-1 text-[13px] font-semibold text-slate-700 dark:text-zinc-300'>
-                        Cliente
-                      </label>
-                      <div className='relative' ref={saleClientSelectRef}>
-                        <button
-                          type='button'
-                          onClick={() =>
-                            setIsSaleClientSelectOpen((prevOpen) => !prevOpen)
-                          }
-                          className='flex h-11 w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 text-left text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100'
-                          aria-haspopup='listbox'
-                          aria-expanded={isSaleClientSelectOpen}
-                        >
-                          <span className='truncate'>
-                            {selectedSaleClient
-                              ? `${selectedSaleClient.fullName}${
-                                  selectedSaleClient.email
-                                    ? ` (${selectedSaleClient.email})`
-                                    : ''
-                                }`
-                              : 'Selecciona cliente'}
-                          </span>
-                          <ChevronDown size={16} className='text-slate-500' />
-                        </button>
-
-                        {isSaleClientSelectOpen && (
-                          <div className='absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-zinc-800 dark:bg-zinc-950'>
-                            <div className='relative border-b border-slate-100 dark:border-zinc-800'>
-                              <Search
-                                size={16}
-                                className='pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500'
-                              />
-                              <input
-                                autoFocus
-                                type='text'
-                                value={saleClientQuery}
-                                onChange={(event) =>
-                                  setSaleClientQuery(event.target.value)
-                                }
-                                placeholder='Buscar por nombre, apellido o email'
-                                className='h-10 w-full bg-transparent pl-9 pr-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-zinc-100 dark:placeholder:text-zinc-500'
-                              />
-                            </div>
-
-                            <div className='max-h-56 overflow-y-auto py-1'>
-                              {filteredSaleClientOptions.length === 0 ? (
-                                <p className='px-3 py-2 text-sm text-slate-500 dark:text-zinc-400'>
-                                  No hay clientes para {saleClientQuery.trim()}
-                                </p>
-                              ) : (
-                                filteredSaleClientOptions.map((client) => (
-                                  <button
-                                    key={client.id}
-                                    type='button'
-                                    onClick={() => {
-                                      setSelectedSaleClientId(client.id);
-                                      setSaleClientQuery('');
-                                      setIsSaleClientSelectOpen(false);
-                                    }}
-                                    className='block w-full px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100 dark:text-zinc-200 dark:hover:bg-zinc-900'
-                                  >
-                                    <span className='block truncate font-medium'>
-                                      {client.fullName}
-                                    </span>
-                                    {client.email && (
-                                      <span className='block truncate text-xs text-slate-500 dark:text-zinc-400'>
-                                        {client.email}
-                                      </span>
-                                    )}
-                                  </button>
-                                ))
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <select
-                        name='clientId'
-                        required={saleClientMode === 'existing'}
-                        value={selectedSaleClientId}
-                        onChange={(event) => {
-                          setSelectedSaleClientId(event.target.value);
-                        }}
-                        tabIndex={-1}
-                        aria-hidden='true'
-                        className='h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100'
-                        style={{ display: 'none' }}
-                      >
-                        <option value=''>Selecciona cliente</option>
-                        {clientOptions.map((client) => (
-                          <option key={client.id} value={client.id}>
-                            {client.fullName}
-                            {client.email ? ` (${client.email})` : ''}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    <CardSelect
+                      className='md:col-span-3'
+                      label='Cliente'
+                      name='clientId'
+                      required
+                      icon={<User size={18} />}
+                      placeholder='Selecciona cliente'
+                      searchPlaceholder='Buscar por nombre, apellido o email'
+                      emptyLabel='No hay clientes para tu búsqueda'
+                      value={selectedSaleClientId}
+                      onChange={setSelectedSaleClientId}
+                      options={clientOptions.map((client) => ({
+                        id: client.id,
+                        title: client.fullName,
+                        subtitle: client.email,
+                      }))}
+                    />
                   ) : (
                     <div className='grid grid-cols-1 gap-4 md:col-span-3 md:grid-cols-2'>
                       <InputField
@@ -1384,27 +1334,24 @@ export default function ClientsPart() {
                     </div>
                   )}
 
-                  <div className='flex flex-col gap-1.5'>
-                    <label className='ml-1 text-[13px] font-semibold text-slate-700 dark:text-zinc-300'>
-                      Unidad
-                    </label>
-                    <select
-                      name='unitId'
-                      required
-                      value={selectedSaleUnitId}
-                      onChange={(event) =>
-                        setSelectedSaleUnitId(event.target.value)
-                      }
-                      className='h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100'
-                    >
-                      <option value=''>Selecciona unidad</option>
-                      {saleableUnits.map((unit) => (
-                        <option key={unit.id} value={unit.id}>
-                          {unit.label} - {stateLabel(unit.state)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <CardSelect
+                    className='md:col-span-3'
+                    label='Unidad'
+                    name='unitId'
+                    required
+                    icon={<Home size={18} />}
+                    placeholder='Selecciona unidad'
+                    searchPlaceholder='Buscar por edificio, piso o unidad'
+                    emptyLabel='No hay unidades disponibles para tu búsqueda'
+                    value={selectedSaleUnitId}
+                    onChange={setSelectedSaleUnitId}
+                    options={saleableUnits.map((unit) => ({
+                      id: unit.id,
+                      title: unit.label,
+                      subtitle: formatSquareMeters(unit.squareMeters),
+                      badge: { text: stateLabel(unit.state), tone: 'success' },
+                    }))}
+                  />
 
                   <div className='flex flex-col gap-1.5'>
                     <label className='ml-1 text-[13px] font-semibold text-slate-700 dark:text-zinc-300'>
@@ -1423,28 +1370,7 @@ export default function ClientsPart() {
                     </select>
                   </div>
 
-                  <InputField
-                    name='finalPrice'
-                    label='Precio Final'
-                    type='number'
-                  />
-                  <div className='flex flex-col gap-1.5'>
-                    <label className='ml-1 text-[13px] font-semibold text-slate-700 dark:text-zinc-300'>
-                      Adelanto (%)
-                    </label>
-                    <input
-                      name='advancePercentage'
-                      type='number'
-                      min='0'
-                      max='100'
-                      step='1'
-                      placeholder='Ej: 13'
-                      className='h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500'
-                    />
-                    <p className='ml-1 text-[11px] text-slate-500 dark:text-zinc-400'>
-                      Se calcula sobre el precio final total.
-                    </p>
-                  </div>
+                  <PriceAdvanceFields />
                   <InputField name='paymentMethod' label='Metodo de Pago' />
 
                   <div className='flex flex-col gap-1.5 md:col-span-3'>
@@ -1544,39 +1470,49 @@ export default function ClientsPart() {
                       <span className='font-semibold'>Cliente:</span>{' '}
                       {editingSale.clientName}
                     </p>
-                    <p>
-                      <span className='font-semibold'>Unidad:</span>{' '}
-                      {editingSale.unitLabel}
-                    </p>
                   </div>
 
-                  <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
-                    <div className='flex flex-col gap-1.5'>
-                      <label className='ml-1 text-[13px] font-semibold text-slate-700 dark:text-zinc-300'>
-                        Precio Final
-                      </label>
-                      <input
-                        name='finalPrice'
-                        type='number'
-                        defaultValue={editingSale.finalPrice ?? ''}
-                        className='h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition-all focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100'
-                      />
-                    </div>
+                  <CardSelect
+                    label='Unidad'
+                    name='unitId'
+                    icon={<Home size={18} />}
+                    placeholder='Selecciona unidad'
+                    searchPlaceholder='Buscar por edificio, piso o unidad'
+                    value={editUnitId}
+                    onChange={setEditUnitId}
+                    options={unitOptions.map((unit) => ({
+                      id: unit.id,
+                      title: unit.label,
+                      subtitle:
+                        [
+                          formatSquareMeters(unit.squareMeters),
+                          unit.id === editingSale.unitId
+                            ? 'Unidad actual de esta reserva'
+                            : null,
+                        ]
+                          .filter(Boolean)
+                          .join(' · ') || null,
+                      badge: {
+                        text: stateLabel(unit.state),
+                        tone: unit.state === 1 ? 'success' : 'warning',
+                      },
+                      disabled:
+                        unit.state !== 1 && unit.id !== editingSale.unitId,
+                    }))}
+                  />
+                  <p className='-mt-2 ml-1 text-[11px] text-slate-500 dark:text-zinc-400'>
+                    Solo puedes reasignar a una unidad disponible.
+                  </p>
 
-                    <div className='flex flex-col gap-1.5'>
-                      <label className='ml-1 text-[13px] font-semibold text-slate-700 dark:text-zinc-300'>
-                        Adelanto (%)
-                      </label>
-                      <input
-                        name='advancePercentage'
-                        type='number'
-                        min='0'
-                        max='100'
-                        step='1'
-                        defaultValue={editingSale.advancePercentage ?? ''}
-                        className='h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition-all focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100'
-                      />
-                    </div>
+                  <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+                    <PriceAdvanceFields
+                      defaultCurrency={editingSale.currency}
+                      defaultExchangeRate={editingSale.exchangeRate}
+                      defaultFinalPrice={editingSale.finalPrice}
+                      defaultAdvanceType={editingSale.advanceType}
+                      defaultAdvancePercentage={editingSale.advancePercentage}
+                      defaultAdvanceAmount={editingSale.advanceFixedAmount}
+                    />
 
                     <div className='flex flex-col gap-1.5'>
                       <label className='ml-1 text-[13px] font-semibold text-slate-700 dark:text-zinc-300'>
@@ -1635,6 +1571,355 @@ function stateLabel(state: UnitState) {
   );
 }
 
+function PriceAdvanceFields({
+  defaultCurrency,
+  defaultExchangeRate,
+  defaultFinalPrice,
+  defaultAdvanceType,
+  defaultAdvancePercentage,
+  defaultAdvanceAmount,
+}: {
+  defaultCurrency?: string | null;
+  defaultExchangeRate?: number | null;
+  defaultFinalPrice?: number | null;
+  defaultAdvanceType?: string | null;
+  defaultAdvancePercentage?: number | null;
+  defaultAdvanceAmount?: number | null;
+}) {
+  const [currency, setCurrency] = useState<'BOB' | 'USD'>(
+    defaultCurrency === 'USD' ? 'USD' : 'BOB'
+  );
+  const [advanceType, setAdvanceType] = useState<'percentage' | 'amount'>(
+    defaultAdvanceType === 'amount' ? 'amount' : 'percentage'
+  );
+
+  return (
+    <>
+      <InputField
+        name='finalPrice'
+        label='Precio Final'
+        type='number'
+        defaultValue={defaultFinalPrice ?? undefined}
+      />
+
+      <div className='flex flex-col gap-1.5'>
+        <label className='ml-1 text-[13px] font-semibold text-slate-700 dark:text-zinc-300'>
+          Moneda
+        </label>
+        <select
+          name='currency'
+          value={currency}
+          onChange={(event) => setCurrency(event.target.value as 'BOB' | 'USD')}
+          className='h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100'
+        >
+          {currencyOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className='flex flex-col gap-1.5'>
+        <label className='ml-1 text-[13px] font-semibold text-slate-700 dark:text-zinc-300'>
+          Tipo de Cambio {currency === 'BOB' && '(opcional)'}
+        </label>
+        <input
+          name='exchangeRate'
+          type='number'
+          min='0'
+          step='0.0001'
+          placeholder='Ej: 6.96'
+          defaultValue={defaultExchangeRate ?? undefined}
+          className='h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500'
+        />
+        <p className='ml-1 text-[11px] text-slate-500 dark:text-zinc-400'>
+          Tipo de cambio que representa este precio.
+        </p>
+      </div>
+
+      <div className='md:col-span-3'>
+        <p className='ml-1 text-[13px] font-semibold text-slate-700 dark:text-zinc-300'>
+          Tipo de adelanto
+        </p>
+        <div className='mt-2 grid grid-cols-2 gap-2'>
+          <button
+            type='button'
+            onClick={() => setAdvanceType('percentage')}
+            className={`rounded-xl border px-4 py-2 text-sm font-semibold transition ${
+              advanceType === 'percentage'
+                ? 'border-slate-900 bg-slate-900 text-white dark:border-zinc-200 dark:bg-zinc-200 dark:text-black'
+                : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900'
+            }`}
+          >
+            Porcentaje
+          </button>
+          <button
+            type='button'
+            onClick={() => setAdvanceType('amount')}
+            className={`rounded-xl border px-4 py-2 text-sm font-semibold transition ${
+              advanceType === 'amount'
+                ? 'border-slate-900 bg-slate-900 text-white dark:border-zinc-200 dark:bg-zinc-200 dark:text-black'
+                : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900'
+            }`}
+          >
+            Monto fijo
+          </button>
+        </div>
+        <input type='hidden' name='advanceType' value={advanceType} />
+      </div>
+
+      {advanceType === 'percentage' ? (
+        <div className='flex flex-col gap-1.5'>
+          <label className='ml-1 text-[13px] font-semibold text-slate-700 dark:text-zinc-300'>
+            Adelanto (%)
+          </label>
+          <input
+            name='advancePercentage'
+            type='number'
+            min='0'
+            max='100'
+            step='1'
+            placeholder='Ej: 13'
+            defaultValue={defaultAdvancePercentage ?? undefined}
+            className='h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500'
+          />
+          <p className='ml-1 text-[11px] text-slate-500 dark:text-zinc-400'>
+            Se calcula sobre el precio final total.
+          </p>
+        </div>
+      ) : (
+        <div className='flex flex-col gap-1.5'>
+          <label className='ml-1 text-[13px] font-semibold text-slate-700 dark:text-zinc-300'>
+            Monto de Adelanto
+          </label>
+          <input
+            name='advanceAmount'
+            type='number'
+            min='0'
+            step='1'
+            placeholder='Ej: 5000'
+            defaultValue={defaultAdvanceAmount ?? undefined}
+            className='h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500'
+          />
+          <p className='ml-1 text-[11px] text-slate-500 dark:text-zinc-400'>
+            Monto fijo, en la misma moneda del precio final.
+          </p>
+        </div>
+      )}
+    </>
+  );
+}
+
+interface CardSelectOption {
+  id: string;
+  title: string;
+  subtitle?: string | null;
+  badge?: { text: string; tone?: 'success' | 'warning' | 'default' } | null;
+  disabled?: boolean;
+}
+
+function CardSelect({
+  label,
+  name,
+  icon,
+  placeholder,
+  searchPlaceholder,
+  emptyLabel = 'Sin resultados',
+  options,
+  value,
+  onChange,
+  required,
+  className = '',
+}: {
+  label: string;
+  name: string;
+  icon: React.ReactNode;
+  placeholder: string;
+  searchPlaceholder: string;
+  emptyLabel?: string;
+  options: CardSelectOption[];
+  value: string;
+  onChange: (id: string) => void;
+  required?: boolean;
+  className?: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleOutsideClick(event: MouseEvent) {
+      if (!isOpen) return;
+      const target = event.target as Node;
+      if (containerRef.current?.contains(target)) return;
+      setIsOpen(false);
+    }
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [isOpen]);
+
+  const selected = options.find((option) => option.id === value);
+
+  const filteredOptions = useMemo(() => {
+    const normalizedQuery = normalizeSearch(query);
+    if (!normalizedQuery) return options;
+    return options.filter((option) =>
+      normalizeSearch(`${option.title} ${option.subtitle ?? ''}`).includes(
+        normalizedQuery
+      )
+    );
+  }, [options, query]);
+
+  const badgeClassName = (tone?: 'success' | 'warning' | 'default') =>
+    tone === 'warning'
+      ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300'
+      : tone === 'success'
+        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
+        : 'bg-slate-200 text-slate-600 dark:bg-zinc-800 dark:text-zinc-300';
+
+  return (
+    <div className={`flex flex-col gap-1.5 ${className}`}>
+      <label className='ml-1 text-[13px] font-semibold text-slate-700 dark:text-zinc-300'>
+        {label} {required && <span className='text-red-500'>*</span>}
+      </label>
+      <div className='relative' ref={containerRef}>
+        <button
+          type='button'
+          onClick={() => setIsOpen((prev) => !prev)}
+          className={`flex h-14 w-full items-center gap-3 rounded-xl border px-3 text-left transition ${
+            selected
+              ? 'border-emerald-300 bg-emerald-50/60 dark:border-emerald-900/50 dark:bg-emerald-950/20'
+              : 'border-slate-200 bg-slate-50 hover:border-slate-300 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700'
+          }`}
+          aria-haspopup='listbox'
+          aria-expanded={isOpen}
+        >
+          <span
+            className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg ${
+              selected
+                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                : 'bg-slate-200/70 text-slate-500 dark:bg-zinc-800 dark:text-zinc-400'
+            }`}
+          >
+            {icon}
+          </span>
+          <span className='min-w-0 flex-1'>
+            {selected ? (
+              <>
+                <span className='block truncate text-sm font-semibold text-slate-900 dark:text-zinc-100'>
+                  {selected.title}
+                </span>
+                {selected.subtitle && (
+                  <span className='block truncate text-xs text-slate-500 dark:text-zinc-400'>
+                    {selected.subtitle}
+                  </span>
+                )}
+              </>
+            ) : (
+              <span className='block text-sm text-slate-400 dark:text-zinc-500'>
+                {placeholder}
+              </span>
+            )}
+          </span>
+          {selected?.badge && (
+            <span
+              className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${badgeClassName(selected.badge.tone)}`}
+            >
+              {selected.badge.text}
+            </span>
+          )}
+          <ChevronDown size={16} className='flex-shrink-0 text-slate-400' />
+        </button>
+
+        {isOpen && (
+          <div className='absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-zinc-800 dark:bg-zinc-950'>
+            <div className='relative border-b border-slate-100 dark:border-zinc-800'>
+              <Search
+                size={16}
+                className='pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500'
+              />
+              <input
+                autoFocus
+                type='text'
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={searchPlaceholder}
+                className='h-10 w-full bg-transparent pl-9 pr-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-zinc-100 dark:placeholder:text-zinc-500'
+              />
+            </div>
+
+            <div className='max-h-64 overflow-y-auto py-1'>
+              {filteredOptions.length === 0 ? (
+                <p className='px-3 py-2 text-sm text-slate-500 dark:text-zinc-400'>
+                  {emptyLabel}
+                </p>
+              ) : (
+                filteredOptions.map((option) => (
+                  <button
+                    key={option.id}
+                    type='button'
+                    disabled={option.disabled}
+                    onClick={() => {
+                      if (option.disabled) return;
+                      onChange(option.id);
+                      setQuery('');
+                      setIsOpen(false);
+                    }}
+                    className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition ${
+                      option.disabled
+                        ? 'cursor-not-allowed opacity-40'
+                        : 'hover:bg-slate-100 dark:hover:bg-zinc-900'
+                    } ${option.id === value ? 'bg-slate-100 dark:bg-zinc-900' : ''}`}
+                  >
+                    <span className='min-w-0'>
+                      <span className='block truncate font-medium text-slate-700 dark:text-zinc-200'>
+                        {option.title}
+                      </span>
+                      {option.subtitle && (
+                        <span className='block truncate text-xs text-slate-500 dark:text-zinc-400'>
+                          {option.subtitle}
+                        </span>
+                      )}
+                    </span>
+                    {option.badge && (
+                      <span
+                        className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${badgeClassName(option.badge.tone)}`}
+                      >
+                        {option.badge.text}
+                      </span>
+                    )}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <select
+        name={name}
+        required={required}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        tabIndex={-1}
+        aria-hidden='true'
+        style={{ display: 'none' }}
+      >
+        <option value=''>{placeholder}</option>
+        {options.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.title}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 function SectionHeader({
   icon,
   title,
@@ -1663,6 +1948,7 @@ interface InputFieldProps {
   type?: 'text' | 'number' | 'email';
   required?: boolean;
   icon?: React.ReactNode;
+  defaultValue?: string | number;
 }
 
 function InputField({
@@ -1671,6 +1957,7 @@ function InputField({
   type = 'text',
   required = false,
   icon,
+  defaultValue,
 }: InputFieldProps) {
   return (
     <div className='flex flex-col gap-1.5'>
@@ -1687,6 +1974,7 @@ function InputField({
           name={name}
           type={type}
           required={required}
+          defaultValue={defaultValue}
           placeholder={`Ej: ${label}...`}
           className={`h-11 w-full rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500 ${icon ? 'pl-10 pr-4' : 'px-4'}`}
         />

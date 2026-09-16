@@ -11,9 +11,12 @@ import {
   resolveVisibleSalesUserId,
 } from '@/lib/ownership';
 import {
-  calculateAdvanceAmount,
-  calculateRemainingAmount,
   normalizeAdvancePercentage,
+  normalizeAdvanceType,
+  normalizeCurrency,
+  resolveAdvanceAmount,
+  resolveRemainingAmount,
+  type AdvanceType,
 } from '@/lib/sales-payment';
 import { and, desc, eq, ilike, or, sql } from 'drizzle-orm';
 
@@ -27,6 +30,102 @@ function parseState(value: unknown): UnitState | null {
     return parsed;
   }
   return null;
+}
+
+function resolveSquareMeters(
+  realSquareMeters: number | string | null | undefined,
+  baseSquareMeters: number | null | undefined
+) {
+  const real = realSquareMeters == null ? null : Number(realSquareMeters);
+  if (real != null && Number.isFinite(real)) return real;
+  return baseSquareMeters ?? null;
+}
+
+interface AdvanceValidationInput {
+  advanceType?: string;
+  advancePercentage?: number | null;
+  advanceAmount?: number | null;
+  finalPrice?: number | null;
+}
+
+type AdvanceValidationResult =
+  | {
+      ok: true;
+      advanceType: AdvanceType;
+      advancePercentage: number | null;
+      advanceAmount: number | null;
+    }
+  | { ok: false; error: string };
+
+function validateAdvanceInput(
+  input: AdvanceValidationInput
+): AdvanceValidationResult {
+  const advanceType: AdvanceType =
+    normalizeAdvanceType(input.advanceType) ?? 'percentage';
+
+  if (advanceType === 'amount') {
+    if (input.advanceAmount == null) {
+      return {
+        ok: true,
+        advanceType,
+        advancePercentage: null,
+        advanceAmount: null,
+      };
+    }
+
+    const amount = Number(input.advanceAmount);
+    if (!Number.isFinite(amount) || amount < 0) {
+      return { ok: false, error: 'El adelanto debe ser un monto válido' };
+    }
+
+    if (input.finalPrice == null || input.finalPrice <= 0) {
+      return {
+        ok: false,
+        error:
+          'Debes ingresar el precio final para registrar un adelanto en monto',
+      };
+    }
+
+    if (amount > input.finalPrice) {
+      return {
+        ok: false,
+        error: 'El adelanto no puede ser mayor al precio final',
+      };
+    }
+
+    return {
+      ok: true,
+      advanceType,
+      advancePercentage: null,
+      advanceAmount: Math.trunc(amount),
+    };
+  }
+
+  const advancePercentage =
+    input.advancePercentage == null
+      ? null
+      : normalizeAdvancePercentage(input.advancePercentage);
+
+  if (input.advancePercentage != null && advancePercentage == null) {
+    return { ok: false, error: 'El adelanto debe estar entre 0% y 100%' };
+  }
+
+  if (
+    advancePercentage !== null &&
+    (input.finalPrice == null || input.finalPrice <= 0)
+  ) {
+    return {
+      ok: false,
+      error: 'Debes ingresar el precio final para calcular el adelanto',
+    };
+  }
+
+  return {
+    ok: true,
+    advanceType,
+    advancePercentage,
+    advanceAmount: null,
+  };
 }
 
 function toOptionalText(value: unknown) {
@@ -167,11 +266,17 @@ export async function getSalesSetupDataAction() {
           unit_number: true,
           floor: true,
           state: true,
+          real_square_meters: true,
         },
         with: {
           building: {
             columns: {
               building_title: true,
+            },
+          },
+          model: {
+            columns: {
+              base_square_meters: true,
             },
           },
         },
@@ -214,6 +319,10 @@ export async function getSalesSetupDataAction() {
           id: unit.id,
           label: `${unit.building?.building_title ?? 'Edificio'} · Piso ${unit.floor} · Unidad ${unit.unit_number ?? '-'}`,
           state: parseState(unit.state) ?? 1,
+          squareMeters: resolveSquareMeters(
+            unit.real_square_meters,
+            unit.model?.base_square_meters
+          ),
         })),
         users: userOptions.map((item) => ({
           id: item.id,
@@ -238,7 +347,11 @@ interface CreateSaleInput {
   unitId: string;
   state: UnitState;
   finalPrice?: number | null;
+  currency?: string;
+  exchangeRate?: number | null;
+  advanceType?: string;
   advancePercentage?: number | null;
+  advanceAmount?: number | null;
   paymentMethod?: string;
   paymentNotes?: string;
 }
@@ -284,27 +397,22 @@ export async function createSaleAction(input: CreateSaleInput) {
       };
     }
 
-    const advancePercentage =
-      input.advancePercentage == null
+    const advanceResult = validateAdvanceInput({
+      advanceType: input.advanceType,
+      advancePercentage: input.advancePercentage,
+      advanceAmount: input.advanceAmount,
+      finalPrice: input.finalPrice,
+    });
+
+    if (!advanceResult.ok) {
+      return { success: false, error: advanceResult.error };
+    }
+
+    const currency = normalizeCurrency(input.currency) ?? 'BOB';
+    const exchangeRate =
+      input.exchangeRate == null || !Number.isFinite(Number(input.exchangeRate))
         ? null
-        : normalizeAdvancePercentage(input.advancePercentage);
-
-    if (input.advancePercentage != null && advancePercentage == null) {
-      return {
-        success: false,
-        error: 'El adelanto debe estar entre 0% y 100%',
-      };
-    }
-
-    if (
-      advancePercentage !== null &&
-      (input.finalPrice == null || input.finalPrice <= 0)
-    ) {
-      return {
-        success: false,
-        error: 'Debes ingresar el precio final para calcular el adelanto',
-      };
-    }
+        : Number(input.exchangeRate);
 
     await db.transaction(async (tx) => {
       await tx.insert(sales).values({
@@ -313,7 +421,11 @@ export async function createSaleAction(input: CreateSaleInput) {
         userId: session.user.id,
         updatedByUserId: session.user.id,
         final_price: input.finalPrice ?? null,
-        advance_percentage: advancePercentage,
+        currency,
+        exchangeRate,
+        advanceType: advanceResult.advanceType,
+        advance_percentage: advanceResult.advancePercentage,
+        advanceAmount: advanceResult.advanceAmount,
         payment_method: input.paymentMethod || null,
         payment_notes: input.paymentNotes || null,
       });
@@ -414,10 +526,31 @@ export async function updateUnitStateAction(unitId: string, state: UnitState) {
 
 interface UpdateSaleInput {
   saleId: string;
+  unitId?: string;
   finalPrice?: number | null;
+  currency?: string;
+  exchangeRate?: number | null;
+  advanceType?: string;
   advancePercentage?: number | null;
+  advanceAmount?: number | null;
   paymentMethod?: string;
   paymentNotes?: string;
+}
+
+async function loadUnitLabel(unitId: string) {
+  const unit = await db.query.unit_department.findFirst({
+    where: eq(unit_department.id, unitId),
+    columns: { id: true, unit_number: true, floor: true, state: true },
+    with: { building: { columns: { building_title: true } } },
+  });
+
+  if (!unit) return null;
+
+  return {
+    id: unit.id,
+    state: parseState(unit.state) ?? 1,
+    label: `${unit.building?.building_title ?? 'Edificio'} · Piso ${unit.floor} · Unidad ${unit.unit_number ?? '-'}`,
+  };
 }
 
 export async function updateSaleAction(input: UpdateSaleInput) {
@@ -441,6 +574,7 @@ export async function updateSaleAction(input: UpdateSaleInput) {
       columns: {
         id: true,
         userId: true,
+        unitId: true,
       },
     });
 
@@ -455,40 +589,83 @@ export async function updateSaleAction(input: UpdateSaleInput) {
       };
     }
 
-    const advancePercentage =
-      input.advancePercentage == null
+    const advanceResult = validateAdvanceInput({
+      advanceType: input.advanceType,
+      advancePercentage: input.advancePercentage,
+      advanceAmount: input.advanceAmount,
+      finalPrice: input.finalPrice,
+    });
+
+    if (!advanceResult.ok) {
+      return { success: false, error: advanceResult.error };
+    }
+
+    const requestedUnitId = input.unitId?.trim() || sale.unitId;
+    let reassignment: {
+      oldUnit: NonNullable<Awaited<ReturnType<typeof loadUnitLabel>>>;
+      newUnit: NonNullable<Awaited<ReturnType<typeof loadUnitLabel>>>;
+    } | null = null;
+
+    if (requestedUnitId !== sale.unitId) {
+      const [oldUnit, newUnit] = await Promise.all([
+        loadUnitLabel(sale.unitId),
+        loadUnitLabel(requestedUnitId),
+      ]);
+
+      if (!oldUnit || !newUnit) {
+        return { success: false, error: 'No se encontró la unidad' };
+      }
+
+      if (newUnit.state !== 1) {
+        return {
+          success: false,
+          error: 'La unidad seleccionada no está disponible',
+        };
+      }
+
+      reassignment = { oldUnit, newUnit };
+    }
+
+    const nextFinalPrice = input.finalPrice ?? null;
+    const nextCurrency = normalizeCurrency(input.currency) ?? 'BOB';
+    const nextExchangeRate =
+      input.exchangeRate == null || !Number.isFinite(Number(input.exchangeRate))
         ? null
-        : normalizeAdvancePercentage(input.advancePercentage);
-
-    if (input.advancePercentage != null && advancePercentage == null) {
-      return {
-        success: false,
-        error: 'El adelanto debe estar entre 0% y 100%',
-      };
-    }
-
-    if (
-      advancePercentage !== null &&
-      (input.finalPrice == null || input.finalPrice <= 0)
-    ) {
-      return {
-        success: false,
-        error: 'Debes ingresar el precio final para calcular el adelanto',
-      };
-    }
+        : Number(input.exchangeRate);
+    const nextPaymentMethod = input.paymentMethod?.trim() || null;
+    const nextPaymentNotes = input.paymentNotes?.trim() || null;
 
     const now = new Date();
-    await db
-      .update(sales)
-      .set({
-        final_price: input.finalPrice ?? null,
-        advance_percentage: advancePercentage,
-        payment_method: input.paymentMethod?.trim() || null,
-        payment_notes: input.paymentNotes?.trim() || null,
-        updatedByUserId: session.user.id,
-        updatedAt: now,
-      })
-      .where(eq(sales.id, input.saleId));
+    await db.transaction(async (tx) => {
+      await tx
+        .update(sales)
+        .set({
+          unitId: requestedUnitId,
+          final_price: nextFinalPrice,
+          currency: nextCurrency,
+          exchangeRate: nextExchangeRate,
+          advanceType: advanceResult.advanceType,
+          advance_percentage: advanceResult.advancePercentage,
+          advanceAmount: advanceResult.advanceAmount,
+          payment_method: nextPaymentMethod,
+          payment_notes: nextPaymentNotes,
+          updatedByUserId: session.user.id,
+          updatedAt: now,
+        })
+        .where(eq(sales.id, input.saleId));
+
+      if (reassignment) {
+        await tx
+          .update(unit_department)
+          .set({ state: 1, updatedAt: now })
+          .where(eq(unit_department.id, reassignment.oldUnit.id));
+
+        await tx
+          .update(unit_department)
+          .set({ state: reassignment.oldUnit.state, updatedAt: now })
+          .where(eq(unit_department.id, reassignment.newUnit.id));
+      }
+    });
 
     revalidatePath('/admin/sales');
     return { success: true, updatedAt: now.toISOString() };
@@ -653,11 +830,17 @@ export async function getSalesListAction(input: GetSalesListInput = {}) {
               unit_number: true,
               floor: true,
               state: true,
+              real_square_meters: true,
             },
             with: {
               building: {
                 columns: {
                   building_title: true,
+                },
+              },
+              model: {
+                columns: {
+                  base_square_meters: true,
                 },
               },
             },
@@ -702,6 +885,10 @@ export async function getSalesListAction(input: GetSalesListInput = {}) {
             .filter(Boolean)
             .join(' '),
           unitLabel: `${sale.unit.building?.building_title ?? 'Edificio'} · Piso ${sale.unit.floor} · Unidad ${sale.unit.unit_number ?? '-'}`,
+          unitSquareMeters: resolveSquareMeters(
+            sale.unit.real_square_meters,
+            sale.unit.model?.base_square_meters
+          ),
           state: parseState(sale.unit.state) ?? 1,
           detail: [sale.payment_method, sale.payment_notes]
             .filter(Boolean)
@@ -709,15 +896,25 @@ export async function getSalesListAction(input: GetSalesListInput = {}) {
           paymentMethod: sale.payment_method ?? '',
           paymentNotes: sale.payment_notes ?? '',
           finalPrice: sale.final_price,
+          currency: sale.currency ?? 'BOB',
+          exchangeRate: sale.exchangeRate,
+          advanceType: (sale.advanceType === 'amount'
+            ? 'amount'
+            : 'percentage') as AdvanceType,
           advancePercentage: sale.advance_percentage ?? null,
-          advanceAmount: calculateAdvanceAmount(
-            sale.final_price,
-            sale.advance_percentage
-          ),
-          remainingAmount: calculateRemainingAmount(
-            sale.final_price,
-            sale.advance_percentage
-          ),
+          advanceFixedAmount: sale.advanceAmount ?? null,
+          advanceAmount: resolveAdvanceAmount({
+            totalPrice: sale.final_price,
+            advanceType: sale.advanceType as AdvanceType | null,
+            advancePercentage: sale.advance_percentage,
+            advanceAmount: sale.advanceAmount,
+          }),
+          remainingAmount: resolveRemainingAmount({
+            totalPrice: sale.final_price,
+            advanceType: sale.advanceType as AdvanceType | null,
+            advancePercentage: sale.advance_percentage,
+            advanceAmount: sale.advanceAmount,
+          }),
           salesDate: sale.sales_date?.toISOString() ?? null,
           updatedAt: sale.updatedAt?.toISOString() ?? null,
           lastUpdatedBy: sale.lastUpdatedBy
