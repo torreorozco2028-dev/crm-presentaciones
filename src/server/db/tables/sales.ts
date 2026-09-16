@@ -5,6 +5,7 @@ import {
   varchar,
   text,
   integer,
+  numeric,
   timestamp,
 } from 'drizzle-orm/pg-core';
 import { client } from './client';
@@ -16,7 +17,19 @@ export const sales = pgTable('sales', {
     .default(sql`gen_random_uuid()`)
     .primaryKey(),
   final_price: integer(),
+  // ISO currency code the price/advance are denominated in ('BOB' or 'USD').
+  // Nullable so pre-existing rows (created before multi-currency support) keep working; the app treats a null value as 'BOB'.
+  currency: varchar({ length: 3 }),
+  // Exchange rate the sale was priced at, only meaningful when currency !== 'BOB'.
+  exchangeRate: numeric('exchange_rate', {
+    precision: 10,
+    scale: 4,
+    mode: 'number',
+  }),
   advance_percentage: integer(),
+  // 'percentage' | 'amount'. Nullable for pre-existing rows, treated as 'percentage' when null.
+  advanceType: varchar('advance_type', { length: 20 }),
+  advanceAmount: integer('advance_amount'),
   sales_date: timestamp().default(sql`now()`),
   payment_method: varchar({ length: 50 }),
   payment_notes: text(),
