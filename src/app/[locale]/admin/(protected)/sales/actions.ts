@@ -103,7 +103,7 @@ function validateAdvanceInput(
       ok: true,
       advanceType,
       advancePercentage: null,
-      advanceAmount: Math.trunc(amount),
+      advanceAmount: Math.round(amount * 100) / 100,
     };
   }
 

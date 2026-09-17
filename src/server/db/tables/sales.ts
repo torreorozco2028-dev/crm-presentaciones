@@ -16,7 +16,11 @@ export const sales = pgTable('sales', {
   id: uuid('id')
     .default(sql`gen_random_uuid()`)
     .primaryKey(),
-  final_price: integer(),
+  final_price: numeric('final_price', {
+    precision: 12,
+    scale: 2,
+    mode: 'number',
+  }),
   // ISO currency code the price/advance are denominated in ('BOB' or 'USD').
   // Nullable so pre-existing rows (created before multi-currency support) keep working; the app treats a null value as 'BOB'.
   currency: varchar({ length: 3 }),
@@ -29,7 +33,11 @@ export const sales = pgTable('sales', {
   advance_percentage: integer(),
   // 'percentage' | 'amount'. Nullable for pre-existing rows, treated as 'percentage' when null.
   advanceType: varchar('advance_type', { length: 20 }),
-  advanceAmount: integer('advance_amount'),
+  advanceAmount: numeric('advance_amount', {
+    precision: 12,
+    scale: 2,
+    mode: 'number',
+  }),
   sales_date: timestamp().default(sql`now()`),
   payment_method: varchar({ length: 50 }),
   payment_notes: text(),
