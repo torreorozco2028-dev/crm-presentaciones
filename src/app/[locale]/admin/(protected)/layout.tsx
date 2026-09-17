@@ -30,7 +30,7 @@ export default async function AdminProtectedLayout({
           </aside>
           <main className='flex-1'>
             <div className='flex min-h-screen flex-col md:ml-64'>
-              <header className='sticky top-0 z-40 border-b border-none bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
+              <header className='sticky top-0 z-40 border-b border-none bg-background/95'>
                 <NavBarTop user={session} />
               </header>
               <div className='flex flex-grow flex-col gap-4 p-6'>

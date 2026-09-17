@@ -22,11 +22,14 @@ import {
   ChevronDown,
   Pencil,
   Trash2,
+  History,
   X,
 } from 'lucide-react';
 import {
+  addSaleCommentAction,
   createSaleAction,
   deleteSaleAction,
+  getSaleHistoryAction,
   getSalesListAction,
   getSalesSetupDataAction,
   registerClientAction,
@@ -110,12 +113,29 @@ interface SalesListData {
   rows: SaleRow[];
 }
 
+interface SaleHistoryEntry {
+  id: string;
+  type: 'system' | 'comment';
+  summary: string;
+  createdAt: string | null;
+  user: { id: string; name: string | null; email: string | null };
+}
+
+interface SaleHistoryData {
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  rows: SaleHistoryEntry[];
+}
+
 export default function ClientsPart() {
   const searchParams = useSearchParams();
   const [showClientForm, setShowClientForm] = useState(false);
   const [showSaleForm, setShowSaleForm] = useState(false);
   const [editingSale, setEditingSale] = useState<SaleRow | null>(null);
   const [editUnitId, setEditUnitId] = useState('');
+  const [editClientId, setEditClientId] = useState('');
   const reserveQueryAppliedRef = useRef(false);
 
   const [detailQuery, setDetailQuery] = useState('');
@@ -145,6 +165,13 @@ export default function ClientsPart() {
     null
   );
 
+  const [historySale, setHistorySale] = useState<SaleRow | null>(null);
+  const [historyData, setHistoryData] = useState<SaleHistoryData | null>(null);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
+
   useEffect(() => {
     void loadSetupData();
   }, []);
@@ -164,9 +191,11 @@ export default function ClientsPart() {
     }
   }, [showSaleForm]);
 
-  useEffect(() => {
-    setEditUnitId(editingSale?.unitId ?? '');
-  }, [editingSale]);
+  function openEditSale(sale: SaleRow) {
+    setEditUnitId(sale.unitId);
+    setEditClientId(sale.clientId);
+    setEditingSale(sale);
+  }
 
   useEffect(() => {
     if (reserveQueryAppliedRef.current || !setupData) return;
@@ -248,6 +277,73 @@ export default function ClientsPart() {
     if (!setupData) return;
     void loadSalesList();
   }, [setupData, loadSalesList]);
+
+  const loadSaleHistory = useCallback(async () => {
+    if (!historySale) return;
+    setIsHistoryLoading(true);
+
+    const result = await getSaleHistoryAction({
+      saleId: historySale.id,
+      page: historyPage,
+      pageSize: 10,
+    });
+
+    if (!result.success || !('data' in result) || !result.data) {
+      toast.error(result.error ?? 'No se pudo cargar el historial');
+      setIsHistoryLoading(false);
+      return;
+    }
+
+    setHistoryData(result.data);
+    setIsHistoryLoading(false);
+  }, [historySale, historyPage]);
+
+  useEffect(() => {
+    if (!historySale) return;
+    void loadSaleHistory();
+  }, [historySale, historyPage, loadSaleHistory]);
+
+  function openHistory(sale: SaleRow) {
+    setHistoryData(null);
+    setHistoryPage(1);
+    setNewComment('');
+    setHistorySale(sale);
+  }
+
+  function closeHistory() {
+    setHistorySale(null);
+    setHistoryData(null);
+    setHistoryPage(1);
+    setNewComment('');
+  }
+
+  async function handleAddComment(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!historySale) return;
+
+    const comment = newComment.trim();
+    if (!comment) return;
+
+    setIsCommentSubmitting(true);
+    const result = await addSaleCommentAction({
+      saleId: historySale.id,
+      comment,
+    });
+    setIsCommentSubmitting(false);
+
+    if (!result.success) {
+      toast.error(result.error ?? 'No se pudo guardar el comentario');
+      return;
+    }
+
+    setNewComment('');
+    if (historyPage !== 1) {
+      setHistoryPage(1);
+    } else {
+      await loadSaleHistory();
+    }
+    toast.success('Comentario agregado');
+  }
 
   async function handleClientSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -445,6 +541,9 @@ export default function ClientsPart() {
     setSalesError(null);
 
     const formData = new FormData(form);
+    const clientId = String(
+      formData.get('clientId') ?? editingSale.clientId
+    ).trim();
     const unitId = String(formData.get('unitId') ?? editingSale.unitId).trim();
     const finalPriceRaw = String(formData.get('finalPrice') ?? '').trim();
     const currency = String(formData.get('currency') ?? 'BOB').trim();
@@ -461,6 +560,7 @@ export default function ClientsPart() {
 
     const result = await updateSaleAction({
       saleId: editingSale.id,
+      clientId,
       unitId,
       finalPrice: finalPriceRaw ? Number(finalPriceRaw) : null,
       currency,
@@ -833,11 +933,20 @@ export default function ClientsPart() {
                           </td>
                           <td className='px-4 py-3'>
                             <div className='flex items-center gap-2'>
+                              <button
+                                type='button'
+                                onClick={() => openHistory(sale)}
+                                className='inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800'
+                                aria-label='Ver historial'
+                                title='Ver historial'
+                              >
+                                <History size={16} />
+                              </button>
                               {sale.canUpdate && (
                                 <>
                                   <button
                                     type='button'
-                                    onClick={() => setEditingSale(sale)}
+                                    onClick={() => openEditSale(sale)}
                                     className='inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800'
                                     aria-label='Editar reserva'
                                     title='Editar reserva'
@@ -977,11 +1086,19 @@ export default function ClientsPart() {
                           )}
                         </div>
                         <div className='flex items-center gap-2'>
+                          <button
+                            type='button'
+                            onClick={() => openHistory(sale)}
+                            className='inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800'
+                            aria-label='Ver historial'
+                          >
+                            <History size={16} />
+                          </button>
                           {sale.canUpdate ? (
                             <>
                               <button
                                 type='button'
-                                onClick={() => setEditingSale(sale)}
+                                onClick={() => openEditSale(sale)}
                                 className='inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 transition hover:bg-slate-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800'
                                 aria-label='Editar reserva'
                               >
@@ -1064,12 +1181,14 @@ export default function ClientsPart() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm'
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4'
             >
               <motion.div
                 initial={{ scale: 0.95 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0.95 }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
                 className='max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-8 shadow-xl dark:border-zinc-800 dark:bg-black md:p-10'
               >
                 <div className='mb-6 flex items-center justify-between border-b border-slate-200 pb-4 dark:border-zinc-800'>
@@ -1215,12 +1334,14 @@ export default function ClientsPart() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm'
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4'
             >
               <motion.div
                 initial={{ scale: 0.95 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0.95 }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
                 className='max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-8 shadow-xl dark:border-zinc-800 dark:bg-black md:p-10'
               >
                 <div className='mb-6 flex items-center justify-between border-b border-slate-200 pb-4 dark:border-zinc-800'>
@@ -1434,12 +1555,14 @@ export default function ClientsPart() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm'
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4'
             >
               <motion.div
                 initial={{ scale: 0.95 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0.95 }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
                 className='w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-black'
               >
                 <div className='mb-5 flex items-center justify-between border-b border-slate-200 pb-3 dark:border-zinc-800'>
@@ -1465,12 +1588,20 @@ export default function ClientsPart() {
                 </div>
 
                 <form onSubmit={handleEditSaleSubmit} className='space-y-4'>
-                  <div className='rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400'>
-                    <p>
-                      <span className='font-semibold'>Cliente:</span>{' '}
-                      {editingSale.clientName}
-                    </p>
-                  </div>
+                  <CardSelect
+                    label='Cliente'
+                    name='clientId'
+                    icon={<User size={18} />}
+                    placeholder='Selecciona cliente'
+                    searchPlaceholder='Buscar por nombre, apellido o email'
+                    value={editClientId}
+                    onChange={setEditClientId}
+                    options={clientOptions.map((option) => ({
+                      id: option.id,
+                      title: option.fullName,
+                      subtitle: option.email,
+                    }))}
+                  />
 
                   <CardSelect
                     label='Unidad'
@@ -1556,6 +1687,154 @@ export default function ClientsPart() {
                     </button>
                   </div>
                 </form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {historySale && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4'
+            >
+              <motion.div
+                initial={{ scale: 0.95 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0.95 }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
+                className='flex max-h-[85vh] w-full max-w-lg flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-black'
+              >
+                <div className='mb-4 flex items-center justify-between border-b border-slate-200 pb-3 dark:border-zinc-800'>
+                  <div>
+                    <h3 className='text-lg font-bold text-slate-900 dark:text-zinc-100'>
+                      Historial de la reserva
+                    </h3>
+                    <p className='text-xs text-slate-500 dark:text-zinc-400'>
+                      {historySale.clientName} · {historySale.unitLabel}
+                    </p>
+                  </div>
+                  <button
+                    type='button'
+                    onClick={closeHistory}
+                    className='rounded-lg p-1 hover:bg-slate-100 dark:hover:bg-zinc-900'
+                    aria-label='Cerrar'
+                  >
+                    <X
+                      size={20}
+                      className='text-slate-600 dark:text-zinc-300'
+                    />
+                  </button>
+                </div>
+
+                <form
+                  onSubmit={handleAddComment}
+                  className='mb-4 flex flex-col gap-2'
+                >
+                  <textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    rows={2}
+                    placeholder='Agregar un comentario o actualización...'
+                    className='w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500'
+                  />
+                  <button
+                    type='submit'
+                    disabled={isCommentSubmitting || !newComment.trim()}
+                    className='inline-flex items-center justify-center gap-2 self-end rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60'
+                  >
+                    {isCommentSubmitting
+                      ? 'Guardando...'
+                      : 'Agregar comentario'}
+                  </button>
+                </form>
+
+                <div className='flex-1 space-y-3 overflow-y-auto pr-1'>
+                  {isHistoryLoading && (
+                    <p className='text-sm text-slate-500 dark:text-zinc-400'>
+                      Cargando historial...
+                    </p>
+                  )}
+
+                  {!isHistoryLoading && historyData?.rows.length === 0 && (
+                    <p className='text-sm text-slate-500 dark:text-zinc-400'>
+                      Aun no hay movimientos registrados para esta reserva.
+                    </p>
+                  )}
+
+                  {!isHistoryLoading &&
+                    historyData?.rows.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className='rounded-xl border border-slate-200 p-3 dark:border-zinc-800'
+                      >
+                        <div className='mb-1 flex items-center justify-between gap-2'>
+                          <span className='text-sm font-bold text-emerald-700 dark:text-emerald-400'>
+                            {entry.createdAt
+                              ? new Date(entry.createdAt).toLocaleString(
+                                  'es-BO',
+                                  {
+                                    dateStyle: 'medium',
+                                    timeStyle: 'short',
+                                  }
+                                )
+                              : '-'}
+                          </span>
+                          {entry.type === 'comment' && (
+                            <span className='rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-semibold text-white dark:bg-zinc-200 dark:text-black'>
+                              Comentario
+                            </span>
+                          )}
+                        </div>
+                        <p className='whitespace-pre-line text-sm text-slate-700 dark:text-zinc-300'>
+                          {entry.summary}
+                        </p>
+                        <p className='mt-1 text-xs text-slate-500 dark:text-zinc-400'>
+                          {entry.user.name ?? entry.user.email ?? 'Usuario'}
+                        </p>
+                      </div>
+                    ))}
+                </div>
+
+                {historyData && historyData.totalPages > 1 && (
+                  <div className='mt-4 flex items-center justify-between border-t border-slate-200 pt-3 dark:border-zinc-800'>
+                    <div className='text-xs text-slate-600 dark:text-zinc-300'>
+                      Página{' '}
+                      <span className='font-semibold'>{historyData.page}</span>{' '}
+                      de{' '}
+                      <span className='font-semibold'>
+                        {historyData.totalPages}
+                      </span>
+                    </div>
+                    <div className='flex gap-1'>
+                      <button
+                        type='button'
+                        onClick={() =>
+                          setHistoryPage((page) => Math.max(1, page - 1))
+                        }
+                        disabled={historyPage === 1}
+                        className='rounded-lg border border-slate-300 px-3 py-1 text-xs font-medium text-slate-600 transition hover:enabled:border-slate-400 hover:enabled:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:enabled:border-zinc-600 dark:hover:enabled:bg-zinc-950'
+                      >
+                        Anterior
+                      </button>
+                      <button
+                        type='button'
+                        onClick={() =>
+                          setHistoryPage((page) =>
+                            Math.min(historyData.totalPages, page + 1)
+                          )
+                        }
+                        disabled={historyPage === historyData.totalPages}
+                        className='rounded-lg border border-slate-300 px-3 py-1 text-xs font-medium text-slate-600 transition hover:enabled:border-slate-400 hover:enabled:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:enabled:border-zinc-600 dark:hover:enabled:bg-zinc-950'
+                      >
+                        Siguiente
+                      </button>
+                    </div>
+                  </div>
+                )}
               </motion.div>
             </motion.div>
           )}

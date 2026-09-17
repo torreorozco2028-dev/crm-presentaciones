@@ -24,6 +24,7 @@ import {
 } from './tables/building';
 import { client, clientRelations } from './tables/client';
 import { sales, salesRelations } from './tables/sales';
+import { sale_history, saleHistoryRelations } from './tables/sale_history';
 import {
   construction_phases,
   constructionPhasesRelations,
@@ -70,4 +71,6 @@ export {
   points_interest,
   salesStagesRelations,
   sales_stages,
+  sale_history,
+  saleHistoryRelations,
 };
