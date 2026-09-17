@@ -1,3 +1,7 @@
+function roundToCents(value: number) {
+  return Math.round(value * 100) / 100;
+}
+
 export function normalizeAdvancePercentage(value: unknown) {
   const text = String(value ?? '')
     .replace('%', '')
@@ -26,7 +30,7 @@ export function calculateAdvanceAmount(
     return null;
   }
 
-  return Math.round((totalPrice * advancePercentage) / 100);
+  return roundToCents((totalPrice * advancePercentage) / 100);
 }
 
 export function calculateRemainingAmount(
@@ -43,7 +47,7 @@ export function calculateRemainingAmount(
     return null;
   }
 
-  return Math.max(0, totalPrice - advanceAmount);
+  return Math.max(0, roundToCents(totalPrice - advanceAmount));
 }
 
 export type AdvanceType = 'percentage' | 'amount';
@@ -95,5 +99,5 @@ export function resolveRemainingAmount(input: AdvanceInput) {
     return null;
   }
 
-  return Math.max(0, input.totalPrice - advanceAmount);
+  return Math.max(0, roundToCents(input.totalPrice - advanceAmount));
 }

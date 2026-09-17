@@ -58,6 +58,18 @@ const normalizeSearch = (value: string) =>
     .replace(/[\u0300-\u036f]/g, '')
     .trim();
 
+// Accepts both "1500.50" and "1500,50" (comma as decimal separator, with "."
+// as an optional thousands separator, e.g. "1.500,50").
+function parseDecimalInput(raw: string): number | null {
+  const text = raw.trim();
+  if (!text) return null;
+  const normalized = text.includes(',')
+    ? text.replace(/\./g, '').replace(',', '.')
+    : text;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 const formatSquareMeters = (value: number | null) =>
   value != null ? `${value.toLocaleString('es-BO')} m\u00b2` : null;
 
@@ -464,14 +476,16 @@ export default function ClientsPart() {
       clientId,
       unitId,
       state,
-      finalPrice: finalPriceRaw ? Number(finalPriceRaw) : null,
+      finalPrice: finalPriceRaw ? parseDecimalInput(finalPriceRaw) : null,
       currency,
-      exchangeRate: exchangeRateRaw ? Number(exchangeRateRaw) : null,
+      exchangeRate: exchangeRateRaw ? parseDecimalInput(exchangeRateRaw) : null,
       advanceType,
       advancePercentage: advancePercentageRaw
         ? Number(advancePercentageRaw)
         : null,
-      advanceAmount: advanceAmountRaw ? Number(advanceAmountRaw) : null,
+      advanceAmount: advanceAmountRaw
+        ? parseDecimalInput(advanceAmountRaw)
+        : null,
       paymentMethod,
       paymentNotes,
     });
@@ -562,14 +576,16 @@ export default function ClientsPart() {
       saleId: editingSale.id,
       clientId,
       unitId,
-      finalPrice: finalPriceRaw ? Number(finalPriceRaw) : null,
+      finalPrice: finalPriceRaw ? parseDecimalInput(finalPriceRaw) : null,
       currency,
-      exchangeRate: exchangeRateRaw ? Number(exchangeRateRaw) : null,
+      exchangeRate: exchangeRateRaw ? parseDecimalInput(exchangeRateRaw) : null,
       advanceType,
       advancePercentage: advancePercentageRaw
         ? Number(advancePercentageRaw)
         : null,
-      advanceAmount: advanceAmountRaw ? Number(advanceAmountRaw) : null,
+      advanceAmount: advanceAmountRaw
+        ? parseDecimalInput(advanceAmountRaw)
+        : null,
       paymentMethod,
       paymentNotes,
     });
@@ -1877,7 +1893,7 @@ function PriceAdvanceFields({
       <InputField
         name='finalPrice'
         label='Precio Final'
-        type='number'
+        type='decimal'
         defaultValue={defaultFinalPrice ?? undefined}
       />
 
@@ -1905,10 +1921,10 @@ function PriceAdvanceFields({
         </label>
         <input
           name='exchangeRate'
-          type='number'
-          min='0'
-          step='0.0001'
-          placeholder='Ej: 6.96'
+          type='text'
+          inputMode='decimal'
+          pattern='[0-9.,]*'
+          placeholder='Ej: 6,96'
           defaultValue={defaultExchangeRate ?? undefined}
           className='h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500'
         />
@@ -1974,10 +1990,10 @@ function PriceAdvanceFields({
           </label>
           <input
             name='advanceAmount'
-            type='number'
-            min='0'
-            step='1'
-            placeholder='Ej: 5000'
+            type='text'
+            inputMode='decimal'
+            pattern='[0-9.,]*'
+            placeholder='Ej: 5000,50'
             defaultValue={defaultAdvanceAmount ?? undefined}
             className='h-11 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500'
           />
@@ -2224,7 +2240,7 @@ function SectionHeader({
 interface InputFieldProps {
   label: string;
   name: string;
-  type?: 'text' | 'number' | 'email';
+  type?: 'text' | 'number' | 'email' | 'decimal';
   required?: boolean;
   icon?: React.ReactNode;
   defaultValue?: string | number;
@@ -2238,6 +2254,8 @@ function InputField({
   icon,
   defaultValue,
 }: InputFieldProps) {
+  const isDecimal = type === 'decimal';
+
   return (
     <div className='flex flex-col gap-1.5'>
       <label className='ml-1 text-[13px] font-semibold text-slate-700 dark:text-zinc-300'>
@@ -2251,7 +2269,9 @@ function InputField({
         )}
         <input
           name={name}
-          type={type}
+          type={isDecimal ? 'text' : type}
+          inputMode={isDecimal ? 'decimal' : undefined}
+          pattern={isDecimal ? '[0-9.,]*' : undefined}
           required={required}
           defaultValue={defaultValue}
           placeholder={`Ej: ${label}...`}
