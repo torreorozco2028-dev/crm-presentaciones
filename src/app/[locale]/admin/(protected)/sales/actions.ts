@@ -4,7 +4,13 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
 import ClientEntity from '@/server/db/entities/clients';
 import { db } from '@/server/db/config';
-import { client, unit_department, sales, users } from '@/server/db/schema';
+import {
+  client,
+  unit_department,
+  sales,
+  sale_history,
+  users,
+} from '@/server/db/schema';
 import {
   isAdminRole,
   resolveClientVisibility,
@@ -126,6 +132,26 @@ function validateAdvanceInput(
     advancePercentage,
     advanceAmount: null,
   };
+}
+
+const stateLabels: Record<UnitState, string> = {
+  1: 'Disponible',
+  2: 'Reservado',
+  3: 'Vendido',
+};
+
+function formatClientFullName(input: {
+  names: string;
+  first_last_name: string;
+  second_last_name: string | null;
+}) {
+  return [input.names, input.first_last_name, input.second_last_name]
+    .filter(Boolean)
+    .join(' ');
+}
+
+function formatMoney(amount: number | null, currency: string) {
+  return amount != null ? `${amount.toLocaleString('es-BO')} ${currency}` : '-';
 }
 
 function toOptionalText(value: unknown) {
@@ -415,25 +441,35 @@ export async function createSaleAction(input: CreateSaleInput) {
         : Number(input.exchangeRate);
 
     await db.transaction(async (tx) => {
-      await tx.insert(sales).values({
-        clientId: input.clientId,
-        unitId: input.unitId,
-        userId: session.user.id,
-        updatedByUserId: session.user.id,
-        final_price: input.finalPrice ?? null,
-        currency,
-        exchangeRate,
-        advanceType: advanceResult.advanceType,
-        advance_percentage: advanceResult.advancePercentage,
-        advanceAmount: advanceResult.advanceAmount,
-        payment_method: input.paymentMethod || null,
-        payment_notes: input.paymentNotes || null,
-      });
+      const [insertedSale] = await tx
+        .insert(sales)
+        .values({
+          clientId: input.clientId,
+          unitId: input.unitId,
+          userId: session.user.id,
+          updatedByUserId: session.user.id,
+          final_price: input.finalPrice ?? null,
+          currency,
+          exchangeRate,
+          advanceType: advanceResult.advanceType,
+          advance_percentage: advanceResult.advancePercentage,
+          advanceAmount: advanceResult.advanceAmount,
+          payment_method: input.paymentMethod || null,
+          payment_notes: input.paymentNotes || null,
+        })
+        .returning({ id: sales.id });
 
       await tx
         .update(unit_department)
         .set({ state: parsedState, updatedAt: new Date() })
         .where(eq(unit_department.id, input.unitId));
+
+      await tx.insert(sale_history).values({
+        saleId: insertedSale.id,
+        userId: session.user.id,
+        type: 'system',
+        summary: 'Venta registrada',
+      });
     });
 
     revalidatePath('/admin/sales');
@@ -489,6 +525,12 @@ export async function updateUnitStateAction(unitId: string, state: UnitState) {
       };
     }
 
+    const currentUnit = await db.query.unit_department.findFirst({
+      where: eq(unit_department.id, unitId),
+      columns: { state: true },
+    });
+    const previousState = parseState(currentUnit?.state);
+
     const now = new Date();
     await db.transaction(async (tx) => {
       await tx
@@ -503,6 +545,15 @@ export async function updateUnitStateAction(unitId: string, state: UnitState) {
           updatedAt: now,
         })
         .where(eq(sales.id, currentSale.id));
+
+      if (previousState !== parsedState) {
+        await tx.insert(sale_history).values({
+          saleId: currentSale.id,
+          userId: session.user.id,
+          type: 'system',
+          summary: `Estado actualizado: ${stateLabels[previousState ?? 1]} → ${stateLabels[parsedState]}`,
+        });
+      }
     });
 
     revalidatePath('/admin/sales');
@@ -526,6 +577,7 @@ export async function updateUnitStateAction(unitId: string, state: UnitState) {
 
 interface UpdateSaleInput {
   saleId: string;
+  clientId?: string;
   unitId?: string;
   finalPrice?: number | null;
   currency?: string;
@@ -575,6 +627,24 @@ export async function updateSaleAction(input: UpdateSaleInput) {
         id: true,
         userId: true,
         unitId: true,
+        clientId: true,
+        final_price: true,
+        currency: true,
+        advanceType: true,
+        advance_percentage: true,
+        advanceAmount: true,
+        payment_method: true,
+        payment_notes: true,
+      },
+      with: {
+        client: {
+          columns: {
+            id: true,
+            names: true,
+            first_last_name: true,
+            second_last_name: true,
+          },
+        },
       },
     });
 
@@ -626,6 +696,41 @@ export async function updateSaleAction(input: UpdateSaleInput) {
       reassignment = { oldUnit, newUnit };
     }
 
+    const requestedClientId = input.clientId?.trim() || sale.clientId;
+    let clientChange: { oldName: string; newName: string } | null = null;
+
+    if (requestedClientId !== sale.clientId) {
+      const newClient = await db.query.client.findFirst({
+        where: eq(client.id, requestedClientId),
+        columns: {
+          id: true,
+          names: true,
+          first_last_name: true,
+          second_last_name: true,
+          userId: true,
+        },
+      });
+
+      if (!newClient) {
+        return {
+          success: false,
+          error: 'No se encontró el cliente seleccionado',
+        };
+      }
+
+      if (!canManageAnySale && newClient.userId !== session.user.id) {
+        return {
+          success: false,
+          error: 'Solo puedes asignar tus propios clientes a la reserva',
+        };
+      }
+
+      clientChange = {
+        oldName: formatClientFullName(sale.client),
+        newName: formatClientFullName(newClient),
+      };
+    }
+
     const nextFinalPrice = input.finalPrice ?? null;
     const nextCurrency = normalizeCurrency(input.currency) ?? 'BOB';
     const nextExchangeRate =
@@ -635,11 +740,60 @@ export async function updateSaleAction(input: UpdateSaleInput) {
     const nextPaymentMethod = input.paymentMethod?.trim() || null;
     const nextPaymentNotes = input.paymentNotes?.trim() || null;
 
+    const changes: string[] = [];
+    if (clientChange) {
+      changes.push(
+        `Cliente: ${clientChange.oldName} → ${clientChange.newName}`
+      );
+    }
+    if (reassignment) {
+      changes.push(
+        `Unidad: ${reassignment.oldUnit.label} → ${reassignment.newUnit.label}`
+      );
+    }
+    if (
+      sale.final_price !== nextFinalPrice ||
+      (sale.currency ?? 'BOB') !== nextCurrency
+    ) {
+      changes.push(
+        `Precio: ${formatMoney(sale.final_price, sale.currency ?? 'BOB')} → ${formatMoney(nextFinalPrice, nextCurrency)}`
+      );
+    }
+    const prevAdvanceAmount = resolveAdvanceAmount({
+      totalPrice: sale.final_price,
+      advanceType: sale.advanceType as AdvanceType | null,
+      advancePercentage: sale.advance_percentage,
+      advanceAmount: sale.advanceAmount,
+    });
+    const nextAdvanceAmount = resolveAdvanceAmount({
+      totalPrice: nextFinalPrice,
+      advanceType: advanceResult.advanceType,
+      advancePercentage: advanceResult.advancePercentage,
+      advanceAmount: advanceResult.advanceAmount,
+    });
+    if (
+      prevAdvanceAmount !== nextAdvanceAmount ||
+      sale.advanceType !== advanceResult.advanceType
+    ) {
+      changes.push(
+        `Adelanto: ${formatMoney(prevAdvanceAmount, sale.currency ?? 'BOB')} → ${formatMoney(nextAdvanceAmount, nextCurrency)}`
+      );
+    }
+    if ((sale.payment_method ?? '') !== (nextPaymentMethod ?? '')) {
+      changes.push(
+        `Método de pago: ${sale.payment_method || '-'} → ${nextPaymentMethod || '-'}`
+      );
+    }
+    if ((sale.payment_notes ?? '') !== (nextPaymentNotes ?? '')) {
+      changes.push('Notas de pago actualizadas');
+    }
+
     const now = new Date();
     await db.transaction(async (tx) => {
       await tx
         .update(sales)
         .set({
+          clientId: requestedClientId,
           unitId: requestedUnitId,
           final_price: nextFinalPrice,
           currency: nextCurrency,
@@ -664,6 +818,15 @@ export async function updateSaleAction(input: UpdateSaleInput) {
           .update(unit_department)
           .set({ state: reassignment.oldUnit.state, updatedAt: now })
           .where(eq(unit_department.id, reassignment.newUnit.id));
+      }
+
+      if (changes.length > 0) {
+        await tx.insert(sale_history).values({
+          saleId: input.saleId,
+          userId: session.user.id,
+          type: 'system',
+          summary: changes.join('\n'),
+        });
       }
     });
 
@@ -935,5 +1098,149 @@ export async function getSalesListAction(input: GetSalesListInput = {}) {
   } catch (error) {
     console.error('Error loading filtered sales list:', error);
     return { success: false, error: 'No se pudo cargar la lista de ventas' };
+  }
+}
+
+async function loadSaleForHistoryAccess(saleId: string) {
+  return db.query.sales.findFirst({
+    where: eq(sales.id, saleId),
+    columns: { id: true, userId: true },
+  });
+}
+
+interface GetSaleHistoryInput {
+  saleId: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export async function getSaleHistoryAction(input: GetSaleHistoryInput) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        error: 'Debes iniciar sesión para ver el historial',
+      };
+    }
+
+    if (!input.saleId) {
+      return { success: false, error: 'Reserva inválida' };
+    }
+
+    const canManageAnySale = isAdminRole(session.user.role);
+    const sale = await loadSaleForHistoryAccess(input.saleId);
+
+    if (!sale) {
+      return { success: false, error: 'No se encontró la reserva' };
+    }
+
+    if (!canManageAnySale && sale.userId !== session.user.id) {
+      return {
+        success: false,
+        error: 'Solo el propietario o un admin puede ver este historial',
+      };
+    }
+
+    const page = normalizePage(input.page, 1);
+    const pageSize = Math.min(50, normalizePage(input.pageSize, 10));
+    const offset = (page - 1) * pageSize;
+
+    const [rows, totalResult] = await Promise.all([
+      db.query.sale_history.findMany({
+        where: eq(sale_history.saleId, input.saleId),
+        with: {
+          user: {
+            columns: { id: true, name: true, email: true },
+          },
+        },
+        orderBy: [desc(sale_history.createdAt)],
+        limit: pageSize,
+        offset,
+      }),
+      db
+        .select({ total: sql<number>`count(*)` })
+        .from(sale_history)
+        .where(eq(sale_history.saleId, input.saleId)),
+    ]);
+
+    const totalItems = Number(totalResult[0]?.total ?? 0);
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+
+    return {
+      success: true,
+      data: {
+        page,
+        pageSize,
+        totalItems,
+        totalPages,
+        rows: rows.map((row) => ({
+          id: row.id,
+          type:
+            row.type === 'comment' ? ('comment' as const) : ('system' as const),
+          summary: row.summary,
+          createdAt: row.createdAt?.toISOString() ?? null,
+          user: {
+            id: row.user.id,
+            name: row.user.name,
+            email: row.user.email,
+          },
+        })),
+      },
+    };
+  } catch (error) {
+    console.error('Error loading sale history:', error);
+    return { success: false, error: 'No se pudo cargar el historial' };
+  }
+}
+
+interface AddSaleCommentInput {
+  saleId: string;
+  comment: string;
+}
+
+export async function addSaleCommentAction(input: AddSaleCommentInput) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        error: 'Debes iniciar sesión para agregar un comentario',
+      };
+    }
+
+    const comment = toOptionalText(input.comment);
+    if (!input.saleId || !comment) {
+      return {
+        success: false,
+        error: 'Escribe un comentario antes de guardarlo',
+      };
+    }
+
+    const canManageAnySale = isAdminRole(session.user.role);
+    const sale = await loadSaleForHistoryAccess(input.saleId);
+
+    if (!sale) {
+      return { success: false, error: 'No se encontró la reserva' };
+    }
+
+    if (!canManageAnySale && sale.userId !== session.user.id) {
+      return {
+        success: false,
+        error: 'Solo el propietario o un admin puede comentar esta reserva',
+      };
+    }
+
+    await db.insert(sale_history).values({
+      saleId: input.saleId,
+      userId: session.user.id,
+      type: 'comment',
+      summary: comment,
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error adding sale comment:', error);
+    return { success: false, error: 'No se pudo guardar el comentario' };
   }
 }
