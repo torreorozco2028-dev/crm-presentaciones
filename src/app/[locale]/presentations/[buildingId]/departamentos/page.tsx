@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Modal,
@@ -24,21 +24,57 @@ interface DepartmentModel {
   batch_images?: any;
 }
 
+function normalizeZoneId(id: string) {
+  return id
+    .trim()
+    .replace(/_x([0-9a-f]{2,4})_/gi, (_m, hex: string) =>
+      String.fromCharCode(parseInt(hex, 16))
+    )
+    .replace(/_\d+_$/, '')
+    .replace(/[\s_-]+/g, '')
+    .toLowerCase();
+}
+
+/** Un modelo puede apuntar a varias zonas del plano: "E1, E2; E3". */
+function zoneIdsOf(model: DepartmentModel) {
+  return String(model.id_plan ?? '')
+    .split(/[,;\n]+/)
+    .map(normalizeZoneId)
+    .filter(Boolean);
+}
+
+function modelFromElement(
+  target: Element | null,
+  departments: DepartmentModel[],
+  root: Element
+) {
+  for (let el = target; el && el !== root; el = el.parentElement) {
+    if (!el.id) continue;
+    const zone = normalizeZoneId(el.id);
+    const model = departments.find((d) => zoneIdsOf(d).includes(zone));
+    if (model) return model;
+  }
+  return null;
+}
+
 function InteractiveSVG({
   svgUrl,
   departments,
   onSelect,
   selectedId,
+  ownStyles = false,
 }: {
   svgUrl: string;
   departments: DepartmentModel[];
   onSelect: (model: DepartmentModel | null) => void;
   selectedId?: string;
+  ownStyles?: boolean;
 }) {
   const [svgContent, setSvgContent] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!svgUrl) return;
     fetch(svgUrl)
       .then((res) => res.text())
       .then((text) => {
@@ -68,47 +104,79 @@ function InteractiveSVG({
 
             return `<svg${withoutHeight} width="100%" height="100%" preserveAspectRatio="xMidYMid meet">`;
           })
-          .replace(/<style([\s\S]*?)<\/style>/gi, '')
+          .replace(/<style([\s\S]*?)<\/style>/gi, (block) =>
+            ownStyles ? block.replace(/@import[^;]*;/gi, '') : ''
+          )
+          .replace(/<script[\s\S]*?<\/script>/gi, '')
+          .replace(/\son\w+\s*=\s*(['"]).*?\1/gi, '')
           .replace(
             /<text/g,
             '<text style="pointer-events: none; user-select: none;"'
           );
         setSvgContent(cleanSvg);
       });
-  }, [svgUrl]);
+  }, [svgUrl, ownStyles]);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container || !svgContent) return;
 
     const handleSvgClick = (e: MouseEvent) => {
-      const target = e.target as SVGElement;
-      const zone = target.closest('[id]');
-      if (zone) {
-        const zoneId = zone.id.trim();
-        const model = departments.find(
-          (d) => String(d.id_plan).trim() === zoneId
-        );
-        if (model) {
-          onSelect(model.id_plan === selectedId ? null : model);
-        }
-      }
+      const model = modelFromElement(
+        e.target as Element,
+        departments,
+        container
+      );
+      if (model) onSelect(model.id_plan === selectedId ? null : model);
     };
 
     container.addEventListener('click', handleSvgClick);
     return () => container.removeEventListener('click', handleSvgClick);
   }, [svgContent, departments, onSelect, selectedId]);
 
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !svgContent) return;
+    const selected = departments.find((d) => d.id_plan === selectedId);
+    const wanted = selected ? zoneIdsOf(selected) : [];
+    container.querySelectorAll<SVGElement>('svg [id]').forEach((el) => {
+      el.toggleAttribute(
+        'data-zone-selected',
+        wanted.includes(normalizeZoneId(el.id))
+      );
+    });
+  }, [svgContent, departments, selectedId]);
+
   return (
     <div
       ref={containerRef}
-      className='interactive-svg-container flex h-full w-full items-center justify-center p-0 lg:p-4'
+      className={`interactive-svg-container ${ownStyles ? 'own-svg' : ''} flex h-full w-full items-center justify-center p-0 lg:p-4`}
       dangerouslySetInnerHTML={{ __html: svgContent || '' }}
     />
   );
 }
 
-export default function DepartmentsPage({ data }: { data: any }) {
+export default function DepartmentsPage({
+  data,
+  sectionId = 'distribucion',
+  eyebrow = 'Explora tu próximo hogar',
+  title = 'plano Interactivo',
+  emptyText = 'Sin imagen disponible',
+  emptyContent,
+  subtitle,
+  ownStyles = false,
+  titleClassName = 'text-5xl md:text-7xl lg:text-8xl',
+}: {
+  data: any;
+  sectionId?: string;
+  eyebrow?: string;
+  title?: string;
+  emptyText?: string;
+  emptyContent?: (model: DepartmentModel | null) => ReactNode;
+  subtitle?: string;
+  ownStyles?: boolean;
+  titleClassName?: string;
+}) {
   const [selectedModel, setSelectedModel] = useState<DepartmentModel | null>(
     null
   );
@@ -157,20 +225,27 @@ export default function DepartmentsPage({ data }: { data: any }) {
 
   return (
     <div
-      id='distribucion'
+      id={sectionId}
       className='flex min-h-screen flex-col items-center bg-[#ffffff] p-4 dark:bg-black lg:p-10'
     >
-      <div className='mb-10 flex flex-col items-center'>
+      <div className='mb-10 flex w-full flex-col items-center px-2 text-center'>
         <motion.span
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className='mb-2 text-xs font-bold uppercase tracking-[0.5em] text-zinc-500 dark:text-zinc-400'
         >
-          Explora tu próximo hogar
+          {eyebrow}
         </motion.span>
-        <h1 className='mi-fuente-2 bg-gradient-to-b from-zinc-800 to-zinc-500 bg-clip-text text-5xl font-black uppercase tracking-tighter text-transparent dark:from-white dark:to-zinc-500 md:text-7xl lg:text-8xl'>
-          plano Interactivo
+        <h1
+          className={`mi-fuente-2 bg-gradient-to-b from-zinc-800 to-zinc-500 bg-clip-text font-black uppercase tracking-tighter text-transparent dark:from-white dark:to-zinc-500 ${titleClassName}`}
+        >
+          {title}
         </h1>
+        {subtitle && (
+          <p className='mt-4 max-w-xl text-center text-sm text-zinc-600 dark:text-white/65 sm:text-base'>
+            {subtitle}
+          </p>
+        )}
       </div>
 
       <div className='flex h-auto w-full max-w-[1700px] flex-col gap-8 lg:h-[calc(100vh-250px)] lg:flex-row'>
@@ -200,6 +275,10 @@ export default function DepartmentsPage({ data }: { data: any }) {
                         className='bg-white object-contain p-2 dark:bg-black'
                       />
                     </button>
+                  ) : emptyContent ? (
+                    <div className='min-h-[32vh]'>
+                      {emptyContent(selectedModel)}
+                    </div>
                   ) : (
                     <div className='flex h-[32vh] items-center justify-center text-sm text-zinc-500 dark:text-zinc-400'>
                       Sin imagen de distribución disponible
@@ -209,7 +288,9 @@ export default function DepartmentsPage({ data }: { data: any }) {
 
                 <div className='flex w-full items-center justify-between px-1'>
                   <p className='text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400'>
-                    Distribución del piso
+                    {emptyContent
+                      ? 'Toca una zona del plano'
+                      : 'Distribución del piso'}
                   </p>
                   {currentImage && (
                     <Button
@@ -225,6 +306,7 @@ export default function DepartmentsPage({ data }: { data: any }) {
 
                 <div className='h-[45vh] max-h-[45vh] w-full'>
                   <InteractiveSVG
+                    ownStyles={ownStyles}
                     svgUrl={data.plan_image}
                     departments={data.models}
                     onSelect={handleSelectModel}
@@ -257,9 +339,11 @@ export default function DepartmentsPage({ data }: { data: any }) {
                       alt='Vista Departamento'
                     />
                   ) : (
-                    <div className='flex h-[70vh] w-full items-center justify-center text-sm text-zinc-500 dark:text-zinc-400'>
-                      Sin imagen disponible
-                    </div>
+                    (emptyContent?.(selectedModel) ?? (
+                      <div className='flex h-[70vh] w-full items-center justify-center text-sm text-zinc-500 dark:text-zinc-400'>
+                        {emptyText}
+                      </div>
+                    ))
                   )}
                 </div>
 
@@ -282,6 +366,7 @@ export default function DepartmentsPage({ data }: { data: any }) {
         <aside className='hidden items-center lg:flex lg:w-[30%]'>
           <div className='relative aspect-square w-full max-w-[520px] overflow-hidden rounded-[40px] border-[2px] border-zinc-900 bg-white shadow-xl dark:border-[#949494] dark:border-white/5 dark:bg-transparent'>
             <InteractiveSVG
+              ownStyles={ownStyles}
               svgUrl={data.plan_image}
               departments={data.models}
               onSelect={handleSelectModel}
@@ -343,20 +428,20 @@ export default function DepartmentsPage({ data }: { data: any }) {
           object-fit: contain;
           overflow: visible;
         }
-        .interactive-svg-container [id] {
+        .interactive-svg-container:not(.own-svg) [id] {
           cursor: pointer;
           transition: all 0.3s ease;
           stroke: #000000;
           fill: #908e8e;
         }
-        :is(.dark) .interactive-svg-container [id] {
+        :is(.dark) .interactive-svg-container:not(.own-svg) [id] {
           cursor: pointer;
           transition: all 0.3s ease;
           stroke: #bebdbd;
           fill: #6b6b6b;
         }
 
-        .interactive-svg-container [id]:hover {
+        .interactive-svg-container:not(.own-svg) [id]:hover {
           fill: #ffffff;
           stroke: #111111;
           stroke-width: 2px;
@@ -364,13 +449,21 @@ export default function DepartmentsPage({ data }: { data: any }) {
 
         ${selectedModel
           ? `
-          .interactive-svg-container [id="${selectedModel.id_plan}"] {
+          .interactive-svg-container:not(.own-svg) [data-zone-selected],
+          .interactive-svg-container:not(.own-svg) [data-zone-selected] :is(path, rect, polygon, polyline, circle, ellipse) {
             fill: #d4d4d4 !important;
             stroke: #8a8a8a !important;
             stroke-width: 3px !important;
           }
         `
           : ''}
+        /* SVG con estilos propios: se conservan sus colores; solo se resalta la zona */
+        .interactive-svg-container.own-svg [id] {
+          cursor: pointer;
+        }
+        .interactive-svg-container.own-svg [data-zone-selected] {
+          filter: drop-shadow(0 0 3px #fbbf24) drop-shadow(0 0 6px #fbbf24);
+        }
       `}</style>
     </div>
   );

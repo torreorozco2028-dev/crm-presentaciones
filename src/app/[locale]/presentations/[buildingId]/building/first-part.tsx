@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { getCurrentStage, sortStages, stageName } from '@/lib/sales-stages';
 
 interface BuildingHeroProps {
   building: any;
@@ -10,6 +11,10 @@ interface BuildingHeroProps {
 
 export default function BuildingHero({ building }: BuildingHeroProps) {
   const primaryImage = building.prymary_image || '/placeholder-1.jpg';
+  const stages = sortStages(building.salesStages);
+  const stage = getCurrentStage(stages);
+  const stageIndex = stage ? stages.indexOf(stage) : -1;
+  const price = stage?.price ?? building.price_per_m2;
 
   return (
     <section
@@ -25,7 +30,7 @@ export default function BuildingHero({ building }: BuildingHeroProps) {
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
-            className='mb-8 pl-3 lg:mb-10 lg:max-w-[46rem] lg:-translate-y-8 lg:pl-16 lg:pl-6 lg:pr-8 xl:max-w-[52rem] xl:pl-24'
+            className='mb-8 pl-3 pr-4 lg:mb-10 lg:max-w-[46rem] lg:-translate-y-8 lg:pl-16 lg:pl-6 lg:pr-8 xl:max-w-[52rem] xl:pl-24'
           >
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -54,33 +59,84 @@ export default function BuildingHero({ building }: BuildingHeroProps) {
               transition={{ duration: 0.6, delay: 0.2 }}
               className='mb-6 max-w-4xl lg:max-w-[46rem]'
             >
-              <p
-                className='mi-fuente-2 text-5xl font-bold uppercase leading-[0.9] text-foreground-900 md:text-7xl lg:text-[4rem] xl:text-[5rem]'
+              {building.hero_headline && (
+                <p
+                  className='mi-fuente-2 text-5xl font-bold uppercase leading-[0.9] text-foreground-900 md:text-7xl lg:text-[4rem] xl:text-[5rem]'
+                  style={{
+                    // background: 'linear-gradient(90deg, var(--foreground-100) 0%, var(--foreground-100) 25%, var(--foreground-100) 50%, var(--foreground-100) 75%, var(--foreground-100) 100%)',
+                    WebkitBackgroundClip: 'text',
+                    // WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    backgroundSize: '200% auto',
+                  }}
+                >
+                  {building.hero_headline}
+                </p>
+              )}
+            </motion.div>
+
+            {/* Precio por m² */}
+            {price != null && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className='mi-fuente border-l-4 border-[#64320e] pl-5 pt-5 text-5xl font-bold leading-[0.9] text-[#64320e] dark:text-[#fd8129] md:text-7xl lg:text-[3rem] xl:text-[4rem]'
                 style={{
-                  // background: 'linear-gradient(90deg, var(--foreground-100) 0%, var(--foreground-100) 25%, var(--foreground-100) 50%, var(--foreground-100) 75%, var(--foreground-100) 100%)',
-                  WebkitBackgroundClip: 'text',
-                  // WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
                   backgroundSize: '200% auto',
                 }}
               >
-                Aprovecha los precios de feria
-              </p>
-            </motion.div>
+                {price} $us/m²
+              </motion.p>
+            )}
 
-            {/* Location */}
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className='mi-fuente border-l-4 border-[#64320e] pl-5 pt-5 text-5xl font-bold leading-[0.9] text-[#64320e] dark:text-[#fd8129] md:text-7xl lg:text-[3rem] xl:text-[4rem]'
-              style={{
-                backgroundClip: 'text',
-                backgroundSize: '200% auto',
-              }}
-            >
-              1100 $us/m²
-            </motion.p>
+            {stageIndex >= 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className='mt-8 w-full max-w-md space-y-3 md:pl-5'
+              >
+                <ol className='flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-wider'>
+                  {stages.map((s, i) => (
+                    <li
+                      key={`${s.stage_type}-${i}`}
+                      className={`rounded-full px-3 py-1 ${
+                        i === stageIndex
+                          ? 'bg-[#0a6406] text-white'
+                          : i < stageIndex
+                            ? 'bg-[#0a6406]/15 text-[#0a6406] dark:text-[#fd8129]'
+                            : 'bg-zinc-200 text-zinc-500 dark:bg-zinc-800'
+                      }`}
+                    >
+                      {stageName(s)}
+                    </li>
+                  ))}
+                </ol>
+                {stage?.sold_percent != null && (
+                  <div>
+                    <div className='mb-1 flex justify-between text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400'>
+                      <span>Vendido en esta etapa</span>
+                      <span>{stage.sold_percent}%</span>
+                    </div>
+                    <div
+                      role='progressbar'
+                      aria-valuenow={stage.sold_percent}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label='Porcentaje vendido en esta etapa'
+                      className='h-3 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800'
+                    >
+                      <div
+                        className='h-full rounded-full bg-[#0a6406] transition-all duration-700 dark:bg-[#fd8129]'
+                        style={{ width: `${stage.sold_percent}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
           </motion.div>
         </div>
         <div className='relative flex min-h-[70vh] items-center justify-center lg:min-h-[100vh] lg:w-[40%]'>

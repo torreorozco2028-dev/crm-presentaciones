@@ -63,16 +63,16 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
   };
 
   return (
-    <div className='items-between mx-auto flex min-h-screen max-w-7xl flex-col'>
+    <div className='mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 sm:px-6'>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className='mb-20 text-center'
+        className='mb-8 text-center sm:mb-12 md:mb-16'
       >
         <h1
-          className='mb-2 text-2xl font-black tracking-tight sm:text-3xl md:mb-3 md:text-xl lg:text-3xl'
+          className='mb-2 text-3xl font-black tracking-tight md:mb-3 lg:text-4xl'
           style={{
             background:
               'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #fbbf24 100%)',
@@ -84,7 +84,7 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
           Proyectos Exclusivos
         </h1>
       </motion.div>
-      <div className='mb-6 grid grid-cols-1 gap-4 sm:mb-8 sm:grid-cols-2 sm:gap-6 md:-mt-4 md:mb-4 md:gap-8 lg:grid-cols-3'>
+      <div className='mb-6 grid grid-cols-1 gap-4 sm:mb-8 sm:grid-cols-2 sm:gap-6 md:mb-8 md:gap-8 lg:grid-cols-3'>
         <AnimatePresence mode='wait'>
           {items.map((building) => (
             <motion.div
@@ -94,12 +94,12 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
               exit={{ scale: 0.9, opacity: 0 }}
               whileHover={{ scale: 1.02 }}
               // Definimos una altura fija para que el % funcione, o puedes usar h-full si el padre tiene altura
-              className='flex h-[500px] cursor-pointer flex-col overflow-hidden rounded-xl border-1 border-foreground-50 bg-transparent shadow-md hover:shadow-xl'
+              className='flex min-h-[420px] cursor-pointer flex-col overflow-hidden rounded-xl border-1 border-foreground-50 bg-transparent shadow-md hover:shadow-xl sm:h-[500px]'
               onClick={() => navToPresentation(building.id)}
             >
-              <div className='group relative flex h-full flex-col'>
+              <div className='group relative flex h-full flex-1 flex-col'>
                 {/* CONTENEDOR DE IMAGEN/VIDEO - Ocupa el 70% (puedes cambiar a h-[60%]) */}
-                <div className='relative h-[70%] w-full overflow-hidden opacity-95 transition-opacity duration-300 group-hover:opacity-100'>
+                <div className='relative aspect-[16/10] w-full flex-shrink-0 overflow-hidden opacity-95 transition-opacity duration-300 group-hover:opacity-100 sm:aspect-auto sm:h-[70%]'>
                   {isVideo(building.prymary_image) ? (
                     <video
                       src={building.prymary_image}
@@ -132,7 +132,7 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
                 </div>
 
                 {/* CONTENEDOR DE TEXTO - Ocupa el 30% restante */}
-                <div className='flex h-[30%] flex-col justify-center gap-1 bg-white/5 p-4 backdrop-blur-sm'>
+                <div className='flex flex-1 flex-col justify-center gap-1 bg-white/5 p-4 backdrop-blur-sm sm:h-[30%] sm:flex-none'>
                   <h3 className='line-clamp-1 text-lg font-bold leading-tight text-foreground-900 transition-colors group-hover:text-amber-400'>
                     {building.building_title}
                   </h3>
@@ -174,7 +174,7 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
                     <div onClick={(e) => e.stopPropagation()}>
                       <Button
                         size='sm'
-                        className='mt-2'
+                        className='mt-2 w-full sm:w-auto'
                         color={building.is_published ? 'success' : 'warning'}
                         variant={building.is_published ? 'flat' : 'solid'}
                         isLoading={isPublishing}
@@ -198,7 +198,7 @@ export default function LaunchTable({ buildings, total }: LaunchTableProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className='flex flex-col items-center gap-4 px-2 sm:gap-6'
+          className='flex flex-col items-center gap-4 overflow-x-auto px-2 pb-6 sm:gap-6'
         >
           <Pagination
             total={Math.ceil(total / 3)}

@@ -1,5 +1,7 @@
 'use client';
 
+import SaleControlPanel from '@/components/sale-control-panel';
+import { SALE_CONTROL_ENABLED } from '@/lib/feature-flags';
 import React, {
   useEffect,
   useMemo,
@@ -1579,7 +1581,7 @@ export default function ClientsPart() {
                 animate={{ scale: 1 }}
                 exit={{ scale: 0.95 }}
                 transition={{ duration: 0.25, ease: 'easeOut' }}
-                className='w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-black'
+                className='max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-black'
               >
                 <div className='mb-5 flex items-center justify-between border-b border-slate-200 pb-3 dark:border-zinc-800'>
                   <div>
@@ -1587,7 +1589,7 @@ export default function ClientsPart() {
                       Editar Reserva
                     </h3>
                     <p className='text-xs text-slate-500 dark:text-zinc-400'>
-                      Solo el usuario creador puede editar.
+                      Solo el propietario o un admin puede editar.
                     </p>
                   </div>
                   <button
@@ -1703,6 +1705,15 @@ export default function ClientsPart() {
                     </button>
                   </div>
                 </form>
+
+                {SALE_CONTROL_ENABLED && (
+                  <div className='mt-6 border-t border-slate-200 pt-5 dark:border-zinc-800'>
+                    <SaleControlPanel
+                      saleId={editingSale.id}
+                      onChanged={() => void loadSalesList()}
+                    />
+                  </div>
+                )}
               </motion.div>
             </motion.div>
           )}

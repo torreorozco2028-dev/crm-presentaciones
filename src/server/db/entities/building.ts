@@ -1,5 +1,10 @@
 import { db } from '../config';
-import { building, general_features, building_to_features } from '../schema';
+import {
+  building,
+  general_features,
+  building_to_features,
+  sales_stages,
+} from '../schema';
 import { eq, sql, ilike, or, desc } from 'drizzle-orm';
 
 type NewBuilding = typeof building.$inferInsert;
@@ -26,6 +31,23 @@ export default class BuildingEntity {
     });
   }
 
+  /** Reemplaza las etapas de venta del edificio (siempre 3 filas, una por tipo). */
+  async saveSalesStages(
+    buildingId: string,
+    stages: Omit<typeof sales_stages.$inferInsert, 'buildingId'>[]
+  ) {
+    await db.transaction(async (tx) => {
+      await tx
+        .delete(sales_stages)
+        .where(eq(sales_stages.buildingId, buildingId));
+      if (stages.length > 0) {
+        await tx
+          .insert(sales_stages)
+          .values(stages.map((s) => ({ ...s, buildingId })));
+      }
+    });
+  }
+
   async getBuildings(limit: number, page: number, search?: string) {
     const offset = (page - 1) * limit;
     const whereClause = search
@@ -48,6 +70,7 @@ export default class BuildingEntity {
         },
         pointsOfInterest: true,
         commonAreas: true,
+        salesStages: true,
       },
     });
   }

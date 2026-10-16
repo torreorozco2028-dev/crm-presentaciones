@@ -5,12 +5,28 @@ import { auth } from '@/auth';
 import ClientEntity from '@/server/db/entities/clients';
 import { db } from '@/server/db/config';
 import {
+  building,
   client,
   unit_department,
   sales,
   sale_history,
+  sale_payments,
   users,
 } from '@/server/db/schema';
+import {
+  loadSalePayment,
+  registerSalePayment,
+  removeSalePayment,
+  saveSaleControl,
+  type SaleControlInput,
+  type SalePaymentInput,
+} from '@/server/services/sale-control';
+import { SALE_CONTROL_ENABLED } from '@/lib/feature-flags';
+
+const CONTROL_DISABLED = {
+  success: false as const,
+  error: 'El control de ventas está deshabilitado',
+};
 import {
   isAdminRole,
   resolveClientVisibility,
@@ -375,6 +391,7 @@ interface CreateSaleInput {
   finalPrice?: number | null;
   currency?: string;
   exchangeRate?: number | null;
+  advanceExchangeRate?: number | null;
   advanceType?: string;
   advancePercentage?: number | null;
   advanceAmount?: number | null;
@@ -451,6 +468,11 @@ export async function createSaleAction(input: CreateSaleInput) {
           final_price: input.finalPrice ?? null,
           currency,
           exchangeRate,
+          advanceExchangeRate:
+            input.advanceExchangeRate != null &&
+            Number(input.advanceExchangeRate) > 0
+              ? Number(input.advanceExchangeRate)
+              : null,
           advanceType: advanceResult.advanceType,
           advance_percentage: advanceResult.advancePercentage,
           advanceAmount: advanceResult.advanceAmount,
@@ -630,6 +652,7 @@ export async function updateSaleAction(input: UpdateSaleInput) {
         clientId: true,
         final_price: true,
         currency: true,
+        exchangeRate: true,
         advanceType: true,
         advance_percentage: true,
         advanceAmount: true,
@@ -733,10 +756,14 @@ export async function updateSaleAction(input: UpdateSaleInput) {
 
     const nextFinalPrice = input.finalPrice ?? null;
     const nextCurrency = normalizeCurrency(input.currency) ?? 'BOB';
+    // undefined = el formulario no maneja el TC: se conserva el actual.
     const nextExchangeRate =
-      input.exchangeRate == null || !Number.isFinite(Number(input.exchangeRate))
-        ? null
-        : Number(input.exchangeRate);
+      input.exchangeRate === undefined
+        ? sale.exchangeRate
+        : input.exchangeRate == null ||
+            !Number.isFinite(Number(input.exchangeRate))
+          ? null
+          : Number(input.exchangeRate);
     const nextPaymentMethod = input.paymentMethod?.trim() || null;
     const nextPaymentNotes = input.paymentNotes?.trim() || null;
 
@@ -929,13 +956,16 @@ function buildSalesWhere(
     conditions.push(eq(sales.userId, visibleUserId));
   }
 
-  const query = input.detailQuery?.trim();
-  if (query) {
-    const likeQuery = `%${query}%`;
+  const tokens = (input.detailQuery ?? '').trim().split(/\s+/).filter(Boolean);
+  for (const token of tokens) {
+    const likeQuery = `%${token.replace(/[\\%_]/g, '\\$&')}%`;
     conditions.push(
       or(
         ilike(sales.payment_method, likeQuery),
-        ilike(sales.payment_notes, likeQuery)
+        ilike(sales.payment_notes, likeQuery),
+        sql`exists (select 1 from ${client} c where c.id = ${sales.clientId} and (c.names ilike ${likeQuery} or c.first_last_name ilike ${likeQuery} or c.second_last_name ilike ${likeQuery} or c.email ilike ${likeQuery}))`,
+        sql`exists (select 1 from ${unit_department} u left join ${building} b on b.id = u.building_id where u.id = ${sales.unitId} and (u.unit_number ilike ${likeQuery} or u.floor::text ilike ${likeQuery} or b.building_title ilike ${likeQuery}))`,
+        sql`exists (select 1 from ${users} s where s.id = ${sales.userId} and (s.name ilike ${likeQuery} or s.email ilike ${likeQuery}))`
       )
     );
   }
@@ -1243,4 +1273,130 @@ export async function addSaleCommentAction(input: AddSaleCommentInput) {
     console.error('Error adding sale comment:', error);
     return { success: false, error: 'No se pudo guardar el comentario' };
   }
+}
+
+async function requireSaleAccess(saleId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: 'Debes iniciar sesión para editar la venta' } as const;
+  }
+  const sale = await loadSaleForHistoryAccess(saleId);
+  if (!sale) return { error: 'No se encontró la reserva' } as const;
+  if (!isAdminRole(session.user.role) && sale.userId !== session.user.id) {
+    return {
+      error: 'Solo el propietario o un admin puede editar esta reserva',
+    } as const;
+  }
+  return { userId: session.user.id } as const;
+}
+
+// Datos de control y pagos de una venta, para el panel compartido entre la
+// pantalla de ventas y el control de ventas.
+export async function getSaleDetailAction(saleId: string) {
+  if (!SALE_CONTROL_ENABLED) return CONTROL_DISABLED;
+  try {
+    const guard = await requireSaleAccess(saleId);
+    if ('error' in guard)
+      return { success: false as const, error: guard.error };
+
+    const sale = await db.query.sales.findFirst({
+      where: eq(sales.id, saleId),
+      with: { payments: { orderBy: [desc(sale_payments.paid_at)] } },
+    });
+    if (!sale) {
+      return { success: false as const, error: 'No se encontró la reserva' };
+    }
+
+    return {
+      success: true as const,
+      data: {
+        id: sale.id,
+        currency: sale.currency ?? 'BOB',
+        exchangeRate: sale.exchangeRate,
+        advanceExchangeRate: sale.advanceExchangeRate,
+        finalPrice: sale.final_price,
+        advanceType: (sale.advanceType === 'amount'
+          ? 'amount'
+          : 'percentage') as AdvanceType,
+        advancePercentage: sale.advance_percentage,
+        advanceAmount: sale.advanceAmount,
+        paymentMethod: sale.payment_method ?? '',
+        paymentNotes: sale.payment_notes ?? '',
+        sellerAgency: sale.seller_agency,
+        hasCommission: sale.has_commission,
+        hasInstallments: sale.has_installments,
+        paymentFrequency: sale.payment_frequency,
+        installmentsPercentage: sale.installments_percentage,
+        globalPercentage: sale.global_percentage,
+        salesExpensePercentage: sale.sales_expense_percentage,
+        payments: sale.payments.map((p) => ({
+          id: p.id,
+          amount: p.amount,
+          currency: normalizeCurrency(p.currency),
+          exchangeRate: p.exchangeRate,
+          paidAt: p.paid_at.toISOString(),
+          note: p.note,
+        })),
+      },
+    };
+  } catch (error) {
+    console.error('Error loading sale detail:', error);
+    return { success: false as const, error: 'No se pudo cargar la venta' };
+  }
+}
+
+export async function saveSaleControlAction(input: SaleControlInput) {
+  if (!SALE_CONTROL_ENABLED) return CONTROL_DISABLED;
+  try {
+    const guard = await requireSaleAccess(input.saleId);
+    if ('error' in guard) return { success: false, error: guard.error };
+
+    const result = await saveSaleControl(guard.userId, input);
+    if (result.success) revalidateSalePaths();
+    return result;
+  } catch (error) {
+    console.error('Error saving sale control:', error);
+    return {
+      success: false,
+      error: 'No se pudo guardar el control de la venta',
+    };
+  }
+}
+
+export async function registerSalePaymentAction(input: SalePaymentInput) {
+  if (!SALE_CONTROL_ENABLED) return CONTROL_DISABLED;
+  try {
+    const guard = await requireSaleAccess(input.saleId);
+    if ('error' in guard) return { success: false, error: guard.error };
+
+    const result = await registerSalePayment(guard.userId, input);
+    if (result.success) revalidateSalePaths();
+    return result;
+  } catch (error) {
+    console.error('Error adding sale payment:', error);
+    return { success: false, error: 'No se pudo registrar el pago' };
+  }
+}
+
+export async function removeSalePaymentAction(paymentId: string) {
+  if (!SALE_CONTROL_ENABLED) return CONTROL_DISABLED;
+  try {
+    const payment = await loadSalePayment(paymentId);
+    if (!payment) return { success: false, error: 'Pago no encontrado' };
+
+    const guard = await requireSaleAccess(payment.saleId);
+    if ('error' in guard) return { success: false, error: guard.error };
+
+    const result = await removeSalePayment(guard.userId, paymentId);
+    if (result.success) revalidateSalePaths();
+    return result;
+  } catch (error) {
+    console.error('Error deleting sale payment:', error);
+    return { success: false, error: 'No se pudo eliminar el pago' };
+  }
+}
+
+function revalidateSalePaths() {
+  revalidatePath('/admin/sales');
+  revalidatePath('/admin/sales/control');
 }

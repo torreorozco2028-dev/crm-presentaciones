@@ -31,7 +31,9 @@
       "departmentfeatures": "Department Features",
       "pointsofinterest": "Points of Interest",
       "commonareas": "Common Areas",
-      "sales": "Sales"
+      "news": "News",
+      "sales": "Sales",
+      "control": "Sales control"
     },
     "intros": {
       "users": "Manage your team and control system access efficiently.",
@@ -46,7 +48,9 @@
       "pointsofinterest": "Manage the points of Interest near your building to provide a more immersive experience for your clients.",
       "commonareas": "Manage the shared spaces of the building, such as pools, gyms, and lounges.",
       "commonAreas": "Manage the shared spaces of the building, such as pools, gyms, and lounges.",
-      "sales": "Manage your sales process and keep track of your clients and their interactions with your presentations."
+      "sales": "Manage your sales process and keep track of your clients and their interactions with your presentations.",
+      "news": "Publish construction progress updates for your projects on the landing page.",
+      "control": "Track cost, contributions and balance for each unit by building."
     }
   },
   "Auth": {

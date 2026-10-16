@@ -1,6 +1,8 @@
 'use server';
 import { put, del } from '@vercel/blob';
 
+const BLOB_FOLDER = 'developer';
+
 async function uploadToBlob(
   file: File,
   allowedTypes: string[]
@@ -19,7 +21,7 @@ async function uploadToBlob(
     );
   }
 
-  const blob = await put(file.name, file, {
+  const blob = await put(`${BLOB_FOLDER}/${file.name}`, file, {
     access: 'public',
     contentType: file.type,
   });

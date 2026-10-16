@@ -6,7 +6,7 @@ import { fontSans } from '@/config/fonts';
 import { Toaster } from 'react-hot-toast';
 import { ThemeProvider } from '@/providers/theme-provider';
 import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
+import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { ReactScan } from '@/components/react-scan';
@@ -45,7 +45,9 @@ export default async function RootLayout({
     notFound();
   }
 
-  const messages = await getMessages();
+  // Fija el idioma sin leer headers para que las paginas puedan ser estaticas.
+  setRequestLocale(locale);
+  const messages = await getMessages({ locale });
 
   return (
     <html lang={locale} suppressHydrationWarning className='scroll-smooth'>

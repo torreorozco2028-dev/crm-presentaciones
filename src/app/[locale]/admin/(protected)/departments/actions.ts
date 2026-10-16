@@ -10,6 +10,14 @@ import {
 
 const entity = new DepartmentEntity();
 
+const MODEL_TYPES = ['departamento', 'vaulera', 'estacionamiento'];
+
+function parseModelType(value: FormDataEntryValue | null): string {
+  return typeof value === 'string' && MODEL_TYPES.includes(value)
+    ? value
+    : 'departamento';
+}
+
 function parseBatchImages(batchImages: unknown): string[] {
   if (!batchImages) return [];
   if (Array.isArray(batchImages)) {
@@ -47,6 +55,9 @@ export async function createDepartmentModelAction(formData: FormData) {
       parseInt(formData.get('base_square_meters') as string) || 0;
     const balcony = formData.get('balcony') === 'true';
     const idPlan = formData.get('id_plan') as string;
+    const modelType = parseModelType(formData.get('model_type'));
+    const modelDescription =
+      (formData.get('model_description') as string)?.trim() || null;
 
     const primaryFile = formData.get('primary_image') as File;
     const batchFiles = formData.getAll('batch_images') as File[];
@@ -71,6 +82,8 @@ export async function createDepartmentModelAction(formData: FormData) {
       base_square_meters: baseSquareMeters,
       balcony,
       id_plan: idPlan,
+      model_type: modelType,
+      model_description: modelDescription,
       prymary_image: primaryUrl,
       batch_images: JSON.stringify(batchUrls),
     };
@@ -104,6 +117,9 @@ export async function updateDepartmentModelAction(
       parseInt(formData.get('base_square_meters') as string) || 0;
     updateData.balcony = formData.get('balcony') === 'true';
     updateData.id_plan = formData.get('id_plan') as string;
+    updateData.model_type = parseModelType(formData.get('model_type'));
+    updateData.model_description =
+      (formData.get('model_description') as string)?.trim() || null;
 
     const removePrimaryImage = formData.get('remove_primary_image') === 'true';
     if (removePrimaryImage && existingModel.prymary_image) {
