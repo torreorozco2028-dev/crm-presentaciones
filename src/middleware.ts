@@ -4,7 +4,7 @@ export const { auth } = NextAuth(authConfig);
 
 import {
   authRoutes,
-  publicRoutes,
+  isPublicPath,
   DEFAULT_LOGIN_REDIRECT,
   apiRoutes,
 } from './routes';
@@ -47,7 +47,7 @@ export default auth(async (req) => {
 
   const locale = nextUrl.pathname.split('/')[1] || i18n.defaultLocale;
 
-  const isPublicRoute = publicRoutes.includes(pathname);
+  const isPublicRoute = isPublicPath(pathname);
   const isAuthRoute = authRoutes.includes(pathname);
 
   if (pathname === `/${locale}/admin`) {

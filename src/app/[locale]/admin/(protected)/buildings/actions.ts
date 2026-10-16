@@ -1,7 +1,9 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { LANDING_BUILDING_TAG } from '@/server/db/queries/landing';
 import BuildingEntity from '@/server/db/entities/building';
+import { parseSalesStages } from '@/lib/sales-stages';
 import {
   uploadSingleImage,
   uploadBuildingPlan,
@@ -42,11 +44,26 @@ export async function getBuildingsAction(
   }
 }
 
+/** Textos editables del hero de la landing: titular y precio por m². */
+function readHeroFields(formData: FormData) {
+  const headline = String(formData.get('hero_headline') ?? '').trim();
+  const priceRaw = String(formData.get('price_per_m2') ?? '').trim();
+  let price: number | null = null;
+  if (priceRaw) {
+    price = Number(priceRaw);
+    if (!Number.isInteger(price) || price < 0) {
+      throw new Error('El precio por m² debe ser un número entero positivo');
+    }
+  }
+  return { hero_headline: headline || null, price_per_m2: price };
+}
+
 export async function createBuildingAction(formData: FormData) {
   try {
     const primaryFile = formData.get('primary_image') as File;
     const planFile = formData.get('plan_image') as File;
     const distributionFile = formData.get('distribution_image') as File;
+    const extrasPlanFile = formData.get('extras_plan_image') as File | null;
     const batchFiles = formData.getAll('batch_images') as File[];
 
     const primaryUrl =
@@ -56,6 +73,10 @@ export async function createBuildingAction(formData: FormData) {
       distributionFile.size > 0
         ? await uploadSingleImage(distributionFile)
         : '';
+    const extrasPlanUrl =
+      extrasPlanFile && extrasPlanFile.size > 0
+        ? await uploadBuildingPlan(extrasPlanFile)
+        : null;
     const batchUrls = await uploadMultipleImages(batchFiles);
 
     const featureIdsString = formData.get('featureIds') as string;
@@ -66,20 +87,26 @@ export async function createBuildingAction(formData: FormData) {
     const newBuilding = {
       building_title: formData.get('building_title') as string,
       building_description: formData.get('building_description') as string,
+      ...readHeroFields(formData),
       building_location: formData.get('building_location') as string,
       building_locationURL: formData.get('building_locationURL') as string,
       prymary_image: primaryUrl,
       plan_image: planUrl,
       distribution_image: distributionUrl,
+      extras_plan_image: extrasPlanUrl,
       total_floors: parseInt(formData.get('total_floors') as string) || 0,
       number_garages: parseInt(formData.get('number_garages') as string) || 0,
       number_storages: parseInt(formData.get('number_storages') as string) || 0,
       batch_images: batchUrls,
     };
 
+    const stages = parseSalesStages(formData);
     const result = await entity.createBuilding(newBuilding, featureIds);
+    if (stages) await entity.saveSalesStages(result.id, stages);
 
     revalidatePath('/admin/buildings');
+    revalidateTag(LANDING_BUILDING_TAG);
+    revalidatePath('/[locale]', 'page');
     return { success: true, data: result };
   } catch (error: any) {
     console.error('Error en createBuildingAction:', error);
@@ -111,6 +138,13 @@ export async function updateBuildingAction(id: string, formData: FormData) {
       if (existingBuilding.distribution_image)
         filesToDelete.push(existingBuilding.distribution_image);
       updateData.distribution_image = await uploadSingleImage(distributionFile);
+    }
+
+    const extrasPlanFile = formData.get('extras_plan_image') as File | null;
+    if (extrasPlanFile && extrasPlanFile.size > 0) {
+      if (existingBuilding.extras_plan_image)
+        filesToDelete.push(existingBuilding.extras_plan_image);
+      updateData.extras_plan_image = await uploadBuildingPlan(extrasPlanFile);
     }
 
     const existingBatchImages = parseBatchImages(existingBuilding.batch_images);
@@ -153,6 +187,7 @@ export async function updateBuildingAction(id: string, formData: FormData) {
     updateData.building_description = formData.get(
       'building_description'
     ) as string;
+    Object.assign(updateData, readHeroFields(formData));
     updateData.building_location = formData.get('building_location') as string;
     updateData.building_locationURL = formData.get(
       'building_locationURL'
@@ -170,11 +205,15 @@ export async function updateBuildingAction(id: string, formData: FormData) {
       ? JSON.parse(featureIdsString)
       : undefined;
 
+    const stages = parseSalesStages(formData);
     const result = await entity.updateBuilding(id, updateData, featureIds);
+    if (stages) await entity.saveSalesStages(id, stages);
 
     if (filesToDelete.length > 0) await deleteFilesFromStorage(filesToDelete);
 
     revalidatePath('/admin/buildings');
+    revalidateTag(LANDING_BUILDING_TAG);
+    revalidatePath('/[locale]', 'page');
     return { success: true, data: result.updated };
   } catch (error: any) {
     console.error('Error en updateBuildingAction:', error);
@@ -193,6 +232,7 @@ export async function deleteBuildingAction(id: string) {
       buildingToDelete.prymary_image,
       buildingToDelete.plan_image,
       buildingToDelete.distribution_image,
+      buildingToDelete.extras_plan_image,
       ...((buildingToDelete.batch_images as string[]) || []),
     ].filter(Boolean) as string[];
 

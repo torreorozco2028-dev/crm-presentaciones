@@ -23,7 +23,12 @@ import {
   buildingToFeaturesRelations,
 } from './tables/building';
 import { client, clientRelations } from './tables/client';
-import { sales, salesRelations } from './tables/sales';
+import {
+  sales,
+  salesRelations,
+  sale_payments,
+  salePaymentsRelations,
+} from './tables/sales';
 import { sale_history, saleHistoryRelations } from './tables/sale_history';
 import {
   construction_phases,
@@ -35,6 +40,7 @@ import {
 } from './tables/pointsofinterest';
 import { sales_stages, salesStagesRelations } from './tables/sales_stages';
 import { ourteam } from './tables/ourteam';
+import { building_news, buildingNewsRelations } from './tables/building_news';
 
 export {
   users,
@@ -73,4 +79,8 @@ export {
   sales_stages,
   sale_history,
   saleHistoryRelations,
+  sale_payments,
+  salePaymentsRelations,
+  building_news,
+  buildingNewsRelations,
 };

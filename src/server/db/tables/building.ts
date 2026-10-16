@@ -15,6 +15,7 @@ import { common_areas } from './common_areas';
 import { construction_phases } from './construction_phases';
 import { points_interest } from './pointsofinterest';
 import { sales_stages } from './sales_stages';
+import { building_news } from './building_news';
 
 export const general_features = pgTable('general_features', {
   id: uuid('id')
@@ -32,10 +33,13 @@ export const building = pgTable('building', {
     .primaryKey(),
   building_title: varchar({ length: 100 }).notNull(),
   building_description: text(),
+  hero_headline: varchar({ length: 120 }),
+  price_per_m2: integer(),
   building_location: varchar({ length: 255 }),
   building_locationURL: text(),
   plan_image: varchar({ length: 255 }),
   distribution_image: varchar({ length: 255 }),
+  extras_plan_image: varchar({ length: 255 }), // SVG interactivo de vauleras y estacionamientos
   prymary_image: varchar({ length: 255 }),
   total_floors: integer(),
   number_garages: integer(),
@@ -69,6 +73,7 @@ export const buildingRelations = relations(building, ({ many }) => ({
   constructionPhases: many(construction_phases),
   pointsOfInterest: many(points_interest),
   salesStages: many(sales_stages),
+  news: many(building_news),
 }));
 
 export const generalFeaturesRelations = relations(

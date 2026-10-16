@@ -52,6 +52,9 @@ interface Props {
   units: UnitDepartment[];
   building?: Building;
   isAuthenticated?: boolean;
+  title?: string;
+  sectionId?: string;
+  unitLabel?: string;
 }
 
 const roomOrder: Record<string, number> = {
@@ -104,7 +107,14 @@ function getUnitStateMeta(state: number) {
   };
 }
 
-export default function Floors({ units, building, isAuthenticated }: Props) {
+export default function Floors({
+  units,
+  building,
+  isAuthenticated,
+  title = 'NUESTRAS UNIDADES',
+  sectionId = 'unidades',
+  unitLabel = 'departamento',
+}: Props) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const router = useRouter();
   const params = useParams<{ locale?: string }>();
@@ -167,7 +177,7 @@ export default function Floors({ units, building, isAuthenticated }: Props) {
     }
 
     const unit = units.find((u) => u.id === unitId);
-    const message = `Hola, me interesa el departamento ${unit?.unit_number ?? ''}${
+    const message = `Hola, me interesa el ${unitLabel} ${unit?.unit_number ?? ''}${
       building?.building_title ? ` de ${building.building_title}` : ''
     } y quisiera más información para reservarlo.`;
     const whatsappUrl = `${siteConfig.contact.whatsapp}?text=${encodeURIComponent(message)}`;
@@ -264,12 +274,12 @@ export default function Floors({ units, building, isAuthenticated }: Props) {
 
   return (
     <div
-      id='unidades'
+      id={sectionId}
       className='min-h-screen bg-background p-4 pt-10 font-sans text-foreground transition-colors dark:bg-black sm:p-10'
     >
       <div className='mb-10 text-center'>
         <h1 className='mi-fuente-2 mb-4 bg-gradient-to-b from-zinc-800 to-zinc-500 bg-clip-text text-3xl font-black tracking-tight text-transparent dark:from-white dark:to-zinc-500 sm:text-4xl md:text-5xl'>
-          NUESTRAS UNIDADES
+          {title}
         </h1>
         <p className='text-xs uppercase tracking-widest text-default-500'>
           Selecciona hasta {maxSelections} unidades para comparar detalles
@@ -376,7 +386,7 @@ export default function Floors({ units, building, isAuthenticated }: Props) {
                           {room}
                         </p>
                         <p className='text-[11px] text-default-500'>
-                          Comparacion por departamento
+                          Comparacion por {unitLabel}
                         </p>
                       </div>
                     </div>

@@ -76,6 +76,14 @@ export const menuOptions = {
       roles: ['admin'],
     },
     {
+      key: 'news',
+      label: 'menu.news',
+      path: '/admin/news',
+      icon: 'Newspaper',
+      displayDivider: false,
+      roles: ['admin'],
+    },
+    {
       key: 'departmentfeatures',
       label: 'menu.departmentfeatures',
       path: '/admin/departmentfeatures',

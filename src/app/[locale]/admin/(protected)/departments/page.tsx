@@ -10,6 +10,7 @@ import {
   TableCell,
   Button,
   Input,
+  Textarea,
   Select,
   SelectItem,
   Modal,
@@ -40,6 +41,12 @@ import {
 } from './actions';
 import { getBuildingsAction } from '../buildings/actions';
 import useUserRole from '@/lib/getUserRole';
+
+const MODEL_TYPE_OPTIONS = [
+  { key: 'departamento', label: 'Departamento' },
+  { key: 'vaulera', label: 'Vaulera' },
+  { key: 'estacionamiento', label: 'Estacionamiento' },
+];
 
 const FEATURE_ROOM_ORDER = [
   'Generales',
@@ -381,6 +388,8 @@ export default function DepartmentsPage() {
     );
     formData.append('balcony', modelFormData.balcony ? 'true' : 'false');
     formData.append('id_plan', modelFormData.id_plan || '');
+    formData.append('model_type', modelFormData.model_type || 'departamento');
+    formData.append('model_description', modelFormData.model_description || '');
     formData.append('featureIds', JSON.stringify(selectedFeatures));
 
     if (primaryImageFile) {
@@ -528,6 +537,7 @@ export default function DepartmentsPage() {
                   <Table>
                     <TableHeader>
                       <TableColumn>Nombre</TableColumn>
+                      <TableColumn>Tipo</TableColumn>
                       <TableColumn>Área Base (m²)</TableColumn>
                       <TableColumn>Balcón</TableColumn>
                       <TableColumn>Unidades</TableColumn>
@@ -537,6 +547,11 @@ export default function DepartmentsPage() {
                       {(models || []).map((model: any) => (
                         <TableRow key={model.id}>
                           <TableCell>{model.name_model_department}</TableCell>
+                          <TableCell>
+                            {MODEL_TYPE_OPTIONS.find(
+                              (o) => o.key === model.model_type
+                            )?.label ?? 'Departamento'}
+                          </TableCell>
                           <TableCell>{model.base_square_meters}</TableCell>
                           <TableCell>{model.balcony ? 'Sí' : 'No'}</TableCell>
                           <TableCell>
@@ -883,6 +898,21 @@ export default function DepartmentsPage() {
             {modelFormData.id ? 'Editar Modelo' : 'Crear Nuevo Modelo'}
           </ModalHeader>
           <ModalBody className='flex-1 space-y-4 overflow-y-auto'>
+            <Select
+              label='Tipo'
+              selectedKeys={[modelFormData.model_type || 'departamento']}
+              disallowEmptySelection
+              onSelectionChange={(keys) =>
+                setModelFormData({
+                  ...modelFormData,
+                  model_type: Array.from(keys)[0] as string,
+                })
+              }
+            >
+              {MODEL_TYPE_OPTIONS.map((option) => (
+                <SelectItem key={option.key}>{option.label}</SelectItem>
+              ))}
+            </Select>
             <Input
               label='Nombre del Modelo'
               placeholder='Ej: Apartamento Premium 2H'
@@ -908,20 +938,31 @@ export default function DepartmentsPage() {
             />
             <Input
               label='ID Plan'
-              placeholder='Identificador del plano'
+              placeholder='ID de la zona en el plano SVG'
               value={modelFormData.id_plan || ''}
               onValueChange={(value) =>
                 setModelFormData({ ...modelFormData, id_plan: value })
               }
             />
-            <Checkbox
-              isSelected={modelFormData.balcony || false}
+            {(modelFormData.model_type || 'departamento') ===
+              'departamento' && (
+              <Checkbox
+                isSelected={modelFormData.balcony || false}
+                onValueChange={(value) =>
+                  setModelFormData({ ...modelFormData, balcony: value })
+                }
+              >
+                Tiene Balcón
+              </Checkbox>
+            )}
+            <Textarea
+              label='Descripción'
+              placeholder='Se muestra en la sección de vauleras y estacionamientos'
+              value={modelFormData.model_description || ''}
               onValueChange={(value) =>
-                setModelFormData({ ...modelFormData, balcony: value })
+                setModelFormData({ ...modelFormData, model_description: value })
               }
-            >
-              Tiene Balcón
-            </Checkbox>
+            />
 
             <div className='space-y-2'>
               <label className='block text-sm font-medium'>

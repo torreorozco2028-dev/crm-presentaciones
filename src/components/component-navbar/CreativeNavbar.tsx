@@ -36,6 +36,7 @@ const BASE_NAV_LINKS = [
   },
   { title: 'AREAS COMUNES', href: '#areas-comunes' },
   { title: 'UNIDADES', href: '#unidades' },
+  { title: 'NOTICIAS', href: '/noticias' },
 ];
 
 interface CreativeNavbarSessionUser {
@@ -44,11 +45,31 @@ interface CreativeNavbarSessionUser {
   image?: string | null;
 }
 
+type CreativeNavbarSession = { user?: CreativeNavbarSessionUser } | null;
+
 interface CreativeNavbarProps {
-  session?: { user?: CreativeNavbarSessionUser } | null;
+  /**
+   * Si se omite (paginas estaticas que no pueden leer cookies en el servidor),
+   * la sesion se consulta en el cliente.
+   */
+  session?: CreativeNavbarSession;
 }
 
-export default function CreativeNavbar({ session }: CreativeNavbarProps) {
+export default function CreativeNavbar({
+  session: serverSession,
+}: CreativeNavbarProps) {
+  const [clientSession, setClientSession] =
+    useState<CreativeNavbarSession>(null);
+  const session = serverSession === undefined ? clientSession : serverSession;
+  useEffect(() => {
+    if (serverSession !== undefined) return;
+    const controller = new AbortController();
+    fetch('/api/auth/session', { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setClientSession(data?.user ? data : null))
+      .catch(() => {});
+    return () => controller.abort();
+  }, [serverSession]);
   const { theme } = useTheme();
   const params = useParams<{ locale?: string }>();
   const locale =
@@ -66,18 +87,25 @@ export default function CreativeNavbar({ session }: CreativeNavbarProps) {
     setMounted(true);
   }, []);
   const logoSrc = mounted && theme === 'dark' ? LOGO_WHITE : LOGO_DARK;
+  // Las anclas viven en la landing; el prefijo permite usarlas desde otras paginas.
+  const resolveHref = (href: string) => `/${locale}${href}`;
   const NAV_LINKS = BASE_NAV_LINKS.map((link) => {
-    if (link.title === 'INICIO') {
-      return {
-        ...link,
-        dropdown: [
-          { title: 'Introducción', href: '#introduccion' },
-          { title: 'Ubicación', href: '#ubicacion' },
-          { title: 'Departamentos', href: '#distribucion' },
-        ],
-      };
-    }
-    return link;
+    const dropdown =
+      link.title === 'INICIO'
+        ? [
+            { title: 'Introducción', href: '#introduccion' },
+            { title: 'Ubicación', href: '#ubicacion' },
+            { title: 'Departamentos', href: '#distribucion' },
+          ]
+        : link.dropdown;
+    return {
+      ...link,
+      href: resolveHref(link.href),
+      dropdown: dropdown?.map((sub) => ({
+        ...sub,
+        href: resolveHref(sub.href),
+      })),
+    };
   });
   const [isHidden, setIsHidden] = useState(false);
   const { scrollY } = useScroll();

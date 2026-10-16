@@ -31,7 +31,9 @@
       "departmentfeatures": "Acabados de Departamentos",
       "pointsofinterest": "Puntos de interés",
       "commonareas": "Áreas Comunes",
-      "sales": "Ventas"
+      "news": "Noticias",
+      "sales": "Ventas",
+      "control": "Control de ventas"
     },
     "intros": {
       "users": "Gestiona tu equipo y controla el acceso a tu sistema de manera eficiente.",
@@ -46,7 +48,9 @@
       "pointsofinterest": "Administra los puntos de interés cerca de tu edificio para proporcionar una experiencia más inmersiva para tus clientes.",
       "commonareas": "Administra los espacios compartidos del edificio, como piscinas, gimnasios y salones.",
       "áreasComunes": "Administra los espacios compartidos del edificio, como piscinas, gimnasios y salones.",
-      "sales": "Gestiona tu proceso de ventas y lleva un seguimiento de tus clientes y sus interacciones con tus presentaciones."
+      "sales": "Gestiona tu proceso de ventas y lleva un seguimiento de tus clientes y sus interacciones con tus presentaciones.",
+      "news": "Publica los avances de obra de tus proyectos para mostrarlos en la landing.",
+      "control": "Controla el costo, los aportes y el saldo de cada unidad por edificio."
     }
   },
   "Auth": {

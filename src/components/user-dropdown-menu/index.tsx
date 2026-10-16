@@ -13,6 +13,16 @@ import { useTranslations } from 'next-intl';
 
 export default function UserDropdownMenu({ user }: any) {
   const t = useTranslations('Common');
+  // Los ids de react-aria del trigger no coinciden entre servidor y cliente
+  // (hydration mismatch); se renderiza el menu solo en el cliente, con un
+  // placeholder del mismo tamano para no mover el layout.
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+
+  if (!mounted) {
+    return <div className='h-10 w-10 rounded-full bg-default-200' />;
+  }
+
   return (
     <Dropdown placement='bottom-end' backdrop='blur'>
       <DropdownTrigger>

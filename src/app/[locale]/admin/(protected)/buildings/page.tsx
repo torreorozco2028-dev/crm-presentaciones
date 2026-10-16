@@ -34,6 +34,7 @@ import {
 } from './actions';
 // import { getAllFeaturesAction } from '../generalfeatures/actions';
 import useUserRole from '@/lib/getUserRole';
+import SalesStagesFields from '@/components/sales-stages-fields';
 
 export default function BuildingsPage() {
   const queryClient = useQueryClient();
@@ -45,6 +46,8 @@ export default function BuildingsPage() {
   const [selectedPrimaryPreviewUrl, setSelectedPrimaryPreviewUrl] =
     useState('');
   const [selectedPlanPreviewUrl, setSelectedPlanPreviewUrl] = useState('');
+  const [selectedExtrasPlanPreviewUrl, setSelectedExtrasPlanPreviewUrl] =
+    useState('');
   const [selectedDistributionPreviewUrl, setSelectedDistributionPreviewUrl] =
     useState('');
   const [selectedBatchCount, setSelectedBatchCount] = useState(0);
@@ -59,6 +62,7 @@ export default function BuildingsPage() {
   );
   const primaryImageInputRef = useRef<HTMLInputElement>(null);
   const planImageInputRef = useRef<HTMLInputElement>(null);
+  const extrasPlanInputRef = useRef<HTMLInputElement>(null);
   const distributionImageInputRef = useRef<HTMLInputElement>(null);
   const batchImagesInputRef = useRef<HTMLInputElement>(null);
 
@@ -76,6 +80,9 @@ export default function BuildingsPage() {
       if (selectedPlanPreviewUrl) {
         URL.revokeObjectURL(selectedPlanPreviewUrl);
       }
+      if (selectedExtrasPlanPreviewUrl) {
+        URL.revokeObjectURL(selectedExtrasPlanPreviewUrl);
+      }
       if (selectedDistributionPreviewUrl) {
         URL.revokeObjectURL(selectedDistributionPreviewUrl);
       }
@@ -83,6 +90,7 @@ export default function BuildingsPage() {
   }, [
     selectedPrimaryPreviewUrl,
     selectedPlanPreviewUrl,
+    selectedExtrasPlanPreviewUrl,
     selectedDistributionPreviewUrl,
   ]);
 
@@ -204,6 +212,10 @@ export default function BuildingsPage() {
       if (prev) URL.revokeObjectURL(prev);
       return '';
     });
+    setSelectedExtrasPlanPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return '';
+    });
     setSelectedDistributionPreviewUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev);
       return '';
@@ -216,6 +228,9 @@ export default function BuildingsPage() {
     }
     if (distributionImageInputRef.current) {
       distributionImageInputRef.current.value = '';
+    }
+    if (extrasPlanInputRef.current) {
+      extrasPlanInputRef.current.value = '';
     }
   };
 
@@ -230,6 +245,14 @@ export default function BuildingsPage() {
   const handlePlanImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     setSelectedPlanPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return file ? URL.createObjectURL(file) : '';
+    });
+  };
+
+  const handleExtrasPlanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    setSelectedExtrasPlanPreviewUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev);
       return file ? URL.createObjectURL(file) : '';
     });
@@ -576,6 +599,35 @@ export default function BuildingsPage() {
                 variant='bordered'
               />
 
+              <Input
+                name='hero_headline'
+                label='Titular de la portada'
+                placeholder='Ej: Aprovecha los precios de feria'
+                description='Texto grande que aparece debajo del nombre del edificio'
+                maxLength={120}
+                defaultValue={editingBuilding?.hero_headline ?? ''}
+                variant='bordered'
+              />
+              <Input
+                name='price_per_m2'
+                label='Precio por m² (USD)'
+                type='number'
+                min={0}
+                step={1}
+                description='Si lo dejas vacío, no se muestra'
+                defaultValue={
+                  editingBuilding?.price_per_m2 != null
+                    ? String(editingBuilding.price_per_m2)
+                    : ''
+                }
+                variant='bordered'
+              />
+
+              <SalesStagesFields
+                key={editingBuilding?.id ?? 'new'}
+                stages={editingBuilding?.salesStages}
+              />
+
               <Textarea
                 name='building_description'
                 label='Descripción'
@@ -781,6 +833,54 @@ export default function BuildingsPage() {
                       </div>
                     </div>
 
+                    <div className='rounded-lg border border-default-200 p-2'>
+                      <p className='mb-2 text-tiny font-medium uppercase tracking-wider text-default-500'>
+                        Plano de vauleras y estacionamientos (SVG)
+                      </p>
+                      {selectedExtrasPlanPreviewUrl ||
+                      editingBuilding?.extras_plan_image ? (
+                        <div className='relative mb-2 h-40 w-full overflow-hidden rounded-md border border-default-200 bg-default-100'>
+                          <Image
+                            src={
+                              selectedExtrasPlanPreviewUrl ||
+                              editingBuilding.extras_plan_image
+                            }
+                            alt='Plano de vauleras y estacionamientos'
+                            fill
+                            unoptimized
+                            className='object-contain p-2'
+                          />
+                        </div>
+                      ) : (
+                        <div className='mb-2 flex h-24 items-center justify-center rounded-md border border-dashed border-default-300 text-tiny text-default-400'>
+                          Sin plano
+                        </div>
+                      )}
+                      {selectedExtrasPlanPreviewUrl && (
+                        <Chip
+                          size='sm'
+                          color='primary'
+                          variant='flat'
+                          className='mb-2'
+                        >
+                          Nuevo plano seleccionado
+                        </Chip>
+                      )}
+                      <input
+                        ref={extrasPlanInputRef}
+                        name='extras_plan_image'
+                        type='file'
+                        accept='image/svg+xml,.svg'
+                        onChange={handleExtrasPlanChange}
+                        className='block w-full text-tiny text-default-500 file:mr-3 file:rounded-md file:border-0 file:bg-default-100 file:px-3 file:py-1.5 file:text-tiny file:font-medium'
+                      />
+                      <p className='mt-1 text-tiny text-default-500'>
+                        {editingBuilding?.extras_plan_image
+                          ? 'Sube otro SVG para reemplazarlo.'
+                          : 'Opcional.'}
+                      </p>
+                    </div>
+
                     <div>
                       <div className='mb-2 flex items-center justify-between gap-2'>
                         <p className='text-tiny font-medium uppercase tracking-wider text-default-500'>
@@ -927,6 +1027,27 @@ export default function BuildingsPage() {
                             fill
                             unoptimized
                             className='object-contain'
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div className='space-y-2'>
+                      <Input
+                        name='extras_plan_image'
+                        label='Plano de vauleras y estacionamientos (SVG, opcional)'
+                        type='file'
+                        accept='image/svg+xml,.svg'
+                        onChange={handleExtrasPlanChange}
+                        labelPlacement='outside'
+                      />
+                      {selectedExtrasPlanPreviewUrl && (
+                        <div className='relative h-40 w-full overflow-hidden rounded-md border border-default-200 bg-default-100'>
+                          <Image
+                            src={selectedExtrasPlanPreviewUrl}
+                            alt='Preview plano de vauleras y estacionamientos'
+                            fill
+                            unoptimized
+                            className='object-contain p-2'
                           />
                         </div>
                       )}
