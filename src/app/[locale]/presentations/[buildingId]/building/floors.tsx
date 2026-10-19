@@ -107,6 +107,11 @@ function getUnitStateMeta(state: number) {
   };
 }
 
+/** Nombre del modelo de la unidad (Baulera, Local comercial...). Sin nombre: "Depto". */
+function getUnitKindLabel(unit: UnitDepartment) {
+  return unit.model?.name_model_department?.trim() || 'Depto';
+}
+
 export default function Floors({
   units,
   building,
@@ -321,8 +326,8 @@ export default function Floors({
                           : `${stateMeta.buttonClass} opacity-85`
                     }`}
                   >
-                    <span className='text-[9px] font-bold uppercase tracking-[0.2em] opacity-70'>
-                      Depto
+                    <span className='max-w-full truncate text-[9px] font-bold uppercase tracking-[0.2em] opacity-70'>
+                      {getUnitKindLabel(unit)}
                     </span>
                     <span className='font-mono text-base font-black'>
                       {unit.unit_number}
@@ -405,7 +410,7 @@ export default function Floors({
                           >
                             <div className='mb-2 flex items-center justify-between'>
                               <p className='font-mono text-sm font-black tracking-wide text-foreground'>
-                                Depto {unit.unit_number}
+                                {getUnitKindLabel(unit)} {unit.unit_number}
                               </p>
                               <p className='text-[11px] text-default-500'>
                                 Nivel {unit.floor}
