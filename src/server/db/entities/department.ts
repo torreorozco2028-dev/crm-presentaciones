@@ -126,10 +126,17 @@ export default class DepartmentEntity {
   }
 
   async getUnitsByModel(modelId: string) {
-    return await db.query.unit_department.findMany({
+    const units = await db.query.unit_department.findMany({
       where: eq(unit_department.modelId, modelId),
-      orderBy: [unit_department.floor, unit_department.unit_number],
     });
+    // Orden natural: B1, B2, ... B10 (en SQL quedaría B1, B10, B11, B2)
+    return units.sort(
+      (a, b) =>
+        a.floor - b.floor ||
+        (a.unit_number ?? '').localeCompare(b.unit_number ?? '', 'es', {
+          numeric: true,
+        })
+    );
   }
 
   async updateUnit(id: string, data: UnitUpdate) {

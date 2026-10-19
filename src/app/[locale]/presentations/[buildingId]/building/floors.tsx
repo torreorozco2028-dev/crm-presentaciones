@@ -152,7 +152,9 @@ export default function Floors({
     return Object.entries(floors)
       .map(([floor, depts]) => ({
         floor: Number(floor),
-        depts: depts.sort((a, b) => a.unit_number.localeCompare(b.unit_number)),
+        depts: depts.sort((a, b) =>
+          a.unit_number.localeCompare(b.unit_number, 'es', { numeric: true })
+        ),
       }))
       .sort((a, b) => b.floor - a.floor);
   }, [units]);

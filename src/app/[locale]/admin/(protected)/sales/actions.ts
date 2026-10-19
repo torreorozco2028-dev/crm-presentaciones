@@ -357,15 +357,23 @@ export async function getSalesSetupDataAction() {
             .join(' '),
           email: client.email,
         })),
-        units: units.map((unit) => ({
-          id: unit.id,
-          label: `${unit.building?.building_title ?? 'Edificio'} · Piso ${unit.floor} · Unidad ${unit.unit_number ?? '-'}`,
-          state: parseState(unit.state) ?? 1,
-          squareMeters: resolveSquareMeters(
-            unit.real_square_meters,
-            unit.model?.base_square_meters
-          ),
-        })),
+        units: [...units]
+          .sort(
+            (x, y) =>
+              x.floor - y.floor ||
+              (x.unit_number ?? '').localeCompare(y.unit_number ?? '', 'es', {
+                numeric: true,
+              })
+          )
+          .map((unit) => ({
+            id: unit.id,
+            label: `${unit.building?.building_title ?? 'Edificio'} · Piso ${unit.floor} · Unidad ${unit.unit_number ?? '-'}`,
+            state: parseState(unit.state) ?? 1,
+            squareMeters: resolveSquareMeters(
+              unit.real_square_meters,
+              unit.model?.base_square_meters
+            ),
+          })),
         users: userOptions.map((item) => ({
           id: item.id,
           name: item.name ?? 'Sin nombre',
