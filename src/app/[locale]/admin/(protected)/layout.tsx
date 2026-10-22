@@ -5,6 +5,11 @@ import { ServiceProvider } from '@/providers/service-provider';
 import SideBarLeft from '@/components/sidebar-left';
 import NavBarTop from '@/components/nav-bar-top';
 import { ToastProvider } from '@heroui/toast';
+import {
+  SidebarProvider,
+  SidebarAside,
+  SidebarContent,
+} from '@/components/sidebar-provider';
 
 export default async function AdminProtectedLayout({
   children,
@@ -24,21 +29,23 @@ export default async function AdminProtectedLayout({
     <SessionProvider session={session}>
       <ServiceProvider>
         <ToastProvider placement='top-right' />
-        <div className='flex min-h-screen bg-background'>
-          <aside className='fixed hidden h-screen w-64 border-r border-divider bg-default-50/50 shadow-sm dark:border-zinc-700/50 md:block'>
-            <SideBarLeft />
-          </aside>
-          <main className='flex-1'>
-            <div className='flex min-h-screen flex-col md:ml-64'>
-              <header className='sticky top-0 z-40 border-b border-none bg-background/95'>
-                <NavBarTop user={session} />
-              </header>
-              <div className='flex flex-grow flex-col gap-4 p-6'>
-                {children}
-              </div>
-            </div>
-          </main>
-        </div>
+        <SidebarProvider>
+          <div className='flex min-h-screen bg-background'>
+            <SidebarAside>
+              <SideBarLeft />
+            </SidebarAside>
+            <main className='min-w-0 flex-1'>
+              <SidebarContent>
+                <header className='sticky top-0 z-40 border-b border-none bg-background/95'>
+                  <NavBarTop user={session} />
+                </header>
+                <div className='flex flex-grow flex-col gap-4 p-6'>
+                  {children}
+                </div>
+              </SidebarContent>
+            </main>
+          </div>
+        </SidebarProvider>
       </ServiceProvider>
     </SessionProvider>
   );

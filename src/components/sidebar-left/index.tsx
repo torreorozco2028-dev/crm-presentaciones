@@ -1,7 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Listbox, ListboxItem, ListboxSection, Image } from '@heroui/react';
+import Link from 'next/link';
+import { Image } from '@heroui/react';
+import { useSidebar } from '../sidebar-provider';
 import { menuOptions, MenuItem, MenuOptions } from './options';
 import { usePathname } from 'next/navigation';
 import LucideIcon from '../lucide-icon';
@@ -23,6 +25,7 @@ export default function SideBarLeft() {
   const userRole = useUserRole() || 'user';
   const { theme } = useTheme();
   const t = useTranslations('Common');
+  const { collapsed } = useSidebar();
   React.useEffect(() => {
     setMounted(true);
   }, []);
@@ -62,58 +65,84 @@ export default function SideBarLeft() {
   }
 
   const logoSrc = theme === 'dark' ? LOGO_WHITE : LOGO_DARK;
+  const currentLang = pathname.split('/')[1];
+  // En modo colapsado solo se ven los iconos; el texto se oculta con fade.
+  const fade = `whitespace-nowrap transition-opacity duration-200 ${
+    collapsed ? 'pointer-events-none opacity-0' : 'opacity-100 delay-100'
+  }`;
 
   return (
-    <div className='w-full p-1'>
-      <div className='flex h-12 w-full items-center pt-2'>
+    <div className='flex h-full w-full flex-col overflow-x-hidden p-3'>
+      <div
+        className={`relative flex w-full shrink-0 items-center overflow-hidden transition-[height] duration-300 ${
+          collapsed ? 'h-0' : 'h-12'
+        }`}
+      >
         <Image
           src={logoSrc}
           alt={organization.name}
-          className='h-12 w-auto max-w-full object-contain'
+          className={`h-12 w-auto max-w-full object-contain transition-opacity duration-200 ${
+            collapsed ? 'opacity-0' : 'opacity-100 delay-100'
+          }`}
         />
       </div>
-      <Listbox
+      <nav
         aria-label='Sidebar Options'
-        className='my-4'
-        itemClasses={{
-          base: 'px-3 pt-0 first:rounded-medium last:rounded-medium gap-3 h-12 data-[hover=true]:bg-warning-100 data-[hover=true]:text-foreground-700',
-        }}
+        className='mt-4 flex flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
       >
         {Object.keys(menuOptions).map((section) => (
-          <ListboxSection
-            title={t(`menu.${section}`).toUpperCase()}
-            key={section}
-          >
+          <div key={section} className='flex flex-col gap-1'>
+            <div className='relative h-5 px-3'>
+              <span
+                className={`absolute left-3 text-tiny font-semibold text-foreground-400 ${fade}`}
+              >
+                {t(`menu.${section}`).toUpperCase()}
+              </span>
+              <span
+                className={`absolute inset-x-3 top-1/2 border-t border-divider transition-opacity duration-200 ${
+                  collapsed ? 'opacity-100 delay-100' : 'opacity-0'
+                }`}
+              />
+            </div>
             {(menuOptions[section as keyof MenuOptions] as MenuItem[])
               .filter((item) => {
                 if (!item.roles) return true;
                 return item.roles.includes(userRole);
               })
-              .map((item) => (
-                <ListboxItem
-                  key={item.key}
-                  href={item.path}
-                  className={
-                    normalizedPath === item.path
-                      ? 'bg-warning/10 text-warning'
-                      : ''
-                  }
-                  color='warning'
-                  startContent={<LucideIcon name={item.icon} />}
-                  endContent={
-                    pathname === item.path ? (
-                      <LucideIcon name='ChevronRight' />
-                    ) : (
-                      false
-                    )
-                  }
-                >
-                  {t(item.label)}
-                </ListboxItem>
-              ))}
-          </ListboxSection>
+              .map((item) => {
+                const isActive = normalizedPath === item.path;
+                return (
+                  <Link
+                    key={item.key}
+                    href={`/${currentLang}${item.path}`}
+                    aria-label={t(item.label)}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`group relative flex h-12 items-center gap-3 rounded-medium px-3 transition-colors hover:bg-warning-100 hover:text-foreground-700 ${
+                      isActive
+                        ? 'bg-warning/10 font-medium text-warning'
+                        : 'text-foreground-600'
+                    }`}
+                  >
+                    {isActive && (
+                      <span className='absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-warning' />
+                    )}
+                    <span className='flex h-6 w-6 shrink-0 items-center justify-center'>
+                      <LucideIcon name={item.icon} />
+                    </span>
+                    <span className={`flex-1 truncate text-small ${fade}`}>
+                      {t(item.label)}
+                    </span>
+                    {isActive && (
+                      <span className={fade}>
+                        <LucideIcon name='ChevronRight' />
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+          </div>
         ))}
-      </Listbox>
+      </nav>
     </div>
   );
 }

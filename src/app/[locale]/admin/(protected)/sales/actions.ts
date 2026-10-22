@@ -28,7 +28,10 @@ const CONTROL_DISABLED = {
   error: 'El control de ventas está deshabilitado',
 };
 import {
+  VIEWER_READ_ONLY_ERROR,
+  canViewAllSales,
   isAdminRole,
+  isViewerRole,
   resolveClientVisibility,
   resolveVisibleSalesUserId,
 } from '@/lib/ownership';
@@ -210,6 +213,10 @@ export async function registerClientAction(formData: any) {
       };
     }
 
+    if (isViewerRole(session.user.role)) {
+      return { success: false, error: VIEWER_READ_ONLY_ERROR };
+    }
+
     const names = String(formData?.names ?? '').trim();
     const firstLastName = String(formData?.first_last_name ?? '').trim();
 
@@ -324,7 +331,7 @@ export async function getSalesSetupDataAction() {
         },
         orderBy: [unit_department.floor, unit_department.unit_number],
       }),
-      canManageAnySale
+      canViewAllSales(currentUserRole)
         ? db.query.users.findMany({
             columns: {
               id: true,
@@ -415,6 +422,10 @@ export async function createSaleAction(input: CreateSaleInput) {
         success: false,
         error: 'Debes iniciar sesión para registrar una venta',
       };
+    }
+
+    if (isViewerRole(session.user.role)) {
+      return { success: false, error: VIEWER_READ_ONLY_ERROR };
     }
 
     const parsedState = parseState(input.state);
@@ -518,6 +529,10 @@ export async function updateUnitStateAction(unitId: string, state: UnitState) {
         success: false,
         error: 'Debes iniciar sesión para actualizar el estado',
       };
+    }
+
+    if (isViewerRole(session.user.role)) {
+      return { success: false, error: VIEWER_READ_ONLY_ERROR };
     }
 
     const canManageAnySale = isAdminRole(session.user.role);
@@ -643,6 +658,10 @@ export async function updateSaleAction(input: UpdateSaleInput) {
         success: false,
         error: 'Debes iniciar sesión para editar la reserva',
       };
+    }
+
+    if (isViewerRole(session.user.role)) {
+      return { success: false, error: VIEWER_READ_ONLY_ERROR };
     }
 
     const canManageAnySale = isAdminRole(session.user.role);
@@ -883,6 +902,10 @@ export async function deleteSaleAction(saleId: string) {
       };
     }
 
+    if (isViewerRole(session.user.role)) {
+      return { success: false, error: VIEWER_READ_ONLY_ERROR };
+    }
+
     const canManageAnySale = isAdminRole(session.user.role);
 
     if (!saleId) {
@@ -998,7 +1021,11 @@ export async function getSalesListAction(input: GetSalesListInput = {}) {
     const page = normalizePage(input.page, 1);
     const pageSize = Math.min(50, normalizePage(input.pageSize, 10));
     const offset = (page - 1) * pageSize;
-    const whereClause = buildSalesWhere(input, currentUserId, canManageAnySale);
+    const whereClause = buildSalesWhere(
+      input,
+      currentUserId,
+      canViewAllSales(session?.user?.role)
+    );
 
     const [rows, totalResult] = await Promise.all([
       db.query.sales.findMany({
@@ -1129,7 +1156,9 @@ export async function getSalesListAction(input: GetSalesListInput = {}) {
                 name: sale.seller.name,
                 email: sale.seller.email,
               },
-          canUpdate: canManageAnySale || currentUserId === sale.userId,
+          canUpdate:
+            !isViewerRole(session?.user?.role) &&
+            (canManageAnySale || currentUserId === sale.userId),
         })),
       },
     };
@@ -1166,7 +1195,7 @@ export async function getSaleHistoryAction(input: GetSaleHistoryInput) {
       return { success: false, error: 'Reserva inválida' };
     }
 
-    const canManageAnySale = isAdminRole(session.user.role);
+    const canManageAnySale = canViewAllSales(session.user.role);
     const sale = await loadSaleForHistoryAccess(input.saleId);
 
     if (!sale) {
@@ -1247,6 +1276,10 @@ export async function addSaleCommentAction(input: AddSaleCommentInput) {
       };
     }
 
+    if (isViewerRole(session.user.role)) {
+      return { success: false, error: VIEWER_READ_ONLY_ERROR };
+    }
+
     const comment = toOptionalText(input.comment);
     if (!input.saleId || !comment) {
       return {
@@ -1287,6 +1320,9 @@ async function requireSaleAccess(saleId: string) {
   const session = await auth();
   if (!session?.user?.id) {
     return { error: 'Debes iniciar sesión para editar la venta' } as const;
+  }
+  if (isViewerRole(session.user.role)) {
+    return { error: VIEWER_READ_ONLY_ERROR } as const;
   }
   const sale = await loadSaleForHistoryAccess(saleId);
   if (!sale) return { error: 'No se encontró la reserva' } as const;

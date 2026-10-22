@@ -11,7 +11,9 @@ import {
   Link,
   Divider,
   User,
+  Button,
 } from '@heroui/react';
+import { useSidebar } from '@/components/sidebar-provider';
 import Image from 'next/image';
 import { MenuItem, MenuOptions, menuOptions } from '../sidebar-left/options';
 import { ThemeSwitcher } from '../theme-switcher';
@@ -43,6 +45,7 @@ const LOGO_DARK = '/logo1.png';
 
 export default function NavBarTop({ user }: NavBarTopProps) {
   const t = useTranslations('Common');
+  const { collapsed, toggle: toggleSidebar } = useSidebar();
   const { theme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -79,6 +82,19 @@ export default function NavBarTop({ user }: NavBarTopProps) {
         <NavbarMenuToggle
           aria-label={isMenuOpen ? 'navbar-close-menu' : 'navbar-open-menu'}
         />
+      </NavbarContent>
+      <NavbarContent className='hidden md:flex' justify='start'>
+        <Button
+          isIconOnly
+          variant='light'
+          size='sm'
+          aria-label={
+            collapsed ? 'Mostrar menu lateral' : 'Ocultar menu lateral'
+          }
+          onPress={toggleSidebar}
+        >
+          <LucideIcon name={collapsed ? 'PanelLeftOpen' : 'PanelLeftClose'} />
+        </Button>
       </NavbarContent>
       <NavbarBrand className='hidden sm:flex'>
         <TitleNavBar title={title} translatedTitle={translatedTitle} />
