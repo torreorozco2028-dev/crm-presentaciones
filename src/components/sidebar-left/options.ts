@@ -25,7 +25,7 @@ export const menuOptions = {
       path: '/admin/launch',
       icon: 'Rocket',
       displayDivider: true,
-      roles: ['user', 'admin'],
+      roles: ['user', 'admin', 'viewer'],
     },
     {
       key: 'calculator',
@@ -33,7 +33,7 @@ export const menuOptions = {
       path: '/admin/calculator',
       icon: 'Calculator',
       displayDivider: false,
-      roles: ['user', 'admin'],
+      roles: ['user', 'admin', 'viewer'],
     },
     {
       key: 'building',
@@ -105,7 +105,7 @@ export const menuOptions = {
       path: '/admin/clients',
       icon: 'ContactRound',
       displayDivider: false,
-      roles: ['user', 'admin'],
+      roles: ['user', 'admin', 'viewer'],
     },
     {
       key: 'sales',
@@ -113,7 +113,7 @@ export const menuOptions = {
       path: '/admin/sales',
       icon: 'Store',
       displayDivider: true,
-      roles: ['user', 'admin'],
+      roles: ['user', 'admin', 'viewer'],
     },
   ],
 };

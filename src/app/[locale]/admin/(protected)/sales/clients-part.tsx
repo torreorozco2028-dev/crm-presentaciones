@@ -39,6 +39,7 @@ import {
   updateUnitStateAction,
 } from './actions';
 import { useSearchParams } from 'next/navigation';
+import { canViewAllSales } from '@/lib/ownership';
 
 type UnitState = 1 | 2 | 3;
 
@@ -264,10 +265,9 @@ export default function ClientsPart() {
       detailQuery: debouncedDetailQuery,
       clientId: clientFilter,
       unitId: unitFilter,
-      userId:
-        setupData?.currentUserRole?.toLowerCase() === 'admin'
-          ? userFilter
-          : (setupData?.currentUserId ?? undefined),
+      userId: canViewAllSales(setupData?.currentUserRole)
+        ? userFilter
+        : (setupData?.currentUserId ?? undefined),
     });
 
     if (!result.success || !('data' in result) || !result.data) {
@@ -620,7 +620,7 @@ export default function ClientsPart() {
     setClientFilter('all');
     setUnitFilter('all');
     setUserFilter(
-      setupData?.currentUserRole?.toLowerCase() === 'admin'
+      canViewAllSales(setupData?.currentUserRole)
         ? 'all'
         : (setupData?.currentUserId ?? 'all')
     );
@@ -640,9 +640,10 @@ export default function ClientsPart() {
   }, [setupData]);
 
   const isAdmin = useMemo(
-    () => setupData?.currentUserRole?.toLowerCase() === 'admin',
+    () => canViewAllSales(setupData?.currentUserRole),
     [setupData]
   );
+  const isViewer = setupData?.currentUserRole?.toLowerCase() === 'viewer';
 
   useEffect(() => {
     if (!setupData?.currentUserId || isAdmin) return;
@@ -684,23 +685,25 @@ export default function ClientsPart() {
               </p>
             </div>
 
-            <div className='flex flex-wrap gap-3'>
-              <button
-                type='button'
-                onClick={() => setShowClientForm((prev) => !prev)}
-                className='inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-950'
-              >
-                <UserPlus size={16} /> Agregar Cliente
-              </button>
+            {!isViewer && (
+              <div className='flex flex-wrap gap-3'>
+                <button
+                  type='button'
+                  onClick={() => setShowClientForm((prev) => !prev)}
+                  className='inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-950'
+                >
+                  <UserPlus size={16} /> Agregar Cliente
+                </button>
 
-              <button
-                type='button'
-                onClick={() => setShowSaleForm((prev) => !prev)}
-                className='inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-600'
-              >
-                <HandCoins size={16} /> Agregar Venta
-              </button>
-            </div>
+                <button
+                  type='button'
+                  onClick={() => setShowSaleForm((prev) => !prev)}
+                  className='inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-600'
+                >
+                  <HandCoins size={16} /> Agregar Venta
+                </button>
+              </div>
+            )}
           </div>
 
           {salesError && (
@@ -1757,27 +1760,29 @@ export default function ClientsPart() {
                   </button>
                 </div>
 
-                <form
-                  onSubmit={handleAddComment}
-                  className='mb-4 flex flex-col gap-2'
-                >
-                  <textarea
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    rows={2}
-                    placeholder='Agregar un comentario o actualización...'
-                    className='w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500'
-                  />
-                  <button
-                    type='submit'
-                    disabled={isCommentSubmitting || !newComment.trim()}
-                    className='inline-flex items-center justify-center gap-2 self-end rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60'
+                {!isViewer && (
+                  <form
+                    onSubmit={handleAddComment}
+                    className='mb-4 flex flex-col gap-2'
                   >
-                    {isCommentSubmitting
-                      ? 'Guardando...'
-                      : 'Agregar comentario'}
-                  </button>
-                </form>
+                    <textarea
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      rows={2}
+                      placeholder='Agregar un comentario o actualización...'
+                      className='w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500'
+                    />
+                    <button
+                      type='submit'
+                      disabled={isCommentSubmitting || !newComment.trim()}
+                      className='inline-flex items-center justify-center gap-2 self-end rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60'
+                    >
+                      {isCommentSubmitting
+                        ? 'Guardando...'
+                        : 'Agregar comentario'}
+                    </button>
+                  </form>
+                )}
 
                 <div className='flex-1 space-y-3 overflow-y-auto pr-1'>
                   {isHistoryLoading && (

@@ -4,7 +4,11 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
 import { db } from '@/server/db/config';
 import { client } from '@/server/db/schema';
-import { isAdminRole } from '@/lib/ownership';
+import {
+  VIEWER_READ_ONLY_ERROR,
+  isAdminRole,
+  isViewerRole,
+} from '@/lib/ownership';
 import { and, desc, eq, ilike, ne, or, sql } from 'drizzle-orm';
 
 function toOptionalText(value: unknown) {
@@ -220,6 +224,10 @@ export async function createClientAction(input: ClientInput) {
       };
     }
 
+    if (isViewerRole(session.user.role)) {
+      return { success: false, error: VIEWER_READ_ONLY_ERROR };
+    }
+
     const names = String(input.names ?? '').trim();
     const firstLastName = String(input.first_last_name ?? '').trim();
 
@@ -296,6 +304,10 @@ export async function updateClientAction(input: UpdateClientInput) {
         success: false,
         error: 'Debes iniciar sesión para editar el cliente',
       };
+    }
+
+    if (isViewerRole(session.user.role)) {
+      return { success: false, error: VIEWER_READ_ONLY_ERROR };
     }
 
     if (!input.clientId) {

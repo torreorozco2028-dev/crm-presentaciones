@@ -254,13 +254,15 @@ export default function ClientsPart() {
               </p>
             </div>
 
-            <button
-              type='button'
-              onClick={() => setShowCreateForm(true)}
-              className='inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-600'
-            >
-              <UserPlus size={16} /> Agregar Cliente
-            </button>
+            {setupData?.currentUserRole?.toLowerCase() !== 'viewer' && (
+              <button
+                type='button'
+                onClick={() => setShowCreateForm(true)}
+                className='inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-600'
+              >
+                <UserPlus size={16} /> Agregar Cliente
+              </button>
+            )}
           </div>
 
           {error && (
